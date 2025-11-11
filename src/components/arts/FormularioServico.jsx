@@ -83,9 +83,9 @@ export default function FormularioServico({ servicoInicial = {}, onSubmit }) {
         gerou_auto_infracao: false,
         cliente_nome: "",
         cliente_cpf_cnpj: "",
-        responsavel_empreendimento_nome: "",
-        responsavel_empreendimento_cpf_cnpj: "",
-        cliente_e_responsavel_iguais: false,
+        contratante_empreendimento_nome: "",
+        contratante_empreendimento_cpf_cnpj: "",
+        cliente_e_contratante_iguais: false,
         
         atividade_notificada: "",
         tipo_servico_notificado: "",
@@ -122,7 +122,7 @@ export default function FormularioServico({ servicoInicial = {}, onSubmit }) {
     
     const [erros, setErros] = useState({
       cliente_cpf_cnpj: '',
-      responsavel_empreendimento_cpf_cnpj: '',
+      contratante_empreendimento_cpf_cnpj: '',
     });
 
     const [carCopiado, setCarCopiado] = useState({});
@@ -150,15 +150,15 @@ export default function FormularioServico({ servicoInicial = {}, onSubmit }) {
     }, [dados.data_notificacao]);
 
     useEffect(() => {
-        if (dados.cliente_e_responsavel_iguais) {
+        if (dados.cliente_e_contratante_iguais) {
             setDados(prev => ({
                 ...prev,
-                responsavel_empreendimento_nome: prev.cliente_nome,
-                responsavel_empreendimento_cpf_cnpj: prev.cliente_cpf_cnpj,
+                contratante_empreendimento_nome: prev.cliente_nome,
+                contratante_empreendimento_cpf_cnpj: prev.cliente_cpf_cnpj,
             }));
-            setErros(prev => ({ ...prev, responsavel_empreendimento_cpf_cnpj: '' }));
+            setErros(prev => ({ ...prev, contratante_empreendimento_cpf_cnpj: '' }));
         }
-    }, [dados.cliente_e_responsavel_iguais, dados.cliente_nome, dados.cliente_cpf_cnpj]);
+    }, [dados.cliente_e_contratante_iguais, dados.cliente_nome, dados.cliente_cpf_cnpj]);
 
     useEffect(() => {
         if (dados.real_igual_notificada) {
@@ -621,29 +621,29 @@ export default function FormularioServico({ servicoInicial = {}, onSubmit }) {
                             {erros.cliente_cpf_cnpj && <p className="text-sm text-red-600 mt-1">{erros.cliente_cpf_cnpj}</p>}
                         </div>
                         <div className="flex items-center gap-2 self-center">
-                            <Switch id="mesma-pessoa" checked={dados.cliente_e_responsavel_iguais} onCheckedChange={v => handleInputChange('cliente_e_responsavel_iguais', v)} />
-                            <Label htmlFor="mesma-pessoa" className="m-0">Cliente e Responsável são a mesma pessoa?</Label>
+                            <Switch id="mesma-pessoa" checked={dados.cliente_e_contratante_iguais} onCheckedChange={v => handleInputChange('cliente_e_contratante_iguais', v)} />
+                            <Label htmlFor="mesma-pessoa" className="m-0">Cliente e Contratante são a mesma pessoa?</Label>
                         </div>
                         <div className="space-y-1">
-                            <Label htmlFor="responsavel_empreendimento_nome" className="mb-1">Nome do Responsável pelo Empreendimento</Label>
+                            <Label htmlFor="contratante_empreendimento_nome" className="mb-1">Nome do Contratante pelo Empreendimento</Label>
                             <Input 
-                                id="responsavel_empreendimento_nome"
-                                value={dados.responsavel_empreendimento_nome} 
-                                onChange={e => handleInputChange('responsavel_empreendimento_nome', e.target.value)} 
-                                onBlur={e => handleNomeBlur('responsavel_empreendimento_nome', e.target.value)}
-                                disabled={dados.cliente_e_responsavel_iguais} 
+                                id="contratante_empreendimento_nome"
+                                value={dados.contratante_empreendimento_nome} 
+                                onChange={e => handleInputChange('contratante_empreendimento_nome', e.target.value)} 
+                                onBlur={e => handleNomeBlur('contratante_empreendimento_nome', e.target.value)}
+                                disabled={dados.cliente_e_contratante_iguais} 
                             />
                         </div>
                         <div className="space-y-1">
-                            <Label htmlFor="responsavel_empreendimento_cpf_cnpj" className="mb-1">CPF/CNPJ do Responsável</Label>
+                            <Label htmlFor="contratante_empreendimento_cpf_cnpj" className="mb-1">CPF/CNPJ do Contratante</Label>
                             <Input 
-                                id="responsavel_empreendimento_cpf_cnpj"
-                                value={dados.responsavel_empreendimento_cpf_cnpj} 
-                                onChange={e => handleInputChange('responsavel_empreendimento_cpf_cnpj', e.target.value)}
-                                onBlur={e => handleDocumentoBlur('responsavel_empreendimento_cpf_cnpj', e.target.value)}
-                                disabled={dados.cliente_e_responsavel_iguais} 
+                                id="contratante_empreendimento_cpf_cnpj"
+                                value={dados.contratante_empreendimento_cpf_cnpj} 
+                                onChange={e => handleInputChange('contratante_empreendimento_cpf_cnpj', e.target.value)}
+                                onBlur={e => handleDocumentoBlur('contratante_empreendimento_cpf_cnpj', e.target.value)}
+                                disabled={dados.cliente_e_contratante_iguais} 
                             />
-                            {erros.responsavel_empreendimento_cpf_cnpj && <p className="text-sm text-red-600 mt-1">{erros.responsavel_empreendimento_cpf_cnpj}</p>}
+                            {erros.contratante_empreendimento_cpf_cnpj && <p className="text-sm text-red-600 mt-1">{erros.contratante_empreendimento_cpf_cnpj}</p>}
                         </div>
                     </FormSection>
 

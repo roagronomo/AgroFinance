@@ -140,7 +140,7 @@ const MultiAnexoUpload = ({ label, accept, currentFiles = [], onFilesChange, ico
   };
 
   const handleRemove = (index) => {
-    if (window.confirm(`Tem certeza que deseja remover o arquivo "${currentFiles[index]?.name}"?`)) {
+    if (window.confirm(`Remover arquivo "${currentFiles[index]?.name}"?`)) {
       const newFiles = currentFiles.filter((_, i) => i !== index);
       onFilesChange(newFiles);
     }
@@ -1119,98 +1119,108 @@ export default function ElaboracaoARTs() {
               </Card>
             ) : (
               <div className="grid gap-4">
-                {artsFiltradas.map((art) => (
-                  <Card key={art.id} className="shadow-lg border-green-100 hover:shadow-xl transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex flex-col lg:flex-row justify-between gap-6">
-                        <div className="flex-1 space-y-4">
-                          <div>
-                            <h3 className="text-xl font-bold text-green-900 mb-1">
-                              {art.contratante_nome}
-                            </h3>
-                            <p className="text-sm text-gray-600">{art.contratante_cpf_cnpj}</p>
+                {artsFiltradas.map((art) => {
+                  const temKML = art.anexos_kml && art.anexos_kml.length > 0;
+                  const temPDF = art.anexos_car_pdf && art.anexos_car_pdf.length > 0;
+                  
+                  return (
+                    <Card key={art.id} className="shadow-lg border-green-100 hover:shadow-xl transition-shadow relative">
+                      {(temKML || temPDF) && (
+                        <div className="absolute top-3 right-3 flex gap-1.5">
+                          {temKML && (
+                            <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                              <Map className="w-3 h-3" />
+                              <span>{art.anexos_kml.length}</span>
+                            </div>
+                          )}
+                          {temPDF && (
+                            <div className="flex items-center gap-1 px-2 py-0.5 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                              <FileText className="w-3 h-3" />
+                              <span>{art.anexos_car_pdf.length}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      <CardContent className="p-6">
+                        <div className="flex flex-col lg:flex-row justify-between gap-6">
+                          <div className="flex-1 space-y-4">
+                            <div>
+                              <h3 className="text-xl font-bold text-green-900 mb-1">
+                                {art.contratante_nome}
+                              </h3>
+                              <p className="text-sm text-gray-600">{art.contratante_cpf_cnpj}</p>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                              <div>
+                                <span className="font-semibold text-gray-700">Imóvel:</span>
+                                <span className="ml-2 text-gray-600">{art.obra_imovel}</span>
+                              </div>
+                              {art.obra_matricula && (
+                                <div>
+                                  <span className="font-semibold text-gray-700">Matrícula:</span>
+                                  <span className="ml-2 text-gray-600">{formatarMatricula(art.obra_matricula)}</span>
+                                </div>
+                              )}
+                              {art.obra_car && (
+                                <div>
+                                  <span className="font-semibold text-gray-700">CAR:</span>
+                                  <span className="ml-2 text-gray-600">{art.obra_car}</span>
+                                </div>
+                              )}
+                              <div>
+                                <span className="font-semibold text-gray-700">Cultura:</span>
+                                <span className="ml-2 text-gray-600">{getCulturaLabel(art.obra_cultura)}</span>
+                              </div>
+                              <div>
+                                <span className="font-semibold text-gray-700">Área:</span>
+                                <span className="ml-2 text-gray-600">{formatarArea(art.obra_area_ha)} ha</span>
+                              </div>
+                              <div>
+                                <span className="font-semibold text-gray-700">Safra:</span>
+                                <span className="ml-2 text-gray-600">{art.obra_safra}</span>
+                              </div>
+                              <div>
+                                <span className="font-semibold text-gray-700">Custo:</span>
+                                <span className="ml-2 text-green-700 font-semibold">
+                                  R$ {art.obra_custo_medio?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </span>
+                              </div>
+                              <div className="md:col-span-2">
+                                <span className="font-semibold text-gray-700">Localização:</span>
+                                <span className="ml-2 text-gray-600">
+                                  {art.obra_cidade}/{art.obra_uf}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                            <div>
-                              <span className="font-semibold text-gray-700">Imóvel:</span>
-                              <span className="ml-2 text-gray-600">{art.obra_imovel}</span>
-                            </div>
-                            {art.obra_matricula && (
-                              <div>
-                                <span className="font-semibold text-gray-700">Matrícula:</span>
-                                <span className="ml-2 text-gray-600">{formatarMatricula(art.obra_matricula)}</span>
-                              </div>
-                            )}
-                            {art.obra_car && (
-                              <div>
-                                <span className="font-semibold text-gray-700">CAR:</span>
-                                <span className="ml-2 text-gray-600">{art.obra_car}</span>
-                              </div>
-                            )}
-                            <div>
-                              <span className="font-semibold text-gray-700">Cultura:</span>
-                              <span className="ml-2 text-gray-600">{getCulturaLabel(art.obra_cultura)}</span>
-                            </div>
-                            <div>
-                              <span className="font-semibold text-gray-700">Área:</span>
-                              <span className="ml-2 text-gray-600">{formatarArea(art.obra_area_ha)} ha</span>
-                            </div>
-                            <div>
-                              <span className="font-semibold text-gray-700">Safra:</span>
-                              <span className="ml-2 text-gray-600">{art.obra_safra}</span>
-                            </div>
-                            <div>
-                              <span className="font-semibold text-gray-700">Custo:</span>
-                              <span className="ml-2 text-green-700 font-semibold">
-                                R$ {art.obra_custo_medio?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                              </span>
-                            </div>
-                            <div className="md:col-span-2">
-                              <span className="font-semibold text-gray-700">Localização:</span>
-                              <span className="ml-2 text-gray-600">
-                                {art.obra_cidade}/{art.obra_uf}
-                              </span>
-                            </div>
-                            {art.anexos_kml && art.anexos_kml.length > 0 && (
-                              <div>
-                                <span className="font-semibold text-gray-700">KML/KMZ:</span>
-                                <span className="ml-2 text-gray-600">{art.anexos_kml.length} arquivo(s)</span>
-                              </div>
-                            )}
-                            {art.anexos_car_pdf && art.anexos_car_pdf.length > 0 && (
-                              <div>
-                                <span className="font-semibold text-gray-700">CAR PDF:</span>
-                                <span className="ml-2 text-gray-600">{art.anexos_car_pdf.length} arquivo(s)</span>
-                              </div>
-                            )}
+                          <div className="flex lg:flex-col gap-2 lg:justify-start">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditarART(art)}
+                              className="flex-1 lg:flex-none border-green-300 text-green-700 hover:bg-green-50"
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
+                              Editar
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleExcluirART(art.id)}
+                              className="flex-1 lg:flex-none border-red-300 text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Excluir
+                            </Button>
                           </div>
                         </div>
-                        
-                        <div className="flex lg:flex-col gap-2 lg:justify-start">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditarART(art)}
-                            className="flex-1 lg:flex-none border-green-300 text-green-700 hover:bg-green-50"
-                          >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Editar
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleExcluirART(art.id)}
-                            className="flex-1 lg:flex-none border-red-300 text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Excluir
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </>

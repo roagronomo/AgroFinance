@@ -696,16 +696,31 @@ export default function ElaboracaoARTs() {
   useEffect(() => {
     // Carregar dados do localStorage
     const dados = localStorage.getItem('elaboracao_arts_dados');
+    console.log('📦 Carregando ARTs do localStorage:', dados);
+    
     if (dados) {
-      setArts(JSON.parse(dados));
+      try {
+        const artsParsed = JSON.parse(dados);
+        console.log('✅ ARTs carregadas:', artsParsed.length, 'registros');
+        setArts(artsParsed);
+      } catch (error) {
+        console.error('❌ Erro ao parsear ARTs:', error);
+        setArts([]);
+      }
+    } else {
+      console.log('ℹ️ Nenhuma ART encontrada no localStorage');
+      setArts([]);
     }
   }, []);
 
   const salvarNoLocalStorage = (lista) => {
+    console.log('💾 Salvando ARTs no localStorage:', lista.length, 'registros');
     localStorage.setItem('elaboracao_arts_dados', JSON.stringify(lista));
   };
 
   const handleSalvarART = (dados) => {
+    console.log('💾 Salvando ART:', dados);
+    
     if (artEditando) {
       // Editar existente
       const novasArts = arts.map(a => 
@@ -718,6 +733,7 @@ export default function ElaboracaoARTs() {
       // Adicionar nova
       const novaArt = { ...dados, id: Date.now() };
       const novasArts = [...arts, novaArt];
+      console.log('✅ Nova lista de ARTs:', novasArts.length, 'registros');
       setArts(novasArts);
       salvarNoLocalStorage(novasArts);
       setMensagem('ART cadastrada com sucesso!');
@@ -749,18 +765,22 @@ export default function ElaboracaoARTs() {
   };
 
   const artsFiltradas = arts.filter(a => {
+    if (!filtro) return true; // Se não há filtro, mostra todas
+    
     const busca = filtro.toLowerCase();
     return (
       a.contratante_nome?.toLowerCase().includes(busca) ||
       a.contratante_cpf_cnpj?.includes(busca) ||
       a.obra_imovel?.toLowerCase().includes(busca) ||
-      a.obra_car?.includes(busca)
+      a.obra_car?.toLowerCase().includes(busca)
     );
   });
 
   const getCulturaLabel = (value) => {
     return CULTURAS_OPTIONS.find(c => c.value === value)?.label || value;
   };
+
+  console.log('📊 Estado atual - Total ARTs:', arts.length, '| Filtradas:', artsFiltradas.length, '| Mostrando form:', mostrarFormulario);
 
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen">
@@ -815,39 +835,58 @@ export default function ElaboracaoARTs() {
           </Card>
         ) : (
           <>
-            <Card className="mb-6 shadow-lg border-green-100">
-              <CardContent className="p-6">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-green-500" />
-                  <Input
-                    placeholder="Buscar por contratante, CPF/CNPJ, imóvel ou CAR..."
-                    value={filtro}
-                    onChange={(e) => setFiltro(e.target.value)}
-                    className="pl-10 border-green-200 focus:border-green-500"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            {arts.length > 0 && ( /* Show search bar only if there are ARTs */
+              <Card className="mb-6 shadow-lg border-green-100">
+                <CardContent className="p-6">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-green-500" />
+                    <Input
+                      placeholder="Buscar por contratante, CPF/CNPJ, imóvel ou CAR..."
+                      value={filtro}
+                      onChange={(e) => setFiltro(e.target.value)}
+                      className="pl-10 border-green-200 focus:border-green-500"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-            {artsFiltradas.length === 0 ? (
+            {arts.length === 0 ? (
               <Card className="shadow-lg border-green-100">
                 <CardContent className="p-12 text-center">
                   <FileSignature className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                    {filtro ? 'Nenhuma ART encontrada' : 'Nenhuma ART cadastrada'}
+                    Nenhuma ART cadastrada
                   </h3>
                   <p className="text-gray-500 mb-6">
-                    {filtro ? 'Tente outra busca' : 'Comece cadastrando sua primeira ART'}
+                    Comece cadastrando sua primeira ART
                   </p>
-                  {!filtro && (
-                    <Button 
-                      onClick={handleNovaART}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <Plus className="w-5 h-5 mr-2" />
-                      Cadastrar Primeira ART
-                    </Button>
-                  )}
+                  <Button 
+                    onClick={handleNovaART}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Plus className="w-5 h-5 mr-2" />
+                    Cadastrar Primeira ART
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : artsFiltradas.length === 0 ? (
+              <Card className="shadow-lg border-green-100">
+                <CardContent className="p-12 text-center">
+                  <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                    Nenhuma ART encontrada
+                  </h3>
+                  <p className="text-gray-500 mb-6">
+                    Tente outro termo de busca
+                  </p>
+                  <Button 
+                    onClick={() => setFiltro('')}
+                    variant="outline"
+                    className="border-green-300 text-green-700 hover:bg-green-50"
+                  >
+                    Limpar Busca
+                  </Button>
                 </CardContent>
               </Card>
             ) : (
@@ -869,10 +908,12 @@ export default function ElaboracaoARTs() {
                               <span className="font-semibold text-gray-700">Imóvel:</span>
                               <span className="ml-2 text-gray-600">{art.obra_imovel}</span>
                             </div>
-                            <div>
-                              <span className="font-semibold text-gray-700">CAR:</span>
-                              <span className="ml-2 text-gray-600">{art.obra_car}</span>
-                            </div>
+                            {art.obra_car && ( /* Only display CAR if it exists */
+                              <div>
+                                <span className="font-semibold text-gray-700">CAR:</span>
+                                <span className="ml-2 text-gray-600">{art.obra_car}</span>
+                              </div>
+                            )}
                             <div>
                               <span className="font-semibold text-gray-700">Cultura:</span>
                               <span className="ml-2 text-gray-600">{getCulturaLabel(art.obra_cultura)}</span>

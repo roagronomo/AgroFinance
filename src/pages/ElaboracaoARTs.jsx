@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Plus, Edit, Trash2, FileSignature, FileText, Map, Upload, X } from "lucide-react";
+import { Search, Plus, Edit, Trash2, FileSignature, FileText, Map, Upload, X, Download } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatarNomeProprio, validarCPF, validarCNPJ, formatarCPF, formatarCNPJ } from '@/components/lib/formatters';
 import { Badge } from "@/components/ui/badge";
@@ -105,42 +105,54 @@ const buscarEnderecoPorCEP = async (cep) => {
   }
 };
 
-// Componente para upload de arquivo único
-const AnexoUpload = ({ label, accept, currentFile, onFileChange, icon: Icon }) => {
+// Componente para upload múltiplo de arquivos
+const MultiAnexoUpload = ({ label, accept, currentFiles = [], onFilesChange, icon: Icon }) => {
   const [uploading, setUploading] = useState(false);
 
   const handleFileSelect = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
-    const maxSize = 20 * 1024 * 1024; // 20MB
-    if (file.size > maxSize) {
-      alert('Arquivo muito grande. Tamanho máximo: 20MB');
+    const maxSize = 20 * 1024 * 1024;
+    const invalidFiles = files.filter(f => f.size > maxSize);
+    
+    if (invalidFiles.length > 0) {
+      alert(`${invalidFiles.length} arquivo(s) muito grande(s). Tamanho máximo: 20MB`);
       e.target.value = '';
       return;
     }
 
     setUploading(true);
-    
-    // Simular upload (em produção, fazer upload real)
+    // Simular upload (em produção, fazer upload real e obter URL real)
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    const fileData = {
+    const newFilesData = files.map(file => ({
       name: file.name,
       size: file.size,
       type: file.type,
       url: URL.createObjectURL(file), // Em produção, usar URL real do servidor
-    };
+      uploadedAt: new Date().toISOString(),
+    }));
     
-    onFileChange(fileData);
+    onFilesChange([...currentFiles, ...newFilesData]);
     setUploading(false);
     e.target.value = '';
   };
 
-  const handleRemove = () => {
-    if (window.confirm(`Remover arquivo "${currentFile?.name}"?`)) {
-      onFileChange(null);
+  const handleRemove = (index) => {
+    if (window.confirm(`Tem certeza que deseja remover o arquivo "${currentFiles[index]?.name}"?`)) {
+      const newFiles = currentFiles.filter((_, i) => i !== index);
+      onFilesChange(newFiles);
     }
+  };
+
+  const handleDownload = (file) => {
+    const link = document.createElement('a');
+    link.href = file.url;
+    link.download = file.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const formatFileSize = (bytes) => {
@@ -158,48 +170,67 @@ const AnexoUpload = ({ label, accept, currentFile, onFileChange, icon: Icon }) =
         {label}
       </Label>
 
-      {currentFile ? (
-        <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded border">
-          <FileText className="w-4 h-4 text-gray-500 flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{currentFile.name}</p>
-            <p className="text-xs text-gray-500">{formatFileSize(currentFile.size)}</p>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-red-600 hover:text-red-800 flex-shrink-0"
-            onClick={handleRemove}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-      ) : (
-        <div className="flex items-center gap-3">
-          <label htmlFor={`file-${label}`}>
+      <div className="space-y-2">
+        {currentFiles.map((file, index) => (
+          <div key={`${file.name}-${index}`} className="flex items-center gap-3 p-2.5 bg-gray-50 rounded border">
+            <FileText className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{file.name}</p>
+              <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+            </div>
             <Button
               type="button"
-              variant="outline"
-              size="sm"
-              className="h-9"
-              onClick={() => document.getElementById(`file-${label}`).click()}
-              disabled={uploading}
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-blue-600 hover:text-blue-800 flex-shrink-0"
+              onClick={() => handleDownload(file)}
+              title="Baixar arquivo"
             >
-              <Upload className="w-4 h-4 mr-2" />
-              {uploading ? 'Enviando...' : 'Selecionar'}
+              <Download className="w-4 h-4" />
             </Button>
-          </label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-red-600 hover:text-red-800 flex-shrink-0"
+              onClick={() => handleRemove(index)}
+              title="Remover arquivo"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-3">
+        <label htmlFor={`file-${label.replace(/\s+/g, '-')}`}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9"
+            onClick={() => document.getElementById(`file-${label.replace(/\s+/g, '-')}`).click()}
+            disabled={uploading}
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            {uploading ? 'Enviando...' : 'Adicionar Arquivo'}
+          </Button>
+        </label>
+        {currentFiles.length === 0 && (
           <span className="text-sm text-gray-400 italic">Nenhum arquivo selecionado</span>
-        </div>
-      )}
+        )}
+        {currentFiles.length > 0 && (
+          <span className="text-sm text-green-600 font-medium">{currentFiles.length} arquivo(s)</span>
+        )}
+      </div>
 
       <input
-        id={`file-${label}`}
+        id={`file-${label.replace(/\s+/g, '-')}`}
         type="file"
         accept={accept}
         onChange={handleFileSelect}
         className="hidden"
+        multiple
       />
     </div>
   );
@@ -221,20 +252,23 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
     obra_cidade: '',
     obra_uf: '',
     obra_imovel: '',
-    obra_matricula: '', // Novo campo para matrícula
+    obra_matricula: '',
     obra_car: '',
     obra_latitude: '',
     obra_longitude: '',
     obra_area_ha: '',
-    obra_area_ha_display: '', // Para controlar o display
+    obra_area_ha_display: '',
     obra_cultura: '',
     obra_safra: '',
     obra_argumentacao: '',
     obra_custo_medio: 0,
-    // Anexos
-    anexo_kml: null,
-    anexo_car_pdf: null,
+    // Anexos - agora arrays para múltiplos arquivos
+    anexos_kml: [],
+    anexos_car_pdf: [],
     ...artInicial,
+    // Ensure array fields are initialized correctly if artInicial has null/undefined
+    anexos_kml: artInicial?.anexos_kml || [],
+    anexos_car_pdf: artInicial?.anexos_car_pdf || [],
   });
   
   const [erros, setErros] = useState({
@@ -258,7 +292,10 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
       setDados(prev => ({
         ...prev,
         obra_area_ha_display: artInicial.obra_area_ha ? formatarArea(artInicial.obra_area_ha) : '',
-        obra_matricula: artInicial.obra_matricula ? formatarMatricula(artInicial.obra_matricula) : ''
+        obra_matricula: artInicial.obra_matricula ? formatarMatricula(artInicial.obra_matricula) : '',
+        // Ensure array fields are re-initialized correctly
+        anexos_kml: artInicial.anexos_kml || [],
+        anexos_car_pdf: artInicial.anexos_car_pdf || [],
       }));
     }
   }, [artInicial]);
@@ -830,18 +867,18 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
       <div className="space-y-3 pt-4 border-t">
         <h4 className="text-sm font-semibold text-gray-700">Anexos</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <AnexoUpload
+          <MultiAnexoUpload
             label="Área Cultivada (KML/KMZ)"
             accept=".kml,.kmz"
-            currentFile={dados.anexo_kml}
-            onFileChange={(file) => handleInputChange('anexo_kml', file)}
+            currentFiles={dados.anexos_kml}
+            onFilesChange={(files) => handleInputChange('anexos_kml', files)}
             icon={Map}
           />
-          <AnexoUpload
+          <MultiAnexoUpload
             label="CAR (PDF)"
             accept=".pdf"
-            currentFile={dados.anexo_car_pdf}
-            onFileChange={(file) => handleInputChange('anexo_car_pdf', file)}
+            currentFiles={dados.anexos_car_pdf}
+            onFilesChange={(files) => handleInputChange('anexos_car_pdf', files)}
             icon={FileText}
           />
         </div>
@@ -1135,6 +1172,18 @@ export default function ElaboracaoARTs() {
                                 {art.obra_cidade}/{art.obra_uf}
                               </span>
                             </div>
+                            {art.anexos_kml && art.anexos_kml.length > 0 && (
+                              <div>
+                                <span className="font-semibold text-gray-700">KML/KMZ:</span>
+                                <span className="ml-2 text-gray-600">{art.anexos_kml.length} arquivo(s)</span>
+                              </div>
+                            )}
+                            {art.anexos_car_pdf && art.anexos_car_pdf.length > 0 && (
+                              <div>
+                                <span className="font-semibold text-gray-700">CAR PDF:</span>
+                                <span className="ml-2 text-gray-600">{art.anexos_car_pdf.length} arquivo(s)</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                         

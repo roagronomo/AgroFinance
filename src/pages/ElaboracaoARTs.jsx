@@ -38,6 +38,7 @@ const formatarArea = (valor) => {
 // Função para parsear área formatada de volta para número
 const parsearArea = (valorFormatado) => {
   if (!valorFormatado) return null;
+  // Remove pontos de milhar e troca vírgula por ponto
   const valorLimpo = valorFormatado.replace(/\./g, '').replace(',', '.');
   const numero = parseFloat(valorLimpo);
   return isNaN(numero) ? null : numero;
@@ -341,6 +342,7 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
         obra_area_ha_display: areaFormatada
       }));
     } else {
+      // Se não conseguiu parsear, mantém o valor digitado
       setDados(prev => ({
         ...prev,
         obra_area_ha: null,
@@ -586,12 +588,12 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
               id="obra_area_ha"
               value={dados.obra_area_ha_display || ''}
               onChange={e => {
-                // Keep the display value updated as user types
+                // Permite digitar livremente (com ponto ou vírgula)
                 handleInputChange('obra_area_ha_display', e.target.value);
               }}
               onBlur={e => handleAreaBlur(e.target.value)}
               required
-              placeholder="125.36"
+              placeholder="125,36"
               className="h-9"
             />
           </div>

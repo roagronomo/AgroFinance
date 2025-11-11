@@ -695,6 +695,7 @@ export default function ElaboracaoARTs() {
   const [artEditando, setArtEditando] = useState(null);
   const [mensagem, setMensagem] = useState('');
   const [carregando, setCarregando] = useState(true);
+  const [renderKey, setRenderKey] = useState(0); // Adicionar key para forçar re-render
 
   useEffect(() => {
     // Carregar dados do localStorage
@@ -720,7 +721,8 @@ export default function ElaboracaoARTs() {
           
           if (Array.isArray(artsParsed) && artsParsed.length > 0) {
             console.log('✅ [Estado] Definindo ARTs no estado:', artsParsed.length, 'registros');
-            setArts(artsParsed);
+            setArts([...artsParsed]); // Força novo array
+            setRenderKey(prev => prev + 1); // Força re-render
           } else {
             console.warn('⚠️ [Parse] Array vazio ou inválido');
             setArts([]);
@@ -809,8 +811,9 @@ export default function ElaboracaoARTs() {
         a.id === artEditando.id ? { ...dados, id: a.id } : a
       );
       console.log('✏️ [Edição] Nova lista:', novasArts.length, 'registros');
-      setArts(novasArts);
+      setArts([...novasArts]); // Força novo array
       salvarNoLocalStorage(novasArts);
+      setRenderKey(prev => prev + 1); // Força re-render
       setMensagem('ART atualizada com sucesso!');
     } else {
       // Adicionar nova
@@ -822,8 +825,9 @@ export default function ElaboracaoARTs() {
       console.log('➕ [Nova ART] Nova lista:', novasArts.length, 'registros');
       console.log('➕ [Nova ART] Lista completa:', novasArts);
       
-      setArts(novasArts);
+      setArts([...novasArts]); // Força novo array
       salvarNoLocalStorage(novasArts);
+      setRenderKey(prev => prev + 1); // Força re-render
       setMensagem('ART cadastrada com sucesso!');
     }
     
@@ -843,8 +847,9 @@ export default function ElaboracaoARTs() {
       console.log('🗑️ [Excluir] Excluindo ART:', id);
       const novasArts = arts.filter(a => a.id !== id);
       console.log('🗑️ [Excluir] Nova lista:', novasArts.length, 'registros');
-      setArts(novasArts);
+      setArts([...novasArts]); // Força novo array
       salvarNoLocalStorage(novasArts);
+      setRenderKey(prev => prev + 1); // Força re-render
       setMensagem('ART excluída com sucesso!');
       setTimeout(() => setMensagem(''), 3000);
     }
@@ -872,7 +877,7 @@ export default function ElaboracaoARTs() {
     return CULTURAS_OPTIONS.find(c => c.value === value)?.label || value;
   };
 
-  console.log('🎨 [Render] Estado ATUAL - Total ARTs:', arts.length, '| Filtradas:', artsFiltradas.length, '| Mostrando form:', mostrarFormulario, '| Carregando:', carregando);
+  console.log('🎨 [Render] Estado ATUAL - Total ARTs:', arts.length, '| Filtradas:', artsFiltradas.length, '| Mostrando form:', mostrarFormulario, '| Carregando:', carregando, '| RenderKey:', renderKey);
   console.log('🎨 [Render] Arts completo:', arts);
 
   if (carregando) {
@@ -887,7 +892,7 @@ export default function ElaboracaoARTs() {
   }
 
   return (
-    <div className="p-4 md:p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen">
+    <div key={renderKey} className="p-4 md:p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
@@ -898,9 +903,9 @@ export default function ElaboracaoARTs() {
             <p className="text-green-600 mt-1">
               Cadastro completo para elaboração de ARTs
             </p>
-            {/* Debug info - remover depois */}
-            <p className="text-xs text-gray-500 mt-1">
-              Debug: {arts.length} ART(s) no estado | {artsFiltradas.length} filtrada(s)
+            {/* Debug info - COM key para forçar update */}
+            <p key={`debug-${renderKey}-${arts.length}`} className="text-xs text-gray-500 mt-1">
+              Debug: {arts.length} ART(s) no estado | {artsFiltradas.length} filtrada(s) | Render: {renderKey}
             </p>
           </div>
           {!mostrarFormulario && (

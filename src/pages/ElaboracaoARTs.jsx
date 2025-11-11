@@ -1124,24 +1124,7 @@ export default function ElaboracaoARTs() {
                   const temPDF = art.anexos_car_pdf && art.anexos_car_pdf.length > 0;
                   
                   return (
-                    <Card key={art.id} className="shadow-lg border-green-100 hover:shadow-xl transition-shadow relative">
-                      {(temKML || temPDF) && (
-                        <div className="absolute top-3 right-3 flex gap-1.5">
-                          {temKML && (
-                            <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
-                              <Map className="w-3 h-3" />
-                              <span>{art.anexos_kml.length}</span>
-                            </div>
-                          )}
-                          {temPDF && (
-                            <div className="flex items-center gap-1 px-2 py-0.5 bg-red-50 border border-red-200 rounded text-xs text-red-700">
-                              <FileText className="w-3 h-3" />
-                              <span>{art.anexos_car_pdf.length}</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
+                    <Card key={art.id} className="shadow-lg border-green-100 hover:shadow-xl transition-shadow">
                       <CardContent className="p-6">
                         <div className="flex flex-col lg:flex-row justify-between gap-6">
                           <div className="flex-1 space-y-4">
@@ -1194,6 +1177,23 @@ export default function ElaboracaoARTs() {
                                 </span>
                               </div>
                             </div>
+
+                            {(temKML || temPDF) && (
+                              <div className="flex gap-2 pt-2 border-t border-gray-100">
+                                {temKML && (
+                                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                                    <Map className="w-3.5 h-3.5" />
+                                    <span className="font-medium">{art.anexos_kml.length}</span>
+                                  </div>
+                                )}
+                                {temPDF && (
+                                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                                    <FileText className="w-3.5 h-3.5" />
+                                    <span className="font-medium">{art.anexos_car_pdf.length}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                           
                           <div className="flex lg:flex-col gap-2 lg:justify-start">

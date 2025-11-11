@@ -6,6 +6,7 @@ import Vencimentos from './pages/Vencimentos';
 import GerenciamentoARTs from './pages/GerenciamentoARTs';
 import AbrirServicoART from './pages/AbrirServicoART';
 import EditarServicoART from './pages/EditarServicoART';
+import ElaboracaoARTs from './pages/ElaboracaoARTs';
 import Layout from './Layout.jsx';
 
 
@@ -18,6 +19,7 @@ export const PAGES = {
     "GerenciamentoARTs": GerenciamentoARTs,
     "AbrirServicoART": AbrirServicoART,
     "EditarServicoART": EditarServicoART,
+    "ElaboracaoARTs": ElaboracaoARTs,
 }
 
 export const pagesConfig = {

@@ -13,7 +13,8 @@ import {
   Building2,
   RefreshCw,
   Check,
-  Trash2 // Added for cache clear functionality
+  Trash2, // Added for cache clear functionality
+  FileSignature // Added FileSignature icon
 } from "lucide-react";
 import {
   Sidebar,
@@ -64,9 +65,14 @@ const navigationItems = [
     icon: Calendar,
   },
   {
-    title: "ARTs & Notificações",
+    title: "Notificações CREA", // Changed title from "ARTs & Notificações" to "Notificações CREA"
     url: createPageUrl("GerenciamentoARTs"),
     icon: ClipboardCheck,
+  },
+  {
+    title: "Elaboração de ARTs", // Added new navigation item
+    url: createPageUrl("ElaboracaoARTs"),
+    icon: FileSignature,
   },
 ];
 

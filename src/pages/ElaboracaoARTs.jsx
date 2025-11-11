@@ -28,6 +28,22 @@ const formatarCEP = (valor) => {
   return `${digitos.slice(0, 5)}-${digitos.slice(5, 8)}`;
 };
 
+// Função para formatar Matrícula (adiciona pontos de milhar)
+const formatarMatricula = (valor) => {
+  // Remove tudo que não for dígito
+  const digitos = String(valor).replace(/\D/g, '');
+  
+  // Se não tiver dígitos, retorna vazio
+  if (!digitos) return '';
+  
+  // Converte para número e formata com separador de milhar
+  // Usar Intl.NumberFormat para formatação mais robusta e evitar problemas com números grandes
+  const numero = parseInt(digitos, 10);
+  if (isNaN(numero)) return '';
+  
+  return new Intl.NumberFormat('pt-BR').format(numero);
+};
+
 // Função para formatar área (ex: 125.36 → 125,36 ou 25 → 25,00)
 const formatarArea = (valor) => {
   if (!valor && valor !== 0) return '';
@@ -205,6 +221,7 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
     obra_cidade: '',
     obra_uf: '',
     obra_imovel: '',
+    obra_matricula: '', // Novo campo para matrícula
     obra_car: '',
     obra_latitude: '',
     obra_longitude: '',
@@ -231,10 +248,11 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
 
   // Inicializar display da área
   useEffect(() => {
-    if (artInicial && artInicial.obra_area_ha) {
+    if (artInicial) {
       setDados(prev => ({
         ...prev,
-        obra_area_ha_display: formatarArea(artInicial.obra_area_ha)
+        obra_area_ha_display: artInicial.obra_area_ha ? formatarArea(artInicial.obra_area_ha) : '',
+        obra_matricula: artInicial.obra_matricula ? formatarMatricula(artInicial.obra_matricula) : ''
       }));
     }
   }, [artInicial]);
@@ -276,6 +294,13 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
 
     setDados(prev => ({...prev, contratante_cpf_cnpj: valorFinal}));
     setErros(prev => ({...prev, contratante_cpf_cnpj: erro}));
+  };
+
+  const handleMatriculaBlur = (value) => {
+    // A formatação deve ser aplicada na exibição, mas o valor armazenado deve ser o numérico (ou string sem formatação para facilitar buscas).
+    // Para simplificar, estamos armazenando o valor formatado, mas para persistência real, seria melhor armazenar 'digitos'.
+    const valorFormatado = formatarMatricula(value);
+    handleInputChange('obra_matricula', valorFormatado);
   };
 
   const handleCEPContratanteBlur = async (value) => {
@@ -546,6 +571,18 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
           </div>
 
           <div className="space-y-1.5">
+            <Label htmlFor="obra_matricula" className="text-sm">Matrícula nº</Label>
+            <Input
+              id="obra_matricula"
+              value={dados.obra_matricula}
+              onChange={e => handleInputChange('obra_matricula', e.target.value)}
+              onBlur={e => handleMatriculaBlur(e.target.value)}
+              placeholder="Ex: 2.563"
+              className="h-9"
+            />
+          </div>
+
+          <div className="space-y-1.5">
             <Label htmlFor="obra_car" className="text-sm">CAR nº</Label>
             <Input
               id="obra_car"
@@ -781,7 +818,8 @@ export default function ElaboracaoARTs() {
       a.contratante_nome?.toLowerCase().includes(busca) ||
       a.contratante_cpf_cnpj?.includes(busca) ||
       a.obra_imovel?.toLowerCase().includes(busca) ||
-      a.obra_car?.toLowerCase().includes(busca)
+      a.obra_car?.toLowerCase().includes(busca) ||
+      a.obra_matricula?.includes(busca) // Inclui busca por matrícula
     );
   });
 
@@ -859,7 +897,7 @@ export default function ElaboracaoARTs() {
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-green-500" />
                     <Input
-                      placeholder="Buscar por contratante, CPF/CNPJ, imóvel ou CAR..."
+                      placeholder="Buscar por contratante, CPF/CNPJ, imóvel, matrícula ou CAR..."
                       value={filtro}
                       onChange={(e) => setFiltro(e.target.value)}
                       className="pl-10 border-green-200 focus:border-green-500"
@@ -926,6 +964,12 @@ export default function ElaboracaoARTs() {
                               <span className="font-semibold text-gray-700">Imóvel:</span>
                               <span className="ml-2 text-gray-600">{art.obra_imovel}</span>
                             </div>
+                            {art.obra_matricula && (
+                              <div>
+                                <span className="font-semibold text-gray-700">Matrícula:</span>
+                                <span className="ml-2 text-gray-600">{formatarMatricula(art.obra_matricula)}</span>
+                              </div>
+                            )}
                             {art.obra_car && (
                               <div>
                                 <span className="font-semibold text-gray-700">CAR:</span>

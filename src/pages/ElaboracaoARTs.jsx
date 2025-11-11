@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -245,8 +245,14 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
   
   const [buscandoCEPContratante, setBuscandoCEPContratante] = useState(false);
   const [buscandoCEPObra, setBuscandoCEPObra] = useState(false);
+  
+  // Estados para autocomplete de contratante
+  const [contratantesSugeridos, setContratantesSugeridos] = useState([]);
+  const [mostrarSugestoes, setMostrarSugestoes] = useState(false);
+  const [buscandoContratantes, setBuscandoContratantes] = useState(false);
+  const autocompleteRef = useRef(null);
 
-  // Inicializar display da área
+  // Inicializar display da área e matrícula quando artInicial é carregado
   useEffect(() => {
     if (artInicial) {
       setDados(prev => ({
@@ -257,13 +263,110 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
     }
   }, [artInicial]);
 
+  // Fechar sugestões ao clicar fora do componente de autocomplete
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (autocompleteRef.current && !autocompleteRef.current.contains(event.target)) {
+        setMostrarSugestoes(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleInputChange = (field, value) => {
     setDados(prev => ({ ...prev, [field]: value }));
+  };
+
+  const buscarContratantes = async (busca) => {
+    if (!busca || busca.length < 2) {
+      setContratantesSugeridos([]);
+      setMostrarSugestoes(false);
+      return;
+    }
+
+    setBuscandoContratantes(true);
+    try {
+      // Assuming base44.entities.Contratante exists and has a list method
+      const todosContratantes = await base44.entities.Contratante.list('-ultima_utilizacao'); // Order by last used date
+      const filtrados = todosContratantes.filter(c => 
+        c.nome?.toLowerCase().includes(busca.toLowerCase())
+      ).slice(0, 5); // Limit to top 5 suggestions
+      
+      setContratantesSugeridos(filtrados);
+      setMostrarSugestoes(filtrados.length > 0);
+    } catch (error) {
+      console.error('Erro ao buscar contratantes:', error);
+      setContratantesSugeridos([]);
+    }
+    setBuscandoContratantes(false);
+  };
+
+  const handleContratanteNomeChange = (value) => {
+    handleInputChange('contratante_nome', value);
+    buscarContratantes(value);
+  };
+
+  const selecionarContratante = (contratante) => {
+    setDados(prev => ({
+      ...prev,
+      contratante_nome: contratante.nome || '',
+      contratante_cpf_cnpj: contratante.cpf_cnpj || '',
+      contratante_email: contratante.email || '',
+      contratante_cep: contratante.cep || '',
+      contratante_endereco: contratante.endereco || '',
+      contratante_bairro: contratante.bairro || '',
+      contratante_cidade: contratante.cidade || '',
+      contratante_uf: contratante.uf || '',
+    }));
+    setMostrarSugestoes(false);
+    setErros(prev => ({ ...prev, contratante_cpf_cnpj: '' })); // Clear CPF/CNPJ error if populated by autocomplete
+  };
+
+  const salvarOuAtualizarContratante = async () => {
+    if (!dados.contratante_nome) return; // Only save if a name is provided
+
+    try {
+      // Fetch all contractors to check for existing one by name and document
+      const todosContratantes = await base44.entities.Contratante.list();
+      const contratanteExistente = todosContratantes.find(c => 
+        c.nome?.toLowerCase() === dados.contratante_nome.toLowerCase() &&
+        c.cpf_cnpj === dados.contratante_cpf_cnpj // Check by CPF/CNPJ too for better accuracy
+      );
+
+      const dadosContratante = {
+        nome: dados.contratante_nome,
+        cpf_cnpj: dados.contratante_cpf_cnpj,
+        email: dados.contratante_email,
+        cep: dados.contratante_cep,
+        endereco: dados.contratante_endereco,
+        bairro: dados.contratante_bairro,
+        cidade: dados.contratante_cidade,
+        uf: dados.contratante_uf,
+        ultima_utilizacao: new Date().toISOString(), // Mark as recently used
+      };
+
+      if (contratanteExistente) {
+        // Update existing contractor
+        await base44.entities.Contratante.update(contratanteExistente.id, dadosContratante);
+        console.log('Contratante atualizado:', contratanteExistente.id);
+      } else {
+        // Create new contractor
+        await base44.entities.Contratante.create(dadosContratante);
+        console.log('Novo contratante criado:', dados.contratante_nome);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar ou atualizar contratante:', error);
+      // Optionally handle this error, but don't block ART saving
+    }
   };
 
   const handleNomeBlur = (value) => {
     const nomeFormatado = formatarNomeProprio(value);
     handleInputChange('contratante_nome', nomeFormatado);
+    // Delay hiding suggestions to allow click events on suggestions to register
+    setTimeout(() => setMostrarSugestoes(false), 200);
   };
 
   const handleDocumentoBlur = (value) => {
@@ -297,8 +400,6 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
   };
 
   const handleMatriculaBlur = (value) => {
-    // A formatação deve ser aplicada na exibição, mas o valor armazenado deve ser o numérico (ou string sem formatação para facilitar buscas).
-    // Para simplificar, estamos armazenando o valor formatado, mas para persistência real, seria melhor armazenar 'digitos'.
     const valorFormatado = formatarMatricula(value);
     handleInputChange('obra_matricula', valorFormatado);
   };
@@ -391,13 +492,15 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
     }
   }, [dados.obra_area_ha]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const hasErrors = Object.values(erros).some(error => error !== '');
     if (hasErrors) {
       alert('Por favor, corrija os erros antes de salvar.');
       return;
     }
+    
+    await salvarOuAtualizarContratante();
     onSalvar(dados);
   };
 
@@ -407,17 +510,49 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-green-900 border-b pb-2">Dados do Contratante</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="space-y-1.5 lg:col-span-2">
+          <div className="space-y-1.5 lg:col-span-2 relative" ref={autocompleteRef}>
             <Label htmlFor="contratante_nome" className="text-sm">Contratante *</Label>
             <Input
               id="contratante_nome"
               value={dados.contratante_nome}
-              onChange={e => handleInputChange('contratante_nome', e.target.value)}
+              onChange={e => handleContratanteNomeChange(e.target.value)}
               onBlur={e => handleNomeBlur(e.target.value)}
+              onFocus={() => {
+                if (dados.contratante_nome.length >= 2) {
+                  buscarContratantes(dados.contratante_nome);
+                }
+              }}
               required
               placeholder="Nome completo"
               className="h-9"
+              autoComplete="off"
             />
+            {buscandoContratantes && (
+              <p className="text-xs text-green-600">Buscando contratantes...</p>
+            )}
+            {mostrarSugestoes && contratantesSugeridos.length > 0 && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-green-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {contratantesSugeridos.map((contratante) => (
+                  <button
+                    key={contratante.id}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()} // Prevent blur from closing before click
+                    onClick={() => selecionarContratante(contratante)}
+                    className="w-full px-4 py-3 text-left hover:bg-green-50 border-b border-green-100 last:border-b-0 transition-colors"
+                  >
+                    <div className="font-medium text-green-900">{contratante.nome}</div>
+                    {contratante.cpf_cnpj && (
+                      <div className="text-sm text-gray-600">{contratante.cpf_cnpj}</div>
+                    )}
+                    {contratante.cidade && contratante.uf && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        {contratante.cidade}/{contratante.uf}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           
           <div className="space-y-1.5">

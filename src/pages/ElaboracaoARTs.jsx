@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -135,49 +136,45 @@ const AnexoUpload = ({ label, accept, currentFile, onFileChange, icon: Icon }) =
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <Label className="text-sm text-gray-600 flex items-center gap-2">
-          {Icon && <Icon className="w-4 h-4" />}
-          {label}
-        </Label>
-        {!currentFile && (
-          <label htmlFor={`file-${label}`}>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => document.getElementById(`file-${label}`).click()}
-              disabled={uploading}
-            >
-              <Upload className="w-3 h-3 mr-1" />
-              {uploading ? 'Enviando...' : 'Selecionar'}
-            </Button>
-          </label>
-        )}
-      </div>
+      <Label className="text-sm text-gray-700 flex items-center gap-2 font-medium">
+        {Icon && <Icon className="w-4 h-4" />}
+        {label}
+      </Label>
 
       {currentFile ? (
-        <div className="flex items-center justify-between p-2 bg-gray-50 rounded border text-sm">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <FileText className="w-4 h-4 text-gray-500 flex-shrink-0" />
-            <span className="truncate">{currentFile.name}</span>
-            <Badge variant="outline" className="text-xs flex-shrink-0">
-              {formatFileSize(currentFile.size)}
-            </Badge>
+        <div className="flex items-center gap-3 p-2.5 bg-gray-50 rounded border">
+          <FileText className="w-4 h-4 text-gray-500 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{currentFile.name}</p>
+            <p className="text-xs text-gray-500">{formatFileSize(currentFile.size)}</p>
           </div>
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="h-6 w-6 text-red-600 hover:text-red-800 flex-shrink-0"
+            className="h-8 w-8 text-red-600 hover:text-red-800 flex-shrink-0"
             onClick={handleRemove}
           >
             <X className="w-4 h-4" />
           </Button>
         </div>
       ) : (
-        <div className="text-xs text-gray-400 italic px-2">Nenhum arquivo selecionado</div>
+        <div className="flex items-center gap-3">
+          <label htmlFor={`file-${label}`}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9"
+              onClick={() => document.getElementById(`file-${label}`).click()}
+              disabled={uploading}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              {uploading ? 'Enviando...' : 'Selecionar'}
+            </Button>
+          </label>
+          <span className="text-sm text-gray-400 italic">Nenhum arquivo selecionado</span>
+        </div>
       )}
 
       <input
@@ -196,6 +193,7 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
     // Dados do Contratante
     contratante_nome: '',
     contratante_cpf_cnpj: '',
+    contratante_email: '',
     contratante_cep: '',
     contratante_endereco: '',
     contratante_bairro: '',
@@ -210,6 +208,7 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
     obra_latitude: '',
     obra_longitude: '',
     obra_area_ha: '',
+    obra_area_ha_display: '', // Para controlar o display
     obra_cultura: '',
     obra_safra: '',
     obra_argumentacao: '',
@@ -228,6 +227,16 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
   
   const [buscandoCEPContratante, setBuscandoCEPContratante] = useState(false);
   const [buscandoCEPObra, setBuscandoCEPObra] = useState(false);
+
+  // Inicializar display da área
+  useEffect(() => {
+    if (artInicial && artInicial.obra_area_ha) {
+      setDados(prev => ({
+        ...prev,
+        obra_area_ha_display: formatarArea(artInicial.obra_area_ha)
+      }));
+    }
+  }, [artInicial]);
 
   const handleInputChange = (field, value) => {
     setDados(prev => ({ ...prev, [field]: value }));
@@ -325,7 +334,18 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
   const handleAreaBlur = (value) => {
     const areaNumerica = parsearArea(value);
     if (areaNumerica !== null) {
-      handleInputChange('obra_area_ha', areaNumerica);
+      const areaFormatada = formatarArea(areaNumerica);
+      setDados(prev => ({
+        ...prev,
+        obra_area_ha: areaNumerica,
+        obra_area_ha_display: areaFormatada
+      }));
+    } else {
+      setDados(prev => ({
+        ...prev,
+        obra_area_ha: null,
+        obra_area_ha_display: value
+      }));
     }
   };
 
@@ -385,6 +405,18 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
               className="h-9"
             />
             {erros.contratante_cpf_cnpj && <p className="text-xs text-red-600">{erros.contratante_cpf_cnpj}</p>}
+          </div>
+
+          <div className="space-y-1.5 lg:col-span-2">
+            <Label htmlFor="contratante_email" className="text-sm">E-mail</Label>
+            <Input
+              id="contratante_email"
+              type="email"
+              value={dados.contratante_email}
+              onChange={e => handleInputChange('contratante_email', e.target.value)}
+              placeholder="email@exemplo.com"
+              className="h-9"
+            />
           </div>
           
           <div className="space-y-1.5">
@@ -512,24 +544,22 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="obra_car" className="text-sm">CAR nº *</Label>
+            <Label htmlFor="obra_car" className="text-sm">CAR nº</Label>
             <Input
               id="obra_car"
               value={dados.obra_car}
               onChange={e => handleInputChange('obra_car', e.target.value)}
-              required
               placeholder="GO-XXXXXXXX-XXXXXXXX"
               className="h-9"
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="obra_latitude" className="text-sm">Latitude *</Label>
+            <Label htmlFor="obra_latitude" className="text-sm">Latitude</Label>
             <Input
               id="obra_latitude"
               value={dados.obra_latitude}
               onChange={e => handleInputChange('obra_latitude', e.target.value)}
-              required
               placeholder="-17.798641"
               type="number"
               step="any"
@@ -538,12 +568,11 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="obra_longitude" className="text-sm">Longitude *</Label>
+            <Label htmlFor="obra_longitude" className="text-sm">Longitude</Label>
             <Input
               id="obra_longitude"
               value={dados.obra_longitude}
               onChange={e => handleInputChange('obra_longitude', e.target.value)}
-              required
               placeholder="-49.637768"
               type="number"
               step="any"
@@ -555,14 +584,14 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
             <Label htmlFor="obra_area_ha" className="text-sm">Área Cultivada (ha) *</Label>
             <Input
               id="obra_area_ha"
-              value={dados.obra_area_ha ? formatarArea(dados.obra_area_ha) : ''}
+              value={dados.obra_area_ha_display || ''}
               onChange={e => {
-                const valor = e.target.value.replace(/[^\d,]/g, '');
-                handleInputChange('obra_area_ha', parsearArea(valor));
+                // Keep the display value updated as user types
+                handleInputChange('obra_area_ha_display', e.target.value);
               }}
               onBlur={e => handleAreaBlur(e.target.value)}
               required
-              placeholder="125,36"
+              placeholder="125.36"
               className="h-9"
             />
           </div>

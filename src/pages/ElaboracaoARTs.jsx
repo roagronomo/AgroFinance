@@ -699,20 +699,24 @@ export default function ElaboracaoARTs() {
   useEffect(() => {
     // Carregar dados do localStorage
     console.log('🔄 [ElaboracaoARTs] Iniciando carregamento do localStorage...');
-    setCarregando(true);
+    console.log('📍 [localStorage] Chave usada:', 'elaboracao_arts_dados');
     
     try {
       const dados = localStorage.getItem('elaboracao_arts_dados');
       console.log('📦 [localStorage] Dados brutos:', dados);
       console.log('📦 [localStorage] Tipo:', typeof dados);
       console.log('📦 [localStorage] Tamanho:', dados ? dados.length : 0);
+      console.log('📦 [localStorage] É null?', dados === null);
+      console.log('📦 [localStorage] É undefined?', dados === undefined);
       
       if (dados && dados !== 'null' && dados !== 'undefined') {
         try {
           const artsParsed = JSON.parse(dados);
           console.log('✅ [Parse] ARTs parseadas:', artsParsed);
           console.log('✅ [Parse] Quantidade:', artsParsed.length);
-          console.log('✅ [Parse] Primeira ART:', artsParsed[0]);
+          if (artsParsed.length > 0) {
+            console.log('✅ [Parse] Primeira ART:', artsParsed[0]);
+          }
           
           if (Array.isArray(artsParsed) && artsParsed.length > 0) {
             console.log('✅ [Estado] Definindo ARTs no estado:', artsParsed.length, 'registros');
@@ -760,21 +764,36 @@ export default function ElaboracaoARTs() {
     try {
       const dadosJSON = JSON.stringify(lista);
       console.log('💾 [Salvamento] JSON gerado, tamanho:', dadosJSON.length);
+      console.log('💾 [Salvamento] Preview JSON:', dadosJSON.substring(0, 200) + '...');
       
       localStorage.setItem('elaboracao_arts_dados', dadosJSON);
-      console.log('✅ [Salvamento] Dados salvos com sucesso!');
+      console.log('✅ [Salvamento] localStorage.setItem executado!');
       
-      // Verificar se foi salvo corretamente
-      const verificacao = localStorage.getItem('elaboracao_arts_dados');
-      console.log('✅ [Verificação] Dados lidos após salvar:', verificacao ? verificacao.length : 0, 'bytes');
+      // Verificar IMEDIATAMENTE se foi salvo
+      const verificacaoImediata = localStorage.getItem('elaboracao_arts_dados');
+      console.log('✅ [Verificação Imediata] Dados lidos logo após salvar:', verificacaoImediata ? verificacaoImediata.length : 0, 'bytes');
       
-      if (verificacao === dadosJSON) {
-        console.log('✅ [Verificação] Dados salvos corretamente!');
+      if (verificacaoImediata === dadosJSON) {
+        console.log('✅ [Verificação Imediata] ✓ Dados salvos corretamente!');
       } else {
-        console.error('❌ [Verificação] Dados salvos não conferem!');
+        console.error('❌ [Verificação Imediata] ✗ Dados NÃO foram salvos corretamente!');
+        console.error('❌ [Verificação Imediata] Esperado:', dadosJSON.substring(0, 100));
+        console.error('❌ [Verificação Imediata] Recebido:', verificacaoImediata ? verificacaoImediata.substring(0, 100) : 'null');
       }
+      
+      // Listar TODAS as chaves do localStorage
+      console.log('📋 [localStorage] Total de chaves:', localStorage.length);
+      console.log('📋 [localStorage] Chaves existentes:');
+      for (let i = 0; i < localStorage.length; i++) {
+        const chave = localStorage.key(i);
+        const tamanho = localStorage.getItem(chave)?.length || 0;
+        console.log(`  - ${chave}: ${tamanho} bytes`);
+      }
+      
     } catch (error) {
       console.error('❌ [Salvamento] Erro ao salvar:', error);
+      console.error('❌ [Salvamento] Nome do erro:', error.name);
+      console.error('❌ [Salvamento] Mensagem do erro:', error.message);
     }
   };
 

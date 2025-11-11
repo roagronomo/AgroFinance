@@ -694,10 +694,12 @@ export default function ElaboracaoARTs() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [artEditando, setArtEditando] = useState(null);
   const [mensagem, setMensagem] = useState('');
+  const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
     // Carregar dados do localStorage
     console.log('🔄 [ElaboracaoARTs] Iniciando carregamento do localStorage...');
+    setCarregando(true);
     
     try {
       const dados = localStorage.getItem('elaboracao_arts_dados');
@@ -713,8 +715,8 @@ export default function ElaboracaoARTs() {
           console.log('✅ [Parse] Primeira ART:', artsParsed[0]);
           
           if (Array.isArray(artsParsed) && artsParsed.length > 0) {
+            console.log('✅ [Estado] Definindo ARTs no estado:', artsParsed.length, 'registros');
             setArts(artsParsed);
-            console.log('✅ [Estado] ARTs definidas no estado:', artsParsed.length, 'registros');
           } else {
             console.warn('⚠️ [Parse] Array vazio ou inválido');
             setArts([]);
@@ -731,11 +733,10 @@ export default function ElaboracaoARTs() {
     } catch (storageError) {
       console.error('❌ [localStorage] Erro ao acessar localStorage:', storageError);
       setArts([]);
+    } finally {
+      setCarregando(false);
+      console.log('✅ [Carregamento] Finalizado');
     }
-    
-    // Log final do estado (este log será executado antes da atualização do estado no useEffect)
-    // Para ver o estado atualizado, use o useEffect abaixo
-    console.log('📊 [Estado Inicial] Tentativa de carregar ARTs. Estado atual de `arts` ANTES do useEffect ser processado:', arts.length);
   }, []);
 
   // Log quando o estado arts mudar
@@ -743,6 +744,7 @@ export default function ElaboracaoARTs() {
     console.log('🔄 [Estado Atualizado] ARTs no estado:', arts.length, 'registros');
     if (arts.length > 0) {
       console.log('📋 [Estado Atualizado] Primeira ART:', arts[0]);
+      console.log('📋 [Estado Atualizado] Todas as ARTs:', arts);
     }
   }, [arts]);
 
@@ -851,7 +853,19 @@ export default function ElaboracaoARTs() {
     return CULTURAS_OPTIONS.find(c => c.value === value)?.label || value;
   };
 
-  console.log('🎨 [Render] Estado atual - Total ARTs:', arts.length, '| Filtradas:', artsFiltradas.length, '| Mostrando form:', mostrarFormulario);
+  console.log('🎨 [Render] Estado ATUAL - Total ARTs:', arts.length, '| Filtradas:', artsFiltradas.length, '| Mostrando form:', mostrarFormulario, '| Carregando:', carregando);
+  console.log('🎨 [Render] Arts completo:', arts);
+
+  if (carregando) {
+    return (
+      <div className="p-4 md:p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-green-600">Carregando ARTs...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen">
@@ -864,6 +878,10 @@ export default function ElaboracaoARTs() {
             </h1>
             <p className="text-green-600 mt-1">
               Cadastro completo para elaboração de ARTs
+            </p>
+            {/* Debug info - remover depois */}
+            <p className="text-xs text-gray-500 mt-1">
+              Debug: {arts.length} ART(s) no estado | {artsFiltradas.length} filtrada(s)
             </p>
           </div>
           {!mostrarFormulario && (

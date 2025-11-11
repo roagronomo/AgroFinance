@@ -697,45 +697,110 @@ export default function ElaboracaoARTs() {
 
   useEffect(() => {
     // Carregar dados do localStorage
-    const dados = localStorage.getItem('elaboracao_arts_dados');
-    console.log('📦 Carregando ARTs do localStorage:', dados);
+    console.log('🔄 [ElaboracaoARTs] Iniciando carregamento do localStorage...');
     
-    if (dados) {
-      try {
-        const artsParsed = JSON.parse(dados);
-        console.log('✅ ARTs carregadas:', artsParsed.length, 'registros');
-        setArts(artsParsed);
-      } catch (error) {
-        console.error('❌ Erro ao parsear ARTs:', error);
+    try {
+      const dados = localStorage.getItem('elaboracao_arts_dados');
+      console.log('📦 [localStorage] Dados brutos:', dados);
+      console.log('📦 [localStorage] Tipo:', typeof dados);
+      console.log('📦 [localStorage] Tamanho:', dados ? dados.length : 0);
+      
+      if (dados && dados !== 'null' && dados !== 'undefined') {
+        try {
+          const artsParsed = JSON.parse(dados);
+          console.log('✅ [Parse] ARTs parseadas:', artsParsed);
+          console.log('✅ [Parse] Quantidade:', artsParsed.length);
+          console.log('✅ [Parse] Primeira ART:', artsParsed[0]);
+          
+          if (Array.isArray(artsParsed) && artsParsed.length > 0) {
+            setArts(artsParsed);
+            console.log('✅ [Estado] ARTs definidas no estado:', artsParsed.length, 'registros');
+          } else {
+            console.warn('⚠️ [Parse] Array vazio ou inválido');
+            setArts([]);
+          }
+        } catch (parseError) {
+          console.error('❌ [Parse] Erro ao parsear JSON:', parseError);
+          console.error('❌ [Parse] Dados que causaram erro:', dados);
+          setArts([]);
+        }
+      } else {
+        console.log('ℹ️ [localStorage] Nenhuma ART encontrada (dados vazios ou null)');
         setArts([]);
       }
-    } else {
-      console.log('ℹ️ Nenhuma ART encontrada no localStorage');
+    } catch (storageError) {
+      console.error('❌ [localStorage] Erro ao acessar localStorage:', storageError);
       setArts([]);
     }
+    
+    // Log final do estado (este log será executado antes da atualização do estado no useEffect)
+    // Para ver o estado atualizado, use o useEffect abaixo
+    console.log('📊 [Estado Inicial] Tentativa de carregar ARTs. Estado atual de `arts` ANTES do useEffect ser processado:', arts.length);
   }, []);
 
+  // Log quando o estado arts mudar
+  useEffect(() => {
+    console.log('🔄 [Estado Atualizado] ARTs no estado:', arts.length, 'registros');
+    if (arts.length > 0) {
+      console.log('📋 [Estado Atualizado] Primeira ART:', arts[0]);
+    }
+  }, [arts]);
+
   const salvarNoLocalStorage = (lista) => {
-    console.log('💾 Salvando ARTs no localStorage:', lista.length, 'registros');
-    localStorage.setItem('elaboracao_arts_dados', JSON.stringify(lista));
+    console.log('💾 [Salvamento] Iniciando salvamento...');
+    console.log('💾 [Salvamento] Quantidade de ARTs:', lista.length);
+    if (lista.length > 0) {
+      console.log('💾 [Salvamento] Primeira ART:', lista[0]);
+    } else {
+      console.log('💾 [Salvamento] Nenhuma ART para salvar.');
+    }
+    
+    try {
+      const dadosJSON = JSON.stringify(lista);
+      console.log('💾 [Salvamento] JSON gerado, tamanho:', dadosJSON.length);
+      
+      localStorage.setItem('elaboracao_arts_dados', dadosJSON);
+      console.log('✅ [Salvamento] Dados salvos com sucesso!');
+      
+      // Verificar se foi salvo corretamente
+      const verificacao = localStorage.getItem('elaboracao_arts_dados');
+      console.log('✅ [Verificação] Dados lidos após salvar:', verificacao ? verificacao.length : 0, 'bytes');
+      
+      if (verificacao === dadosJSON) {
+        console.log('✅ [Verificação] Dados salvos corretamente!');
+      } else {
+        console.error('❌ [Verificação] Dados salvos não conferem!');
+      }
+    } catch (error) {
+      console.error('❌ [Salvamento] Erro ao salvar:', error);
+    }
   };
 
   const handleSalvarART = (dados) => {
-    console.log('💾 Salvando ART:', dados);
+    console.log('💾 [handleSalvarART] Iniciando salvamento de ART...');
+    console.log('💾 [handleSalvarART] Dados recebidos:', dados);
+    console.log('💾 [handleSalvarART] Estado atual de arts:', arts.length, 'registros');
     
     if (artEditando) {
       // Editar existente
+      console.log('✏️ [Edição] Editando ART existente, ID:', artEditando.id);
       const novasArts = arts.map(a => 
         a.id === artEditando.id ? { ...dados, id: a.id } : a
       );
+      console.log('✏️ [Edição] Nova lista:', novasArts.length, 'registros');
       setArts(novasArts);
       salvarNoLocalStorage(novasArts);
       setMensagem('ART atualizada com sucesso!');
     } else {
       // Adicionar nova
       const novaArt = { ...dados, id: Date.now() };
+      console.log('➕ [Nova ART] Criando nova ART, ID:', novaArt.id);
+      console.log('➕ [Nova ART] Dados completos:', novaArt);
+      
       const novasArts = [...arts, novaArt];
-      console.log('✅ Nova lista de ARTs:', novasArts.length, 'registros');
+      console.log('➕ [Nova ART] Nova lista:', novasArts.length, 'registros');
+      console.log('➕ [Nova ART] Lista completa:', novasArts);
+      
       setArts(novasArts);
       salvarNoLocalStorage(novasArts);
       setMensagem('ART cadastrada com sucesso!');
@@ -747,13 +812,16 @@ export default function ElaboracaoARTs() {
   };
 
   const handleEditarART = (art) => {
+    console.log('✏️ [Editar] Editando ART:', art.id);
     setArtEditando(art);
     setMostrarFormulario(true);
   };
 
   const handleExcluirART = (id) => {
     if (window.confirm('Tem certeza que deseja excluir esta ART?')) {
+      console.log('🗑️ [Excluir] Excluindo ART:', id);
       const novasArts = arts.filter(a => a.id !== id);
+      console.log('🗑️ [Excluir] Nova lista:', novasArts.length, 'registros');
       setArts(novasArts);
       salvarNoLocalStorage(novasArts);
       setMensagem('ART excluída com sucesso!');
@@ -762,12 +830,13 @@ export default function ElaboracaoARTs() {
   };
 
   const handleNovaART = () => {
+    console.log('➕ [Nova ART] Abrindo formulário para nova ART');
     setArtEditando(null);
     setMostrarFormulario(true);
   };
 
   const artsFiltradas = arts.filter(a => {
-    if (!filtro) return true; // Se não há filtro, mostra todas
+    if (!filtro) return true;
     
     const busca = filtro.toLowerCase();
     return (
@@ -782,7 +851,7 @@ export default function ElaboracaoARTs() {
     return CULTURAS_OPTIONS.find(c => c.value === value)?.label || value;
   };
 
-  console.log('📊 Estado atual - Total ARTs:', arts.length, '| Filtradas:', artsFiltradas.length, '| Mostrando form:', mostrarFormulario);
+  console.log('🎨 [Render] Estado atual - Total ARTs:', arts.length, '| Filtradas:', artsFiltradas.length, '| Mostrando form:', mostrarFormulario);
 
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen">
@@ -837,7 +906,7 @@ export default function ElaboracaoARTs() {
           </Card>
         ) : (
           <>
-            {arts.length > 0 && ( /* Show search bar only if there are ARTs */
+            {arts.length > 0 && (
               <Card className="mb-6 shadow-lg border-green-100">
                 <CardContent className="p-6">
                   <div className="relative">
@@ -910,7 +979,7 @@ export default function ElaboracaoARTs() {
                               <span className="font-semibold text-gray-700">Imóvel:</span>
                               <span className="ml-2 text-gray-600">{art.obra_imovel}</span>
                             </div>
-                            {art.obra_car && ( /* Only display CAR if it exists */
+                            {art.obra_car && (
                               <div>
                                 <span className="font-semibold text-gray-700">CAR:</span>
                                 <span className="ml-2 text-gray-600">{art.obra_car}</span>

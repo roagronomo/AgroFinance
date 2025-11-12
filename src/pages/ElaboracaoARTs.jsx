@@ -123,36 +123,53 @@ const MultiAnexoUpload = ({ label, accept, currentFiles = [], onFilesChange, ico
     }
 
     setUploading(true);
-    // Simular upload (em produção, fazer upload real e obter URL real)
-    await new Promise(resolve => setTimeout(resolve, 500));
     
-    const newFilesData = files.map(file => ({
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      url: URL.createObjectURL(file), // Em produção, usar URL real do servidor
-      uploadedAt: new Date().toISOString(),
-    }));
-    
-    onFilesChange([...currentFiles, ...newFilesData]);
-    setUploading(false);
-    e.target.value = '';
+    try {
+      const uploadedFiles = [];
+      
+      for (const file of files) {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        
+        uploadedFiles.push({
+          file_id: file_url,
+          file_name: file.name,
+          file_size: file.size,
+          mime_type: file.type,
+          url: file_url,
+          uploaded_at: new Date().toISOString(),
+        });
+      }
+      
+      onFilesChange([...currentFiles, ...uploadedFiles]);
+    } catch (error) {
+      console.error('Erro ao fazer upload:', error);
+      alert('Erro ao fazer upload dos arquivos. Tente novamente.');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
   };
 
   const handleRemove = (index) => {
-    if (window.confirm(`Remover arquivo "${currentFiles[index]?.name}"?`)) {
+    if (window.confirm(`Remover arquivo "${currentFiles[index]?.file_name}"?`)) {
       const newFiles = currentFiles.filter((_, i) => i !== index);
       onFilesChange(newFiles);
     }
   };
 
-  const handleDownload = (file) => {
-    const link = document.createElement('a');
-    link.href = file.url;
-    link.download = file.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownload = async (file) => {
+    try {
+      const link = document.createElement('a');
+      link.href = file.url || file.file_id;
+      link.download = file.file_name || file.name;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Erro ao baixar arquivo:', error);
+      alert('Erro ao baixar arquivo. Tente novamente.');
+    }
   };
 
   const formatFileSize = (bytes) => {
@@ -172,11 +189,11 @@ const MultiAnexoUpload = ({ label, accept, currentFiles = [], onFilesChange, ico
 
       <div className="space-y-2">
         {currentFiles.map((file, index) => (
-          <div key={`${file.name}-${index}`} className="flex items-center gap-3 p-2.5 bg-gray-50 rounded border">
+          <div key={`${file.file_name || file.name}-${index}`} className="flex items-center gap-3 p-2.5 bg-gray-50 rounded border">
             <FileText className="w-4 h-4 text-gray-500 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{file.name}</p>
-              <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+              <p className="text-sm font-medium truncate">{file.file_name || file.name}</p>
+              <p className="text-xs text-gray-500">{formatFileSize(file.file_size || file.size)}</p>
             </div>
             <Button
               type="button"

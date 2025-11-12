@@ -159,16 +159,31 @@ const MultiAnexoUpload = ({ label, accept, currentFiles = [], onFilesChange, ico
 
   const handleDownload = async (file) => {
     try {
+      const fileUrl = file.url || file.file_id;
+      const fileName = file.file_name || file.name;
+      
+      if (!fileUrl || fileUrl.startsWith('blob:')) {
+        alert('⚠️ Este arquivo foi anexado anteriormente e não pode ser baixado.\n\nPor favor, remova este arquivo e adicione novamente para fazer o upload correto.');
+        return;
+      }
+
+      const response = await fetch(fileUrl);
+      if (!response.ok) throw new Error('Erro ao buscar arquivo');
+      
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
       const link = document.createElement('a');
-      link.href = file.url || file.file_id;
-      link.download = file.file_name || file.name;
-      link.target = '_blank';
+      link.href = blobUrl;
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      
+      window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
       console.error('Erro ao baixar arquivo:', error);
-      alert('Erro ao baixar arquivo. Tente novamente.');
+      alert('Erro ao baixar arquivo. Verifique se o arquivo ainda existe no servidor.');
     }
   };
 
@@ -180,6 +195,11 @@ const MultiAnexoUpload = ({ label, accept, currentFiles = [], onFilesChange, ico
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const isArquivoAntigo = (file) => {
+    const fileUrl = file.url || file.file_id;
+    return !fileUrl || fileUrl.startsWith('blob:');
+  };
+
   return (
     <div className="space-y-2">
       <Label className="text-sm text-gray-700 flex items-center gap-2 font-medium">
@@ -188,35 +208,44 @@ const MultiAnexoUpload = ({ label, accept, currentFiles = [], onFilesChange, ico
       </Label>
 
       <div className="space-y-2">
-        {currentFiles.map((file, index) => (
-          <div key={`${file.file_name || file.name}-${index}`} className="flex items-center gap-3 p-2.5 bg-gray-50 rounded border">
-            <FileText className="w-4 h-4 text-gray-500 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{file.file_name || file.name}</p>
-              <p className="text-xs text-gray-500">{formatFileSize(file.file_size || file.size)}</p>
+        {currentFiles.map((file, index) => {
+          const arquivoAntigo = isArquivoAntigo(file);
+          
+          return (
+            <div key={`${file.file_name || file.name}-${index}`} className={`flex items-center gap-3 p-2.5 rounded border ${arquivoAntigo ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50'}`}>
+              <FileText className={`w-4 h-4 flex-shrink-0 ${arquivoAntigo ? 'text-yellow-600' : 'text-gray-500'}`} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{file.file_name || file.name}</p>
+                <p className="text-xs text-gray-500">
+                  {formatFileSize(file.file_size || file.size)}
+                  {arquivoAntigo && <span className="ml-2 text-yellow-600 font-semibold">⚠️ Requer re-upload</span>}
+                </p>
+              </div>
+              {!arquivoAntigo && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-blue-600 hover:text-blue-800 flex-shrink-0"
+                  onClick={() => handleDownload(file)}
+                  title="Baixar arquivo"
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-red-600 hover:text-red-800 flex-shrink-0"
+                onClick={() => handleRemove(index)}
+                title="Remover arquivo"
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-blue-600 hover:text-blue-800 flex-shrink-0"
-              onClick={() => handleDownload(file)}
-              title="Baixar arquivo"
-            >
-              <Download className="w-4 h-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-red-600 hover:text-red-800 flex-shrink-0"
-              onClick={() => handleRemove(index)}
-              title="Remover arquivo"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="flex items-center gap-3">
@@ -938,7 +967,7 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
         </Button>
         <Button type="submit" className="bg-green-600 hover:bg-green-700">
           <FileSignature className="w-4 h-4 mr-2" />
-          {artInicial ? 'Atualizar ART' : 'Salvar ART'}
+          {artEditando ? 'Atualizar ART' : 'Salvar ART'}
         </Button>
       </div>
     </form>

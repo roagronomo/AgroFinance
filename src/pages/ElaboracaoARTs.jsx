@@ -967,7 +967,7 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
         </Button>
         <Button type="submit" className="bg-green-600 hover:bg-green-700">
           <FileSignature className="w-4 h-4 mr-2" />
-          {artEditando ? 'Atualizar ART' : 'Salvar ART'}
+          {artInicial ? 'Atualizar ART' : 'Salvar ART'}
         </Button>
       </div>
     </form>

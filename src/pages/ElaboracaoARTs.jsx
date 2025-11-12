@@ -260,6 +260,8 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
     obra_area_ha_display: '',
     obra_cultura: '',
     obra_safra: '',
+    obra_proprietario_nome: '', // Added new field
+    obra_proprietario_cpf_cnpj: '', // Added new field
     obra_argumentacao: '',
     obra_custo_medio: 0,
     // Anexos - agora arrays para múltiplos arquivos
@@ -275,6 +277,7 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
     contratante_cpf_cnpj: '',
     contratante_cep: '',
     obra_cep: '',
+    obra_proprietario_cpf_cnpj: '', // Added error field for new input
   });
   
   const [buscandoCEPContratante, setBuscandoCEPContratante] = useState(false);
@@ -399,14 +402,16 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
     }
   };
 
-  const handleNomeBlur = (value) => {
+  const handleNomeBlur = (field, value) => {
     const nomeFormatado = formatarNomeProprio(value);
-    handleInputChange('contratante_nome', nomeFormatado);
+    handleInputChange(field, nomeFormatado);
     // Delay hiding suggestions to allow click events on suggestions to register
-    setTimeout(() => setMostrarSugestoes(false), 200);
+    if (field === 'contratante_nome') {
+      setTimeout(() => setMostrarSugestoes(false), 200);
+    }
   };
 
-  const handleDocumentoBlur = (value) => {
+  const handleDocumentoBlur = (field, value) => {
     const digitos = (value || '').replace(/\D/g, '');
     let erro = '';
     let valorFinal = value;
@@ -432,8 +437,8 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
       valorFinal = '';
     }
 
-    setDados(prev => ({...prev, contratante_cpf_cnpj: valorFinal}));
-    setErros(prev => ({...prev, contratante_cpf_cnpj: erro}));
+    setDados(prev => ({...prev, [field]: valorFinal}));
+    setErros(prev => ({...prev, [field]: erro}));
   };
 
   const handleMatriculaBlur = (value) => {
@@ -553,7 +558,7 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
               id="contratante_nome"
               value={dados.contratante_nome}
               onChange={e => handleContratanteNomeChange(e.target.value)}
-              onBlur={e => handleNomeBlur(e.target.value)}
+              onBlur={e => handleNomeBlur('contratante_nome', e.target.value)}
               onFocus={() => {
                 if (dados.contratante_nome.length >= 2) {
                   buscarContratantes(dados.contratante_nome);
@@ -598,7 +603,7 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
               id="contratante_cpf_cnpj"
               value={dados.contratante_cpf_cnpj}
               onChange={e => handleInputChange('contratante_cpf_cnpj', e.target.value)}
-              onBlur={e => handleDocumentoBlur(e.target.value)}
+              onBlur={e => handleDocumentoBlur('contratante_cpf_cnpj', e.target.value)}
               required
               placeholder="000.000.000-00"
               className="h-9"
@@ -848,6 +853,32 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
               className="h-9 bg-gray-50 text-gray-700 font-semibold"
             />
           </div>
+          
+          {/* New fields for Property Owner */}
+          <div className="space-y-1.5 lg:col-span-2">
+            <Label htmlFor="obra_proprietario_nome" className="text-sm">Nome do Proprietário</Label>
+            <Input
+              id="obra_proprietario_nome"
+              value={dados.obra_proprietario_nome || ''}
+              onChange={e => handleInputChange('obra_proprietario_nome', e.target.value)}
+              onBlur={e => handleNomeBlur('obra_proprietario_nome', e.target.value)}
+              placeholder="Nome completo do proprietário"
+              className="h-9"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="obra_proprietario_cpf_cnpj" className="text-sm">CPF/CNPJ do Proprietário</Label>
+            <Input
+              id="obra_proprietario_cpf_cnpj"
+              value={dados.obra_proprietario_cpf_cnpj || ''}
+              onChange={e => handleInputChange('obra_proprietario_cpf_cnpj', e.target.value)}
+              onBlur={e => handleDocumentoBlur('obra_proprietario_cpf_cnpj', e.target.value)}
+              placeholder="000.000.000-00"
+              className="h-9"
+            />
+            {erros.obra_proprietario_cpf_cnpj && <p className="text-xs text-red-600">{erros.obra_proprietario_cpf_cnpj}</p>}
+          </div>
 
           <div className="space-y-1.5 lg:col-span-4">
             <Label htmlFor="obra_argumentacao" className="text-sm">Argumentação</Label>
@@ -991,7 +1022,9 @@ export default function ElaboracaoARTs() {
       a.contratante_cpf_cnpj?.includes(busca) ||
       a.obra_imovel?.toLowerCase().includes(busca) ||
       a.obra_car?.toLowerCase().includes(busca) ||
-      a.obra_matricula?.includes(busca) // Inclui busca por matrícula
+      a.obra_matricula?.includes(busca) || // Inclui busca por matrícula
+      a.obra_proprietario_nome?.toLowerCase().includes(busca) || // Search by new field
+      a.obra_proprietario_cpf_cnpj?.includes(busca) // Search by new field
     );
   });
 
@@ -1069,7 +1102,7 @@ export default function ElaboracaoARTs() {
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-green-500" />
                     <Input
-                      placeholder="Buscar por contratante, CPF/CNPJ, imóvel, matrícula ou CAR..."
+                      placeholder="Buscar por contratante, CPF/CNPJ, imóvel, proprietário, matrícula ou CAR..."
                       value={filtro}
                       onChange={(e) => setFiltro(e.target.value)}
                       className="pl-10 border-green-200 focus:border-green-500"
@@ -1150,6 +1183,18 @@ export default function ElaboracaoARTs() {
                                 <div>
                                   <span className="font-semibold text-gray-700">CAR:</span>
                                   <span className="ml-2 text-gray-600">{art.obra_car}</span>
+                                </div>
+                              )}
+                              {art.obra_proprietario_nome && (
+                                <div>
+                                  <span className="font-semibold text-gray-700">Proprietário:</span>
+                                  <span className="ml-2 text-gray-600">{art.obra_proprietario_nome}</span>
+                                </div>
+                              )}
+                              {art.obra_proprietario_cpf_cnpj && (
+                                <div>
+                                  <span className="font-semibold text-gray-700">CPF/CNPJ Prop.:</span>
+                                  <span className="ml-2 text-gray-600">{art.obra_proprietario_cpf_cnpj}</span>
                                 </div>
                               )}
                               <div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Plus, Edit, Trash2, FileSignature, FileText, Map, Upload, X, Download } from "lucide-react";
+import { Search, Plus, Edit, Trash2, FileSignature, FileText, Map, Upload, X, Download, ChevronDown, ChevronRight } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatarNomeProprio, validarCPF, validarCNPJ, formatarCPF, formatarCNPJ } from '@/components/lib/formatters';
 import { Badge } from "@/components/ui/badge";
@@ -21,30 +20,20 @@ const CULTURAS_OPTIONS = [
   { value: "cana_de_acucar", label: "Cana de Açúcar" }
 ];
 
-// Função para formatar CEP
 const formatarCEP = (valor) => {
   const digitos = valor.replace(/\D/g, '');
   if (digitos.length <= 5) return digitos;
   return `${digitos.slice(0, 5)}-${digitos.slice(5, 8)}`;
 };
 
-// Função para formatar Matrícula (adiciona pontos de milhar)
 const formatarMatricula = (valor) => {
-  // Remove tudo que não for dígito
   const digitos = String(valor).replace(/\D/g, '');
-  
-  // Se não tiver dígitos, retorna vazio
   if (!digitos) return '';
-  
-  // Converte para número e formata com separador de milhar
-  // Usar Intl.NumberFormat para formatação mais robusta e evitar problemas com números grandes
   const numero = parseInt(digitos, 10);
   if (isNaN(numero)) return '';
-  
   return new Intl.NumberFormat('pt-BR').format(numero);
 };
 
-// Função para formatar área (ex: 125.36 → 125,36 ou 25 → 25,00)
 const formatarArea = (valor) => {
   if (!valor && valor !== 0) return '';
   const numero = parseFloat(valor);
@@ -52,7 +41,6 @@ const formatarArea = (valor) => {
   return numero.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-// Função para parsear área formatada de volta para número
 const parsearArea = (valorFormatado) => {
   if (!valorFormatado) return null;
   const valorLimpo = valorFormatado.replace(/\./g, '').replace(',', '.');
@@ -60,14 +48,12 @@ const parsearArea = (valorFormatado) => {
   return isNaN(numero) ? null : numero;
 };
 
-// Função para calcular custo médio
 const calcularCustoMedio = (areaHa) => {
   if (!areaHa || areaHa <= 0) return 0;
   const calculo = areaHa * 56;
   return calculo < 15000 ? 103.03 : 271.47;
 };
 
-// Função para gerar argumentação automática
 const gerarArgumentacao = (cultura, area, safra) => {
   if (!cultura || !area || !safra) return '';
   
@@ -77,7 +63,6 @@ const gerarArgumentacao = (cultura, area, safra) => {
   return `Atuação na assistência técnica, plantio e condução da lavoura de ${culturaLabel} com área de ${areaFormatada} ha na safra ${safra}.`;
 };
 
-// Função para buscar endereço via CEP usando ViaCEP
 const buscarEnderecoPorCEP = async (cep) => {
   const cepLimpo = cep.replace(/\D/g, '');
   
@@ -105,7 +90,6 @@ const buscarEnderecoPorCEP = async (cep) => {
   }
 };
 
-// Componente para upload múltiplo de arquivos
 const MultiAnexoUpload = ({ label, accept, currentFiles = [], onFilesChange, icon: Icon }) => {
   const [uploading, setUploading] = useState(false);
 
@@ -284,7 +268,6 @@ const MultiAnexoUpload = ({ label, accept, currentFiles = [], onFilesChange, ico
 
 const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
   const [dados, setDados] = useState({
-    // Dados do Contratante
     contratante_nome: '',
     contratante_cpf_cnpj: '',
     contratante_email: '',
@@ -293,7 +276,6 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
     contratante_bairro: '',
     contratante_cidade: '',
     contratante_uf: '',
-    // Dados da Obra/Serviço
     obra_cep: '',
     obra_cidade: '',
     obra_uf: '',
@@ -306,15 +288,13 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
     obra_area_ha_display: '',
     obra_cultura: '',
     obra_safra: '',
-    obra_proprietario_nome: '', // Added new field
-    obra_proprietario_cpf_cnpj: '', // Added new field
+    obra_proprietario_nome: '',
+    obra_proprietario_cpf_cnpj: '',
     obra_argumentacao: '',
     obra_custo_medio: 0,
-    // Anexos - agora arrays para múltiplos arquivos
     anexos_kml: [],
     anexos_car_pdf: [],
     ...artInicial,
-    // Ensure array fields are initialized correctly if artInicial has null/undefined
     anexos_kml: artInicial?.anexos_kml || [],
     anexos_car_pdf: artInicial?.anexos_car_pdf || [],
   });
@@ -323,33 +303,29 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
     contratante_cpf_cnpj: '',
     contratante_cep: '',
     obra_cep: '',
-    obra_proprietario_cpf_cnpj: '', // Added error field for new input
+    obra_proprietario_cpf_cnpj: '',
   });
   
   const [buscandoCEPContratante, setBuscandoCEPContratante] = useState(false);
   const [buscandoCEPObra, setBuscandoCEPObra] = useState(false);
   
-  // Estados para autocomplete de contratante
   const [contratantesSugeridos, setContratantesSugeridos] = useState([]);
   const [mostrarSugestoes, setMostrarSugestoes] = useState(false);
   const [buscandoContratantes, setBuscandoContratantes] = useState(false);
   const autocompleteRef = useRef(null);
 
-  // Inicializar display da área e matrícula quando artInicial é carregado
   useEffect(() => {
     if (artInicial) {
       setDados(prev => ({
         ...prev,
         obra_area_ha_display: artInicial.obra_area_ha ? formatarArea(artInicial.obra_area_ha) : '',
         obra_matricula: artInicial.obra_matricula ? formatarMatricula(artInicial.obra_matricula) : '',
-        // Ensure array fields are re-initialized correctly
         anexos_kml: artInicial.anexos_kml || [],
         anexos_car_pdf: artInicial.anexos_car_pdf || [],
       }));
     }
   }, [artInicial]);
 
-  // Fechar sugestões ao clicar fora do componente de autocomplete
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (autocompleteRef.current && !autocompleteRef.current.contains(event.target)) {
@@ -374,11 +350,10 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
 
     setBuscandoContratantes(true);
     try {
-      // Assuming base44.entities.Contratante exists and has a list method
-      const todosContratantes = await base44.entities.Contratante.list('-ultima_utilizacao'); // Order by last used date
+      const todosContratantes = await base44.entities.Contratante.list('-ultima_utilizacao');
       const filtrados = todosContratantes.filter(c => 
         c.nome?.toLowerCase().includes(busca.toLowerCase())
-      ).slice(0, 5); // Limit to top 5 suggestions
+      ).slice(0, 5);
       
       setContratantesSugeridos(filtrados);
       setMostrarSugestoes(filtrados.length > 0);
@@ -407,18 +382,17 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
       contratante_uf: contratante.uf || '',
     }));
     setMostrarSugestoes(false);
-    setErros(prev => ({ ...prev, contratante_cpf_cnpj: '' })); // Clear CPF/CNPJ error if populated by autocomplete
+    setErros(prev => ({ ...prev, contratante_cpf_cnpj: '' }));
   };
 
   const salvarOuAtualizarContratante = async () => {
-    if (!dados.contratante_nome) return; // Only save if a name is provided
+    if (!dados.contratante_nome) return;
 
     try {
-      // Fetch all contractors to check for existing one by name and document
       const todosContratantes = await base44.entities.Contratante.list();
       const contratanteExistente = todosContratantes.find(c => 
         c.nome?.toLowerCase() === dados.contratante_nome.toLowerCase() &&
-        c.cpf_cnpj === dados.contratante_cpf_cnpj // Check by CPF/CNPJ too for better accuracy
+        c.cpf_cnpj === dados.contratante_cpf_cnpj
       );
 
       const dadosContratante = {
@@ -430,28 +404,22 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
         bairro: dados.contratante_bairro,
         cidade: dados.contratante_cidade,
         uf: dados.contratante_uf,
-        ultima_utilizacao: new Date().toISOString(), // Mark as recently used
+        ultima_utilizacao: new Date().toISOString(),
       };
 
       if (contratanteExistente) {
-        // Update existing contractor
         await base44.entities.Contratante.update(contratanteExistente.id, dadosContratante);
-        console.log('Contratante atualizado:', contratanteExistente.id);
       } else {
-        // Create new contractor
         await base44.entities.Contratante.create(dadosContratante);
-        console.log('Novo contratante criado:', dados.contratante_nome);
       }
     } catch (error) {
-      console.error('Erro ao salvar ou atualizar contratante:', error);
-      // Optionally handle this error, but don't block ART saving
+      console.error('Erro ao salvar contratante:', error);
     }
   };
 
   const handleNomeBlur = (field, value) => {
     const nomeFormatado = formatarNomeProprio(value);
     handleInputChange(field, nomeFormatado);
-    // Delay hiding suggestions to allow click events on suggestions to register
     if (field === 'contratante_nome') {
       setTimeout(() => setMostrarSugestoes(false), 200);
     }
@@ -556,7 +524,6 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
         obra_area_ha_display: areaFormatada
       }));
     } else {
-      // Se não conseguiu parsear, mantém o valor digitado
       setDados(prev => ({
         ...prev,
         obra_area_ha: null,
@@ -565,7 +532,6 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
     }
   };
 
-  // Recalcular argumentação e custo quando cultura, área ou safra mudarem
   useEffect(() => {
     if (dados.obra_cultura && dados.obra_area_ha && dados.obra_safra) {
       const novaArgumentacao = gerarArgumentacao(dados.obra_cultura, dados.obra_area_ha, dados.obra_safra);
@@ -594,7 +560,6 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Dados do Contratante */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-green-900 border-b pb-2">Dados do Contratante</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -624,7 +589,7 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
                   <button
                     key={contratante.id}
                     type="button"
-                    onMouseDown={(e) => e.preventDefault()} // Prevent blur from closing before click
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => selecionarContratante(contratante)}
                     className="w-full px-4 py-3 text-left hover:bg-green-50 border-b border-green-100 last:border-b-0 transition-colors"
                   >
@@ -736,7 +701,6 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
         </div>
       </div>
 
-      {/* Dados da Obra/Serviço */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-green-900 border-b pb-2">Dados da Obra/Serviço</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -847,10 +811,7 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
             <Input
               id="obra_area_ha"
               value={dados.obra_area_ha_display || ''}
-              onChange={e => {
-                // Permite digitar livremente (com ponto ou vírgula)
-                handleInputChange('obra_area_ha_display', e.target.value);
-              }}
+              onChange={e => handleInputChange('obra_area_ha_display', e.target.value)}
               onBlur={e => handleAreaBlur(e.target.value)}
               required
               placeholder="125,36"
@@ -900,7 +861,6 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
             />
           </div>
           
-          {/* New fields for Property Owner */}
           <div className="space-y-1.5 lg:col-span-2">
             <Label htmlFor="obra_proprietario_nome" className="text-sm">Nome do Proprietário</Label>
             <Input
@@ -940,7 +900,6 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
         </div>
       </div>
 
-      {/* Anexos */}
       <div className="space-y-3 pt-4 border-t">
         <h4 className="text-sm font-semibold text-gray-700">Anexos</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -974,6 +933,184 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
   );
 };
 
+const GrupoARTCard = ({ grupo, arts, onEditarART, onExcluirART, getCulturaLabel }) => {
+  const [expandido, setExpandido] = useState(false);
+
+  const areaTotal = arts.reduce((sum, art) => sum + (parseFloat(art.obra_area_ha) || 0), 0);
+  const custoTotal = arts.reduce((sum, art) => sum + (parseFloat(art.obra_custo_medio) || 0), 0);
+  
+  const totalKML = arts.reduce((sum, art) => sum + (art.anexos_kml?.length || 0), 0);
+  const totalPDF = arts.reduce((sum, art) => sum + (art.anexos_car_pdf?.length || 0), 0);
+
+  return (
+    <Card className="shadow-lg border-green-100 hover:shadow-xl transition-shadow overflow-hidden">
+      <div 
+        className="p-6 cursor-pointer hover:bg-green-50/30 transition-colors"
+        onClick={() => setExpandido(!expandido)}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 space-y-3">
+            <div className="flex items-center gap-3">
+              <h3 className="text-xl font-bold text-green-900">{grupo.contratante}</h3>
+              <Badge className="bg-green-600 text-white px-2.5 py-0.5">
+                {arts.length} ART{arts.length > 1 ? 's' : ''}
+              </Badge>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-2 text-sm">
+              <div>
+                <span className="font-semibold text-gray-700">Cultura:</span>
+                <span className="ml-2 text-gray-600">{getCulturaLabel(grupo.cultura)}</span>
+              </div>
+              <div>
+                <span className="font-semibold text-gray-700">Safra:</span>
+                <span className="ml-2 text-gray-600">{grupo.safra}</span>
+              </div>
+              <div>
+                <span className="font-semibold text-gray-700">Área Total:</span>
+                <span className="ml-2 text-gray-600">{formatarArea(areaTotal)} ha</span>
+              </div>
+              <div>
+                <span className="font-semibold text-gray-700">Custo Total:</span>
+                <span className="ml-2 text-green-700 font-semibold">
+                  R$ {custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              {(totalKML > 0 || totalPDF > 0) && (
+                <div className="md:col-span-2 flex gap-3">
+                  {totalKML > 0 && (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                      <Map className="w-3.5 h-3.5" />
+                      <span className="font-medium">{totalKML} KML</span>
+                    </div>
+                  )}
+                  {totalPDF > 0 && (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                      <FileText className="w-3.5 h-3.5" />
+                      <span className="font-medium">{totalPDF} PDF</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            className="flex-shrink-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpandido(!expandido);
+            }}
+          >
+            {expandido ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+          </Button>
+        </div>
+      </div>
+
+      {expandido && (
+        <div className="border-t border-green-100 bg-gray-50/50">
+          <div className="p-6 space-y-4">
+            {arts.map((art, index) => (
+              <Card key={art.id} className="bg-white border-l-4 border-l-green-500">
+                <CardContent className="p-4">
+                  <div className="flex flex-col lg:flex-row justify-between gap-4">
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          ART #{index + 1}
+                        </Badge>
+                        <h4 className="font-semibold text-gray-800">{art.obra_imovel}</h4>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1.5 text-sm">
+                        {art.obra_matricula && (
+                          <div>
+                            <span className="text-gray-600">Matrícula: </span>
+                            <span className="font-medium text-gray-800">{formatarMatricula(art.obra_matricula)}</span>
+                          </div>
+                        )}
+                        {art.obra_car && (
+                          <div className="lg:col-span-2">
+                            <span className="text-gray-600">CAR: </span>
+                            <span className="font-medium text-gray-800">{art.obra_car}</span>
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-gray-600">Área: </span>
+                          <span className="font-medium text-gray-800">{formatarArea(art.obra_area_ha)} ha</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Custo: </span>
+                          <span className="font-medium text-green-700">
+                            R$ {art.obra_custo_medio?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Localização: </span>
+                          <span className="font-medium text-gray-800">{art.obra_cidade}/{art.obra_uf}</span>
+                        </div>
+                        {art.obra_proprietario_nome && (
+                          <div className="md:col-span-2 lg:col-span-3">
+                            <span className="text-gray-600">Proprietário: </span>
+                            <span className="font-medium text-gray-800">{art.obra_proprietario_nome}</span>
+                            {art.obra_proprietario_cpf_cnpj && (
+                              <span className="text-gray-500 ml-2">({art.obra_proprietario_cpf_cnpj})</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {(art.anexos_kml?.length > 0 || art.anexos_car_pdf?.length > 0) && (
+                        <div className="flex gap-2 pt-2">
+                          {art.anexos_kml?.length > 0 && (
+                            <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                              <Map className="w-3 h-3" />
+                              <span className="font-medium">{art.anexos_kml.length}</span>
+                            </div>
+                          )}
+                          {art.anexos_car_pdf?.length > 0 && (
+                            <div className="flex items-center gap-1.5 px-2 py-1 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                              <FileText className="w-3 h-3" />
+                              <span className="font-medium">{art.anexos_car_pdf.length}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex lg:flex-col gap-2 lg:justify-start">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onEditarART(art)}
+                        className="flex-1 lg:flex-none border-green-300 text-green-700 hover:bg-green-50"
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Editar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onExcluirART(art.id)}
+                        className="flex-1 lg:flex-none border-red-300 text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Excluir
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+};
+
 export default function ElaboracaoARTs() {
   const [arts, setArts] = useState([]);
   const [filtro, setFiltro] = useState('');
@@ -989,14 +1126,12 @@ export default function ElaboracaoARTs() {
   const carregarARTs = async () => {
     setCarregando(true);
     try {
-      // Fetch ARTs from base44 backend
-      const data = await base44.entities.ElaboracaoART.list('-created_date'); // Order by creation date descending
+      const data = await base44.entities.ElaboracaoART.list('-created_date');
       console.log('✅ ARTs carregadas do banco:', data.length);
       setArts(data);
     } catch (error) {
       console.error('❌ Erro ao carregar ARTs:', error);
       setArts([]);
-      // Optionally set an error message to display to the user
       setMensagem('Erro ao carregar ARTs. Por favor, tente novamente.');
       setTimeout(() => setMensagem(''), 5000);
     } finally {
@@ -1007,16 +1142,13 @@ export default function ElaboracaoARTs() {
   const handleSalvarART = async (dados) => {
     try {
       if (artEditando) {
-        // Update existing ART
         await base44.entities.ElaboracaoART.update(artEditando.id, dados);
         setMensagem('ART atualizada com sucesso!');
       } else {
-        // Create new ART
         await base44.entities.ElaboracaoART.create(dados);
         setMensagem('ART cadastrada com sucesso!');
       }
       
-      // Refresh the list after saving
       await carregarARTs();
       setMostrarFormulario(false);
       setArtEditando(null);
@@ -1024,7 +1156,6 @@ export default function ElaboracaoARTs() {
     } catch (error) {
       console.error('❌ Erro ao salvar ART:', error);
       alert('Erro ao salvar ART. Tente novamente.');
-      // Optionally set an error message to display to the user
       setMensagem('Erro ao salvar ART. Por favor, tente novamente.');
       setTimeout(() => setMensagem(''), 5000);
     }
@@ -1038,16 +1169,13 @@ export default function ElaboracaoARTs() {
   const handleExcluirART = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir esta ART?')) {
       try {
-        // Delete ART
         await base44.entities.ElaboracaoART.delete(id);
-        // Refresh the list after deleting
         await carregarARTs();
         setMensagem('ART excluída com sucesso!');
         setTimeout(() => setMensagem(''), 3000);
       } catch (error) {
         console.error('❌ Erro ao excluir ART:', error);
         alert('Erro ao excluir ART. Tente novamente.');
-        // Optionally set an error message to display to the user
         setMensagem('Erro ao excluir ART. Por favor, tente novamente.');
         setTimeout(() => setMensagem(''), 5000);
       }
@@ -1068,11 +1196,31 @@ export default function ElaboracaoARTs() {
       a.contratante_cpf_cnpj?.includes(busca) ||
       a.obra_imovel?.toLowerCase().includes(busca) ||
       a.obra_car?.toLowerCase().includes(busca) ||
-      a.obra_matricula?.includes(busca) || // Inclui busca por matrícula
-      a.obra_proprietario_nome?.toLowerCase().includes(busca) || // Search by new field
-      a.obra_proprietario_cpf_cnpj?.includes(busca) // Search by new field
+      a.obra_matricula?.includes(busca) ||
+      a.obra_proprietario_nome?.toLowerCase().includes(busca) ||
+      a.obra_proprietario_cpf_cnpj?.includes(busca)
     );
   });
+
+  const gruposART = artsFiltradas.reduce((grupos, art) => {
+    const chave = `${art.contratante_nome}|${art.obra_safra}|${art.obra_cultura}`;
+    
+    if (!grupos[chave]) {
+      grupos[chave] = {
+        contratante: art.contratante_nome,
+        safra: art.obra_safra,
+        cultura: art.obra_cultura,
+        arts: []
+      };
+    }
+    
+    grupos[chave].arts.push(art);
+    return grupos;
+  }, {});
+
+  const gruposOrdenados = Object.values(gruposART).sort((a, b) => 
+    a.contratante.localeCompare(b.contratante) || a.safra.localeCompare(b.safra)
+  );
 
   const getCulturaLabel = (value) => {
     return CULTURAS_OPTIONS.find(c => c.value === value)?.label || value;
@@ -1099,7 +1247,7 @@ export default function ElaboracaoARTs() {
               Elaboração de ARTs
             </h1>
             <p className="text-green-600 mt-1">
-              Cadastro completo para elaboração de ARTs
+              {gruposOrdenados.length} grupo(s) • {arts.length} ART(s) total
             </p>
           </div>
           {!mostrarFormulario && (
@@ -1177,7 +1325,7 @@ export default function ElaboracaoARTs() {
                   </Button>
                 </CardContent>
               </Card>
-            ) : artsFiltradas.length === 0 ? (
+            ) : gruposOrdenados.length === 0 ? (
               <Card className="shadow-lg border-green-100">
                 <CardContent className="p-12 text-center">
                   <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -1198,120 +1346,16 @@ export default function ElaboracaoARTs() {
               </Card>
             ) : (
               <div className="grid gap-4">
-                {artsFiltradas.map((art) => {
-                  const temKML = art.anexos_kml && art.anexos_kml.length > 0;
-                  const temPDF = art.anexos_car_pdf && art.anexos_car_pdf.length > 0;
-                  
-                  return (
-                    <Card key={art.id} className="shadow-lg border-green-100 hover:shadow-xl transition-shadow">
-                      <CardContent className="p-6">
-                        <div className="flex flex-col lg:flex-row justify-between gap-6">
-                          <div className="flex-1 space-y-4">
-                            <div>
-                              <h3 className="text-xl font-bold text-green-900 mb-1">
-                                {art.contratante_nome}
-                              </h3>
-                              <p className="text-sm text-gray-600">{art.contratante_cpf_cnpj}</p>
-                            </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                              <div>
-                                <span className="font-semibold text-gray-700">Imóvel:</span>
-                                <span className="ml-2 text-gray-600">{art.obra_imovel}</span>
-                              </div>
-                              {art.obra_matricula && (
-                                <div>
-                                  <span className="font-semibold text-gray-700">Matrícula:</span>
-                                  <span className="ml-2 text-gray-600">{formatarMatricula(art.obra_matricula)}</span>
-                                </div>
-                              )}
-                              {art.obra_car && (
-                                <div>
-                                  <span className="font-semibold text-gray-700">CAR:</span>
-                                  <span className="ml-2 text-gray-600">{art.obra_car}</span>
-                                </div>
-                              )}
-                              {art.obra_proprietario_nome && (
-                                <div>
-                                  <span className="font-semibold text-gray-700">Proprietário:</span>
-                                  <span className="ml-2 text-gray-600">{art.obra_proprietario_nome}</span>
-                                </div>
-                              )}
-                              {art.obra_proprietario_cpf_cnpj && (
-                                <div>
-                                  <span className="font-semibold text-gray-700">CPF/CNPJ Prop.:</span>
-                                  <span className="ml-2 text-gray-600">{art.obra_proprietario_cpf_cnpj}</span>
-                                </div>
-                              )}
-                              <div>
-                                <span className="font-semibold text-gray-700">Cultura:</span>
-                                <span className="ml-2 text-gray-600">{getCulturaLabel(art.obra_cultura)}</span>
-                              </div>
-                              <div>
-                                <span className="font-semibold text-gray-700">Área:</span>
-                                <span className="ml-2 text-gray-600">{formatarArea(art.obra_area_ha)} ha</span>
-                              </div>
-                              <div>
-                                <span className="font-semibold text-gray-700">Safra:</span>
-                                <span className="ml-2 text-gray-600">{art.obra_safra}</span>
-                              </div>
-                              <div>
-                                <span className="font-semibold text-gray-700">Custo:</span>
-                                <span className="ml-2 text-green-700 font-semibold">
-                                  R$ {art.obra_custo_medio?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                </span>
-                              </div>
-                              <div className="md:col-span-2">
-                                <span className="font-semibold text-gray-700">Localização:</span>
-                                <span className="ml-2 text-gray-600">
-                                  {art.obra_cidade}/{art.obra_uf}
-                                </span>
-                              </div>
-                            </div>
-
-                            {(temKML || temPDF) && (
-                              <div className="flex gap-2 pt-2 border-t border-gray-100">
-                                {temKML && (
-                                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
-                                    <Map className="w-3.5 h-3.5" />
-                                    <span className="font-medium">{art.anexos_kml.length}</span>
-                                  </div>
-                                )}
-                                {temPDF && (
-                                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-50 border border-red-200 rounded text-xs text-red-700">
-                                    <FileText className="w-3.5 h-3.5" />
-                                    <span className="font-medium">{art.anexos_car_pdf.length}</span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          
-                          <div className="flex lg:flex-col gap-2 lg:justify-start">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEditarART(art)}
-                              className="flex-1 lg:flex-none border-green-300 text-green-700 hover:bg-green-50"
-                            >
-                              <Edit className="w-4 h-4 mr-2" />
-                              Editar
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleExcluirART(art.id)}
-                              className="flex-1 lg:flex-none border-red-300 text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Excluir
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                {gruposOrdenados.map((grupo, index) => (
+                  <GrupoARTCard
+                    key={`${grupo.contratante}-${grupo.safra}-${grupo.cultura}-${index}`}
+                    grupo={grupo}
+                    arts={grupo.arts}
+                    onEditarART={handleEditarART}
+                    onExcluirART={handleExcluirART}
+                    getCulturaLabel={getCulturaLabel}
+                  />
+                ))}
               </div>
             )}
           </>

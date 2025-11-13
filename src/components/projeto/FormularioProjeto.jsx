@@ -65,7 +65,7 @@ const parsearAreaHa = (valorFormatado) => {
 };
 
 export default function FormularioProjeto({ onSubmit, isLoading, projeto = null }) {
-  const [dadosProjeto, setDadosProjeto] = useState(projeto || {
+  const [dadosProjeto, setDadosProjeto] = useState({
     nome_cliente: "",
     data_protocolo: "",
     status: "em_analise",
@@ -89,7 +89,8 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
     carencia_periodos: 0,
     pagar_juros_carencia: false,
     qtd_imoveis_beneficiados: 0,
-    imoveis_beneficiados: []
+    imoveis_beneficiados: [],
+    ...(projeto || {})
   });
 
   const [tipoCalculo, setTipoCalculo] = useState(projeto?.tipo_calculo || "automatico");
@@ -364,6 +365,11 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
         area_financiada_ha_display: imovel.area_financiada_ha ? formatarAreaHa(imovel.area_financiada_ha) : ''
       }));
 
+      console.log('🔄 Inicializando formulário com projeto:', {
+        qtd: imoveisInicializados.length,
+        imoveis: imoveisInicializados
+      });
+
       setDadosProjeto(prev => ({
         ...prev,
         tipo_calculo_auto: projeto.tipo_calculo_auto || "posfixadas",
@@ -411,6 +417,8 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
     const qtd = parseInt(dadosProjeto.qtd_imoveis_beneficiados || 0, 10);
     const currentImoveis = dadosProjeto.imoveis_beneficiados || [];
     
+    console.log('🔢 Ajustando imóveis:', { qtd, currentLength: currentImoveis.length });
+    
     if (qtd > currentImoveis.length) {
       const novosImoveis = [...currentImoveis];
       while (novosImoveis.length < qtd) {
@@ -423,16 +431,19 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
           area_financiada_ha_display: ''
         });
       }
+      console.log('➕ Adicionando imóveis:', novosImoveis);
       setDadosProjeto(prev => ({ ...prev, imoveis_beneficiados: novosImoveis }));
     } else if (qtd < currentImoveis.length) {
+      console.log('➖ Removendo imóveis');
       setDadosProjeto(prev => ({ 
         ...prev, 
         imoveis_beneficiados: currentImoveis.slice(0, qtd) 
       }));
     }
-  }, [dadosProjeto.qtd_imoveis_beneficiados]);
+  }, [dadosProjeto.qtd_imoveis_beneficiados, dadosProjeto.imoveis_beneficiados.length]);
 
   const handleInputChange = (campo, valor) => {
+    console.log('📝 Input change:', campo, valor);
     setDadosProjeto(prev => ({
       ...prev,
       [campo]: valor
@@ -459,6 +470,7 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
   };
 
   const handleImovelChange = (index, field, value) => {
+    console.log(`🏘️ Imovel change [${index}]:`, field, value);
     const novosImoveis = [...dadosProjeto.imoveis_beneficiados];
     novosImoveis[index] = { ...novosImoveis[index], [field]: value };
     setDadosProjeto(prev => ({ ...prev, imoveis_beneficiados: novosImoveis }));
@@ -466,11 +478,14 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
 
   const handleImovelNomeBlur = (index, value) => {
     const nomeFormatado = formatarNomeProprio(value);
+    console.log(`🏘️ Nome formatado [${index}]:`, value, '→', nomeFormatado);
     handleImovelChange(index, 'nome_imovel', nomeFormatado);
   };
 
   const handleImovelAreaBlur = (index, field, value) => {
     const areaNumerica = parsearAreaHa(value);
+    console.log(`📐 Área blur [${index}]:`, field, value, '→', areaNumerica);
+    
     const novosImoveis = [...dadosProjeto.imoveis_beneficiados];
     
     if (areaNumerica !== null) {
@@ -480,6 +495,7 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
         [field]: areaNumerica,
         [`${field}_display`]: areaFormatada
       };
+      console.log(`✅ Área atualizada [${index}]:`, novosImoveis[index]);
     } else {
       novosImoveis[index] = {
         ...novosImoveis[index],
@@ -527,12 +543,19 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const imoveisLimpos = dadosProjeto.imoveis_beneficiados.map(imovel => ({
+    console.log('💾 Estado atual antes de salvar:', {
+      qtd: dadosProjeto.qtd_imoveis_beneficiados,
+      imoveis_raw: dadosProjeto.imoveis_beneficiados
+    });
+
+    const imoveisLimpos = (dadosProjeto.imoveis_beneficiados || []).map(imovel => ({
       nome_imovel: imovel.nome_imovel || '',
       matricula: imovel.matricula || '',
       area_total_ha: imovel.area_total_ha,
       area_financiada_ha: imovel.area_financiada_ha
     }));
+
+    console.log('🧹 Imóveis após limpeza:', imoveisLimpos);
 
     const dadosProcessados = {
       ...dadosProjeto,
@@ -548,7 +571,11 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
       imoveis_beneficiados: imoveisLimpos
     };
 
-    console.log('📦 Dados sendo enviados (imoveis_beneficiados):', dadosProcessados.imoveis_beneficiados);
+    console.log('📦 Dados processados completos sendo enviados:', {
+      imoveis_beneficiados: dadosProcessados.imoveis_beneficiados,
+      qtd_imoveis: dadosProcessados.imoveis_beneficiados.length
+    });
+    
     onSubmit(dadosProcessados);
   };
 

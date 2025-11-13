@@ -354,17 +354,23 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
       setTipoCalculo(projeto.tipo_calculo || "automatico");
       setPeriodicidadeManual(projeto.periodicidade_manual || "anual");
 
+      // Initialize imoveis_beneficiados with display fields
+      const imoveisInicializados = (projeto.imoveis_beneficiados || []).map(imovel => ({
+        nome_imovel: imovel.nome_imovel || '',
+        matricula: imovel.matricula || '',
+        area_total_ha: imovel.area_total_ha || null,
+        area_total_ha_display: imovel.area_total_ha ? formatarAreaHa(imovel.area_total_ha) : '',
+        area_financiada_ha: imovel.area_financiada_ha || null,
+        area_financiada_ha_display: imovel.area_financiada_ha ? formatarAreaHa(imovel.area_financiada_ha) : ''
+      }));
+
       setDadosProjeto(prev => ({
         ...prev,
         tipo_calculo_auto: projeto.tipo_calculo_auto || "posfixadas",
         carencia_periodos: projeto.carencia_periodos || 0,
         pagar_juros_carencia: typeof projeto.pagar_juros_carencia === 'boolean' ? projeto.pagar_juros_carencia : false,
-        qtd_imoveis_beneficiados: projeto.imoveis_beneficiados?.length || 0,
-        imoveis_beneficiados: projeto.imoveis_beneficiados?.map(imovel => ({
-          ...imovel,
-          area_total_ha_display: formatarAreaHa(imovel.area_total_ha),
-          area_financiada_ha_display: formatarAreaHa(imovel.area_financiada_ha)
-        })) || []
+        qtd_imoveis_beneficiados: imoveisInicializados.length,
+        imoveis_beneficiados: imoveisInicializados
       }));
 
       if (projeto.tipo_calculo === 'manual' && projeto.quantidade_parcelas) {
@@ -401,7 +407,6 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
     calcularCronogramaAutomatico,
   ]);
 
-  // Effect to manage imoveis_beneficiados array size
   useEffect(() => {
     const qtd = parseInt(dadosProjeto.qtd_imoveis_beneficiados || 0, 10);
     const currentImoveis = dadosProjeto.imoveis_beneficiados || [];
@@ -522,10 +527,9 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Clean imoveis data before submitting
     const imoveisLimpos = dadosProjeto.imoveis_beneficiados.map(imovel => ({
-      nome_imovel: imovel.nome_imovel,
-      matricula: imovel.matricula,
+      nome_imovel: imovel.nome_imovel || '',
+      matricula: imovel.matricula || '',
       area_total_ha: imovel.area_total_ha,
       area_financiada_ha: imovel.area_financiada_ha
     }));
@@ -544,6 +548,7 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
       imoveis_beneficiados: imoveisLimpos
     };
 
+    console.log('📦 Dados sendo enviados (imoveis_beneficiados):', dadosProcessados.imoveis_beneficiados);
     onSubmit(dadosProcessados);
   };
 

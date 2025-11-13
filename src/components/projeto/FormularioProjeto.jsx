@@ -64,6 +64,14 @@ const parsearAreaHa = (valorFormatado) => {
   return isNaN(numero) ? null : numero;
 };
 
+const formatarMatricula = (valor) => {
+  const digitos = String(valor).replace(/\D/g, '');
+  if (!digitos) return '';
+  const numero = parseInt(digitos, 10);
+  if (isNaN(numero)) return '';
+  return new Intl.NumberFormat('pt-BR').format(numero);
+};
+
 const inicializarImoveisComDisplay = (imoveis = []) => {
   return imoveis.map(imovel => ({
     nome_imovel: imovel.nome_imovel || '',
@@ -476,6 +484,12 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
     handleImovelChange(index, 'nome_imovel', nomeFormatado);
   };
 
+  const handleImovelMatriculaBlur = (index, value) => {
+    const matriculaFormatada = formatarMatricula(value);
+    console.log(`🔢 Formatando matrícula [${index}]: "${value}" → "${matriculaFormatada}"`);
+    handleImovelChange(index, 'matricula', matriculaFormatada);
+  };
+
   const handleImovelAreaBlur = (index, field, value) => {
     const areaNumerica = parsearAreaHa(value);
     console.log(`📐 Formatando área [${index}].${field}: "${value}" → ${areaNumerica}`);
@@ -852,6 +866,7 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
                     <Input
                       value={imovel.matricula || ''}
                       onChange={(e) => handleImovelChange(index, 'matricula', e.target.value)}
+                      onBlur={(e) => handleImovelMatriculaBlur(index, e.target.value)}
                       placeholder="Ex: 2.563"
                       className="h-8 text-sm border-green-300"
                     />

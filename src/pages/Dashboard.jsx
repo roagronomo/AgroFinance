@@ -28,6 +28,7 @@ export default function Dashboard() {
   const [projetos, setProjetos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [anoSelecionado, setAnoSelecionado] = useState("todos");
+  const [filtroModal, setFiltroModal] = useState(null);
 
   useEffect(() => {
     carregarTodosProjetos();
@@ -106,6 +107,25 @@ export default function Dashboard() {
 
   const stats = calcularEstatisticas();
 
+  const handleCardClick = (tipo) => {
+    setFiltroModal(tipo);
+  };
+
+  const projetosFiltradosModal = useMemo(() => {
+    if (!filtroModal) return [];
+    
+    switch (filtroModal) {
+      case 'em_analise':
+        return projetos.filter(p => p.status === 'em_analise');
+      case 'concluido':
+        return projetos.filter(p => p.status === 'concluido');
+      case 'todos':
+        return projetos;
+      default:
+        return [];
+    }
+  }, [filtroModal, projetos]);
+
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
@@ -156,7 +176,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <EstatisticasGerais stats={stats} isLoading={isLoading} />
+        <EstatisticasGerais 
+          stats={stats} 
+          isLoading={isLoading}
+          onCardClick={handleCardClick}
+        />
 
         <div className="grid lg:grid-cols-3 gap-6 mt-8">
           <div className="lg:col-span-2">
@@ -171,6 +195,124 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {filtroModal && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setFiltroModal(null)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6 text-white">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold mb-1">
+                    {filtroModal === 'em_analise' && 'Projetos em Análise'}
+                    {filtroModal === 'concluido' && 'Projetos Concluídos'}
+                    {filtroModal === 'todos' && 'Todos os Projetos'}
+                  </h2>
+                  <p className="text-green-100">
+                    {projetosFiltradosModal.length} projeto(s) encontrado(s)
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setFiltroModal(null)}
+                  className="text-white hover:bg-white/20"
+                >
+                  <XCircle className="w-6 h-6" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(85vh-120px)]">
+              {projetosFiltradosModal.length === 0 ? (
+                <div className="text-center py-12">
+                  <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 text-lg">Nenhum projeto encontrado</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {projetosFiltradosModal.map((projeto) => (
+                    <Card key={projeto.id} className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
+                      <CardContent className="p-5">
+                        <div className="flex flex-col lg:flex-row justify-between gap-4">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-bold text-green-900 mb-2">
+                              {projeto.nome_cliente}
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                              <div>
+                                <span className="text-gray-600">Item: </span>
+                                <span className="font-medium text-gray-800">{projeto.item_financiado}</span>
+                              </div>
+                              {projeto.numero_contrato && (
+                                <div>
+                                  <span className="text-gray-600">Contrato: </span>
+                                  <span className="font-medium text-gray-800">{projeto.numero_contrato}</span>
+                                </div>
+                              )}
+                              <div>
+                                <span className="text-gray-600">Banco: </span>
+                                <span className="font-medium text-gray-800">
+                                  {projeto.banco === 'banco_do_brasil' && 'Banco do Brasil'}
+                                  {projeto.banco === 'caixa' && 'Caixa Econômica'}
+                                  {projeto.banco === 'bradesco' && 'Bradesco'}
+                                  {projeto.banco === 'sicoob' && 'Sicoob'}
+                                  {projeto.banco === 'sicredi' && 'Sicredi'}
+                                  {projeto.banco === 'santander' && 'Santander'}
+                                  {projeto.banco === 'outros' && 'Outros'}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">Valor: </span>
+                                <span className="font-bold text-green-700">
+                                  R$ {(projeto.valor_financiado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </span>
+                              </div>
+                              {projeto.valor_receber && (
+                                <div>
+                                  <span className="text-gray-600">A Receber: </span>
+                                  <span className="font-bold text-yellow-600">
+                                    R$ {projeto.valor_receber.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                              )}
+                              {projeto.data_protocolo && (
+                                <div>
+                                  <span className="text-gray-600">Protocolo: </span>
+                                  <span className="font-medium text-gray-800">
+                                    {format(new Date(projeto.data_protocolo), 'dd/MM/yyyy', { locale: ptBR })}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="flex lg:flex-col gap-2">
+                            <Link to={createPageUrl("EditarProjeto") + `?id=${projeto.id}`} className="flex-1 lg:flex-none">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="w-full border-green-300 text-green-700 hover:bg-green-50"
+                              >
+                                Ver Detalhes
+                              </Button>
+                            </Link>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

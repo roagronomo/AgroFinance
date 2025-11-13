@@ -33,7 +33,7 @@ const STATUS_OPTIONS = [
 const ART_STATUS_OPTIONS = [
   { value: "nao_se_aplica", label: "Não se aplica" },
   { value: "a_fazer", label: "A fazer" },
-  { value: "feita", label: "Feita" },
+  { value: "feita", "label": "Feita" },
   { value: "paga", "label": "Paga" }
 ];
 
@@ -64,7 +64,22 @@ const parsearAreaHa = (valorFormatado) => {
   return isNaN(numero) ? null : numero;
 };
 
+const inicializarImoveisComDisplay = (imoveis = []) => {
+  return imoveis.map(imovel => ({
+    nome_imovel: imovel.nome_imovel || '',
+    matricula: imovel.matricula || '',
+    area_total_ha: imovel.area_total_ha || null,
+    area_total_ha_display: imovel.area_total_ha ? formatarAreaHa(imovel.area_total_ha) : '',
+    area_financiada_ha: imovel.area_financiada_ha || null,
+    area_financiada_ha_display: imovel.area_financiada_ha ? formatarAreaHa(imovel.area_financiada_ha) : ''
+  }));
+};
+
 export default function FormularioProjeto({ onSubmit, isLoading, projeto = null }) {
+  const imoveisIniciais = projeto?.imoveis_beneficiados 
+    ? inicializarImoveisComDisplay(projeto.imoveis_beneficiados)
+    : [];
+
   const [dadosProjeto, setDadosProjeto] = useState({
     nome_cliente: "",
     data_protocolo: "",
@@ -88,9 +103,9 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
     tipo_calculo_auto: "posfixadas",
     carencia_periodos: 0,
     pagar_juros_carencia: false,
-    qtd_imoveis_beneficiados: 0,
-    imoveis_beneficiados: [],
-    ...(projeto || {})
+    ...projeto, // Spread project first to let its values override defaults
+    qtd_imoveis_beneficiados: imoveisIniciais.length, // Then explicitly set these based on processed imoveis
+    imoveis_beneficiados: imoveisIniciais
   });
 
   const [tipoCalculo, setTipoCalculo] = useState(projeto?.tipo_calculo || "automatico");
@@ -355,30 +370,6 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
       setTipoCalculo(projeto.tipo_calculo || "automatico");
       setPeriodicidadeManual(projeto.periodicidade_manual || "anual");
 
-      // Initialize imoveis_beneficiados with display fields
-      const imoveisInicializados = (projeto.imoveis_beneficiados || []).map(imovel => ({
-        nome_imovel: imovel.nome_imovel || '',
-        matricula: imovel.matricula || '',
-        area_total_ha: imovel.area_total_ha || null,
-        area_total_ha_display: imovel.area_total_ha ? formatarAreaHa(imovel.area_total_ha) : '',
-        area_financiada_ha: imovel.area_financiada_ha || null,
-        area_financiada_ha_display: imovel.area_financiada_ha ? formatarAreaHa(imovel.area_financiada_ha) : ''
-      }));
-
-      console.log('🔄 Inicializando formulário com projeto:', {
-        qtd: imoveisInicializados.length,
-        imoveis: imoveisInicializados
-      });
-
-      setDadosProjeto(prev => ({
-        ...prev,
-        tipo_calculo_auto: projeto.tipo_calculo_auto || "posfixadas",
-        carencia_periodos: projeto.carencia_periodos || 0,
-        pagar_juros_carencia: typeof projeto.pagar_juros_carencia === 'boolean' ? projeto.pagar_juros_carencia : false,
-        qtd_imoveis_beneficiados: imoveisInicializados.length,
-        imoveis_beneficiados: imoveisInicializados
-      }));
-
       if (projeto.tipo_calculo === 'manual' && projeto.quantidade_parcelas) {
         const numParcelas = parseInt(projeto.quantidade_parcelas, 10);
         if (!isNaN(numParcelas) && numParcelas > 0) {
@@ -417,7 +408,7 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
     const qtd = parseInt(dadosProjeto.qtd_imoveis_beneficiados || 0, 10);
     const currentImoveis = dadosProjeto.imoveis_beneficiados || [];
     
-    console.log('🔢 Ajustando imóveis:', { qtd, currentLength: currentImoveis.length });
+    console.log('🔢 Ajustando imóveis - qtd solicitada:', qtd, 'length atual:', currentImoveis.length);
     
     if (qtd > currentImoveis.length) {
       const novosImoveis = [...currentImoveis];
@@ -431,19 +422,19 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
           area_financiada_ha_display: ''
         });
       }
-      console.log('➕ Adicionando imóveis:', novosImoveis);
+      console.log('➕ Adicionando imóveis. Novo total:', novosImoveis.length);
       setDadosProjeto(prev => ({ ...prev, imoveis_beneficiados: novosImoveis }));
-    } else if (qtd < currentImoveis.length) {
-      console.log('➖ Removendo imóveis');
+    } else if (qtd < currentImoveis.length && qtd >= 0) {
+      console.log('➖ Removendo imóveis. Novo total:', qtd);
       setDadosProjeto(prev => ({ 
         ...prev, 
         imoveis_beneficiados: currentImoveis.slice(0, qtd) 
       }));
     }
-  }, [dadosProjeto.qtd_imoveis_beneficiados, dadosProjeto.imoveis_beneficiados.length]);
+  }, [dadosProjeto.qtd_imoveis_beneficiados]);
 
   const handleInputChange = (campo, valor) => {
-    console.log('📝 Input change:', campo, valor);
+    console.log('📝 Input change:', campo, '→', valor);
     setDadosProjeto(prev => ({
       ...prev,
       [campo]: valor
@@ -470,41 +461,46 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
   };
 
   const handleImovelChange = (index, field, value) => {
-    console.log(`🏘️ Imovel change [${index}]:`, field, value);
+    console.log(`🏘️ Alterando imóvel [${index}].${field} →`, value);
     const novosImoveis = [...dadosProjeto.imoveis_beneficiados];
-    novosImoveis[index] = { ...novosImoveis[index], [field]: value };
-    setDadosProjeto(prev => ({ ...prev, imoveis_beneficiados: novosImoveis }));
+    if (novosImoveis[index]) {
+      novosImoveis[index] = { ...novosImoveis[index], [field]: value };
+      setDadosProjeto(prev => ({ ...prev, imoveis_beneficiados: novosImoveis }));
+      console.log(`✅ Imóvel [${index}] atualizado:`, novosImoveis[index]);
+    }
   };
 
   const handleImovelNomeBlur = (index, value) => {
     const nomeFormatado = formatarNomeProprio(value);
-    console.log(`🏘️ Nome formatado [${index}]:`, value, '→', nomeFormatado);
+    console.log(`📝 Formatando nome [${index}]: "${value}" → "${nomeFormatado}"`);
     handleImovelChange(index, 'nome_imovel', nomeFormatado);
   };
 
   const handleImovelAreaBlur = (index, field, value) => {
     const areaNumerica = parsearAreaHa(value);
-    console.log(`📐 Área blur [${index}]:`, field, value, '→', areaNumerica);
+    console.log(`📐 Formatando área [${index}].${field}: "${value}" → ${areaNumerica}`);
     
     const novosImoveis = [...dadosProjeto.imoveis_beneficiados];
     
-    if (areaNumerica !== null) {
-      const areaFormatada = formatarAreaHa(areaNumerica);
-      novosImoveis[index] = {
-        ...novosImoveis[index],
-        [field]: areaNumerica,
-        [`${field}_display`]: areaFormatada
-      };
-      console.log(`✅ Área atualizada [${index}]:`, novosImoveis[index]);
-    } else {
-      novosImoveis[index] = {
-        ...novosImoveis[index],
-        [field]: null,
-        [`${field}_display`]: value
-      };
+    if (novosImoveis[index]) {
+      if (areaNumerica !== null) {
+        const areaFormatada = formatarAreaHa(areaNumerica);
+        novosImoveis[index] = {
+          ...novosImoveis[index],
+          [field]: areaNumerica,
+          [`${field}_display`]: areaFormatada
+        };
+        console.log(`✅ Área [${index}].${field} = ${areaNumerica} (display: ${areaFormatada})`);
+      } else {
+        novosImoveis[index] = {
+          ...novosImoveis[index],
+          [field]: null,
+          [`${field}_display`]: value
+        };
+      }
+      
+      setDadosProjeto(prev => ({ ...prev, imoveis_beneficiados: novosImoveis }));
     }
-    
-    setDadosProjeto(prev => ({ ...prev, imoveis_beneficiados: novosImoveis }));
   };
 
   const handleTipoCalculoChange = (novoTipo) => {
@@ -543,10 +539,10 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    console.log('💾 Estado atual antes de salvar:', {
-      qtd: dadosProjeto.qtd_imoveis_beneficiados,
-      imoveis_raw: dadosProjeto.imoveis_beneficiados
-    });
+    console.log('💾 ========== SALVANDO PROJETO ==========');
+    console.log('Estado completo dadosProjeto:', dadosProjeto);
+    console.log('qtd_imoveis_beneficiados:', dadosProjeto.qtd_imoveis_beneficiados);
+    console.log('imoveis_beneficiados (raw):', dadosProjeto.imoveis_beneficiados);
 
     const imoveisLimpos = (dadosProjeto.imoveis_beneficiados || []).map(imovel => ({
       nome_imovel: imovel.nome_imovel || '',
@@ -555,7 +551,7 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
       area_financiada_ha: imovel.area_financiada_ha
     }));
 
-    console.log('🧹 Imóveis após limpeza:', imoveisLimpos);
+    console.log('🧹 Imóveis LIMPOS (sem _display):', imoveisLimpos);
 
     const dadosProcessados = {
       ...dadosProjeto,
@@ -571,10 +567,11 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
       imoveis_beneficiados: imoveisLimpos
     };
 
-    console.log('📦 Dados processados completos sendo enviados:', {
+    console.log('📦 ENVIANDO para onSubmit:', {
       imoveis_beneficiados: dadosProcessados.imoveis_beneficiados,
-      qtd_imoveis: dadosProcessados.imoveis_beneficiados.length
+      total_imoveis: dadosProcessados.imoveis_beneficiados.length
     });
+    console.log('========================================');
     
     onSubmit(dadosProcessados);
   };
@@ -814,7 +811,11 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
             <Label className="text-sm text-gray-600">Quantidade:</Label>
             <Select
               value={dadosProjeto.qtd_imoveis_beneficiados?.toString() || "0"}
-              onValueChange={(value) => handleInputChange('qtd_imoveis_beneficiados', parseInt(value, 10))}
+              onValueChange={(value) => {
+                const qtd = parseInt(value, 10);
+                console.log('🔢 Alterando quantidade de imóveis para:', qtd);
+                handleInputChange('qtd_imoveis_beneficiados', qtd);
+              }}
             >
               <SelectTrigger className="w-24 h-8 border-green-200">
                 <SelectValue />
@@ -833,7 +834,7 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
         {dadosProjeto.imoveis_beneficiados && dadosProjeto.imoveis_beneficiados.length > 0 && (
           <div className="space-y-3">
             {dadosProjeto.imoveis_beneficiados.map((imovel, index) => (
-              <div key={index} className="p-3 bg-green-50/50 rounded-lg border border-green-200">
+              <div key={`imovel-${index}`} className="p-3 bg-green-50/50 rounded-lg border border-green-200">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs text-gray-700">Imóvel Beneficiado</Label>
@@ -842,7 +843,7 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
                       onChange={(e) => handleImovelChange(index, 'nome_imovel', e.target.value)}
                       onBlur={(e) => handleImovelNomeBlur(index, e.target.value)}
                       placeholder="Nome do imóvel"
-                      className="h-8 text-sm"
+                      className="h-8 text-sm border-green-300"
                     />
                   </div>
                   
@@ -852,7 +853,7 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
                       value={imovel.matricula || ''}
                       onChange={(e) => handleImovelChange(index, 'matricula', e.target.value)}
                       placeholder="Ex: 2.563"
-                      className="h-8 text-sm"
+                      className="h-8 text-sm border-green-300"
                     />
                   </div>
                   
@@ -863,7 +864,7 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
                       onChange={(e) => handleImovelChange(index, 'area_total_ha_display', e.target.value)}
                       onBlur={(e) => handleImovelAreaBlur(index, 'area_total_ha', e.target.value)}
                       placeholder="125,36"
-                      className="h-8 text-sm"
+                      className="h-8 text-sm border-green-300"
                     />
                   </div>
                   
@@ -874,7 +875,7 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
                       onChange={(e) => handleImovelChange(index, 'area_financiada_ha_display', e.target.value)}
                       onBlur={(e) => handleImovelAreaBlur(index, 'area_financiada_ha', e.target.value)}
                       placeholder="100,00"
-                      className="h-8 text-sm"
+                      className="h-8 text-sm border-green-300"
                     />
                   </div>
                 </div>

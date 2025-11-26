@@ -379,14 +379,14 @@ export default function Vencimentos() {
               text-align: center;
             }
             .col-cliente {
-              width: 160px;
+              width: 112px;
             }
             .col-banco {
               width: 130px;
               text-align: left;
             }
             .col-projeto {
-              width: 120px;
+              width: 144px;
             }
             .col-contrato {
               width: 110px;
@@ -446,7 +446,7 @@ export default function Vencimentos() {
               bottom: 0;
               left: 0;
               right: 0;
-              height: 1cm;
+              height: 1.2cm;
               background-color: white;
               border-top: 1px solid #e5e7eb;
               padding: 5px 20px;
@@ -455,6 +455,11 @@ export default function Vencimentos() {
               display: flex;
               justify-content: space-between;
               align-items: center;
+            }
+            .footer-total {
+              font-size: 9pt;
+              color: #065f46;
+              font-weight: 500;
             }
 
             @media print {
@@ -576,6 +581,7 @@ export default function Vencimentos() {
 
           <div class="footer-container">
             <span>Relatório gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+            <span class="footer-total">Total Geral: R$ ${valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
             <span>Cerrado Consultoria - Financiamentos Agrícolas</span>
           </div>
         </body>

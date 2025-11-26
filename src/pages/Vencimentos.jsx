@@ -64,7 +64,7 @@ export default function Vencimentos() {
     ano: new Date().getFullYear().toString(),
     mes: "todos",
     status: "todos",
-    cliente: "todos"
+    contrato: ""
   });
 
   useEffect(() => {
@@ -122,10 +122,13 @@ export default function Vencimentos() {
       resultado = resultado.filter(p => projetosIds.includes(p.projeto_id));
     }
 
-    if (filtros.cliente !== "todos") {
-      const projetosDoCliente = projetos.filter(p => p.nome_cliente === filtros.cliente);
-      const projetosIdsDoCliente = projetosDoCliente.map(p => p.id);
-      resultado = resultado.filter(p => projetosIdsDoCliente.includes(p.projeto_id));
+    if (filtros.contrato) {
+      const contratoLimpo = filtros.contrato.replace(/\D/g, '').toLowerCase();
+      const projetosComContrato = projetos.filter(p => 
+        p.numero_contrato && p.numero_contrato.replace(/\D/g, '').toLowerCase().includes(contratoLimpo)
+      );
+      const projetosIdsComContrato = projetosComContrato.map(p => p.id);
+      resultado = resultado.filter(p => projetosIdsComContrato.includes(p.projeto_id));
     }
 
     setParcelasFiltradas(resultado);
@@ -592,7 +595,6 @@ export default function Vencimentos() {
   };
 
   const anos = [...new Set(parcelas.map(p => new Date(p.data_vencimento).getFullYear()))].sort();
-  const clientesUnicos = [...new Set(projetos.map(p => p.nome_cliente))].sort((a, b) => a.localeCompare(b));
 
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen">
@@ -702,22 +704,15 @@ export default function Vencimentos() {
                 </SelectContent>
               </Select>
 
-              <Select
-                value={filtros.cliente}
-                onValueChange={(value) => handleFiltroChange('cliente', value)}
-              >
-                <SelectTrigger className="border-green-200 focus:border-green-500">
-                  <SelectValue placeholder="Cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os clientes</SelectItem>
-                  {clientesUnicos.map(clienteNome => (
-                    <SelectItem key={clienteNome} value={clienteNome}>
-                      {clienteNome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="relative">
+                <FileText className="absolute left-3 top-3 h-4 w-4 text-green-500" />
+                <Input
+                  placeholder="Nº do contrato..."
+                  value={filtros.contrato}
+                  onChange={(e) => handleFiltroChange('contrato', e.target.value)}
+                  className="pl-10 border-green-200 focus:border-green-500"
+                />
+              </div>
             </div>
           </CardContent>
         </Card>

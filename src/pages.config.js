@@ -7,7 +7,7 @@ import GerenciamentoARTs from './pages/GerenciamentoARTs';
 import AbrirServicoART from './pages/AbrirServicoART';
 import EditarServicoART from './pages/EditarServicoART';
 import ElaboracaoARTs from './pages/ElaboracaoARTs';
-import Layout from './Layout.jsx';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
@@ -25,5 +25,5 @@ export const PAGES = {
 export const pagesConfig = {
     mainPage: "Dashboard",
     Pages: PAGES,
-    Layout: Layout,
+    Layout: __Layout,
 };

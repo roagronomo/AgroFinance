@@ -352,8 +352,9 @@ export default function Vencimentos() {
             }
             th, td {
               border: 1px solid #ddd;
-              padding: 8px;
+              padding: 5px 8px;
               text-align: left;
+              line-height: 1.1;
             }
             thead th {
               background-color: #e6f4ea;
@@ -371,7 +372,7 @@ export default function Vencimentos() {
             tbody tr.blank-row td {
               background-color: white;
               border-color: #ddd;
-              height: 35px;
+              height: 24px;
             }
             .col-num {
               width: 35px;

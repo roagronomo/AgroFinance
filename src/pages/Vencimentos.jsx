@@ -250,8 +250,8 @@ export default function Vencimentos() {
     const valorTotal = parcelasComCliente.reduce((sum, p) => sum + p.valor_parcela, 0);
     const periodo = filtros.ano !== 'todos' ? filtros.ano : 'Todos os anos';
 
-    // Paginação: EXATAMENTE 20 linhas por página
-    const ROWS_PER_PAGE = 20;
+    // Paginação: EXATAMENTE 15 linhas por página
+    const ROWS_PER_PAGE = 15;
     const pages = [];
 
     if (parcelasOrdenadas.length === 0) {

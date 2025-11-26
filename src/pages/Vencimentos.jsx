@@ -278,8 +278,8 @@ export default function Vencimentos() {
               margin: 0.8cm;
             }
             body {
-              font-family: Arial, sans-serif;
-              font-size: 10pt;
+              font-family: 'Calibri Light', Calibri, sans-serif;
+              font-size: 11pt;
               color: #333;
               margin: 0;
               padding: 0;
@@ -543,7 +543,7 @@ export default function Vencimentos() {
                       return `
                         <tr>
                           <td class="col-num">${startIndex + idx + 1}</td>
-                          <td class="col-cliente">${projeto?.nome_cliente || ''}</td>
+                          <td class="col-cliente">${projeto?.nome_cliente?.split(' ')[0] || ''}</td>
                           <td class="col-banco">${bancoNomes[projeto?.banco] || projeto?.banco || 'N/A'}</td>
                           <td class="col-projeto">${projeto?.item_financiado || 'N/A'}</td>
                           <td class="col-contrato">${projeto?.numero_contrato || 'N/A'}</td>

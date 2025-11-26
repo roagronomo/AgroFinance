@@ -563,18 +563,7 @@ export default function Vencimentos() {
                   </tbody>
                 </table>
 
-                ${isLastPage ? `
-                  <table style="margin-top: 0;">
-                    <tbody>
-                      <tr class="total-row">
-                        <td class="col-num"></td>
-                        <td colspan="7" class="total-label">TOTAL GERAL</td>
-                        <td class="col-valor total-value">R$ ${valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                        <td class="col-status"></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                ` : ''}
+
               </div>
             `;
           }).join('')}

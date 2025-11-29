@@ -251,7 +251,6 @@ export default function ListaProjetos({ projetos, isLoading, onUpdate, anexosRes
                   </div>
 
                   <div className="flex items-center gap-2.5">
-                    <DollarSign className="w-4 h-4 text-gray-400" />
                     <div>
                       <p className="text-[10px] uppercase tracking-wide text-gray-400">Valor Financiado</p>
                       <p className={`text-sm font-semibold text-gray-800 ${isCancelado ? canceladoClass : ''}`}>
@@ -322,7 +321,6 @@ export default function ListaProjetos({ projetos, isLoading, onUpdate, anexosRes
 
                     {projeto.valor_receber && (
                       <div className="flex items-center gap-1.5 text-xs ml-auto">
-                        <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
                         <span className={`text-emerald-700 font-medium ${isCancelado ? canceladoClass : ''}`}>
                           {projeto.status === 'concluido' ? 'Recebido' : 'A receber'}: <strong>{formatarValor(projeto.valor_receber)}</strong>
                         </span>

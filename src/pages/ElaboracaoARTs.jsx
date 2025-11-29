@@ -1255,10 +1255,12 @@ export default function ElaboracaoARTs() {
 
   if (carregando) {
     return (
-      <div className="p-4 md:p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-green-600">Carregando ARTs...</p>
+      <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-slate-100 min-h-screen flex items-center justify-center">
+        <div className="bg-white rounded-xl border border-gray-100 p-8 shadow-sm">
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+            <span className="text-gray-500 text-sm">Carregando ARTs...</span>
+          </div>
         </div>
       </div>
     );

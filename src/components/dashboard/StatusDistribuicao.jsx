@@ -1,41 +1,90 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock, CheckCircle, XCircle, BarChart3 } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, BarChart3, Calendar } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function StatusDistribuicao({ stats, isLoading }) {
-  const distribuicao = [
-    {
-      status: "Em Análise",
-      valor: stats.emAnalise,
-      total: stats.total,
-      cor: "bg-amber-500",
-      bgLight: "bg-amber-50",
-      textColor: "text-amber-600",
-      icone: Clock,
-      porcentagem: stats.total > 0 ? (stats.emAnalise / stats.total) * 100 : 0
-    },
-    {
-      status: "Concluídos",
-      valor: stats.concluidos,
-      total: stats.total,
-      cor: "bg-emerald-500",
-      bgLight: "bg-emerald-50",
-      textColor: "text-emerald-600",
-      icone: CheckCircle,
-      porcentagem: stats.total > 0 ? (stats.concluidos / stats.total) * 100 : 0
-    },
-    {
-      status: "Cancelados",
-      valor: stats.cancelados,
-      total: stats.total,
-      cor: "bg-gray-400",
-      bgLight: "bg-gray-50",
-      textColor: "text-gray-500",
-      icone: XCircle,
-      porcentagem: stats.total > 0 ? (stats.cancelados / stats.total) * 100 : 0
-    }
+export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [] }) {
+  const agora = new Date();
+  const anoAtual = agora.getFullYear();
+  const mesAtual = agora.getMonth(); // 0-11
+
+  const anoAnterior = anoAtual - 1;
+
+  // Filtrar projetos por ano (baseado em data_protocolo)
+  const projetosAnoAtual = todosProjetos.filter(p => {
+    if (!p.data_protocolo) return false;
+    const data = new Date(p.data_protocolo);
+    return data.getFullYear() === anoAtual;
+  });
+
+  const projetosAnoAnterior = todosProjetos.filter(p => {
+    if (!p.data_protocolo) return false;
+    const data = new Date(p.data_protocolo);
+    return data.getFullYear() === anoAnterior;
+  });
+
+  // Filtrar projetos por mês atual vs mesmo mês do ano anterior
+  const projetosMesAtualAnoAtual = todosProjetos.filter(p => {
+    if (!p.data_protocolo) return false;
+    const data = new Date(p.data_protocolo);
+    return data.getFullYear() === anoAtual && data.getMonth() === mesAtual;
+  });
+
+  const projetosMesAtualAnoAnterior = todosProjetos.filter(p => {
+    if (!p.data_protocolo) return false;
+    const data = new Date(p.data_protocolo);
+    return data.getFullYear() === anoAnterior && data.getMonth() === mesAtual;
+  });
+
+  // Calcular totais
+  const totalAnoAtual = projetosAnoAtual.length;
+  const totalAnoAnterior = projetosAnoAnterior.length;
+  const totalMesAnoAtual = projetosMesAtualAnoAtual.length;
+  const totalMesAnoAnterior = projetosMesAtualAnoAnterior.length;
+
+  // Calcular diferenças
+  const diferencaAnual = totalAnoAtual - totalAnoAnterior;
+  const diferencaMensal = totalMesAnoAtual - totalMesAnoAnterior;
+
+  // Calcular percentuais de crescimento
+  const percentualAnual = totalAnoAnterior > 0 
+    ? ((diferencaAnual / totalAnoAnterior) * 100).toFixed(0) 
+    : totalAnoAtual > 0 ? 100 : 0;
+
+  const percentualMensal = totalMesAnoAnterior > 0 
+    ? ((diferencaMensal / totalMesAnoAnterior) * 100).toFixed(0) 
+    : totalMesAnoAtual > 0 ? 100 : 0;
+
+  // Nomes dos meses
+  const nomesMeses = [
+    'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+    'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
   ];
+  const mesNome = nomesMeses[mesAtual];
+
+  const renderIndicador = (diferenca, percentual) => {
+    if (diferenca > 0) {
+      return (
+        <div className="flex items-center gap-1 text-emerald-600">
+          <TrendingUp className="w-4 h-4" />
+          <span className="text-sm font-semibold">+{percentual}%</span>
+        </div>
+      );
+    } else if (diferenca < 0) {
+      return (
+        <div className="flex items-center gap-1 text-red-500">
+          <TrendingDown className="w-4 h-4" />
+          <span className="text-sm font-semibold">{percentual}%</span>
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-center gap-1 text-gray-400">
+        <Minus className="w-4 h-4" />
+        <span className="text-sm font-semibold">0%</span>
+      </div>
+    );
+  };
 
   return (
     <Card className="border-0 shadow-sm bg-white overflow-hidden h-full">
@@ -44,57 +93,102 @@ export default function StatusDistribuicao({ stats, isLoading }) {
           <div className="p-2 rounded-lg bg-violet-50">
             <BarChart3 className="w-4 h-4 text-violet-600" />
           </div>
-          <h2 className="text-base font-semibold text-gray-800">Status</h2>
+          <h2 className="text-base font-semibold text-gray-800">Crescimento</h2>
         </div>
       </div>
 
       <CardContent className="p-5">
         {isLoading ? (
-          <div className="space-y-4">
-            {Array(3).fill(0).map((_, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <Skeleton className="h-8 w-8 rounded-lg" />
-                <div className="flex-1 space-y-1">
-                  <Skeleton className="h-3 w-20" />
-                  <Skeleton className="h-1.5 w-full rounded-full" />
-                </div>
-                <Skeleton className="h-4 w-8" />
-              </div>
-            ))}
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-12 w-full rounded-lg" />
+            </div>
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-12 w-full rounded-lg" />
+            </div>
           </div>
         ) : (
-          <div className="space-y-4">
-            {distribuicao.map((item, index) => (
-              <div key={index} className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${item.bgLight}`}>
-                  <item.icone className={`w-4 h-4 ${item.textColor}`} />
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-gray-600">{item.status}</span>
-                    <span className="text-xs text-gray-400">{item.porcentagem.toFixed(0)}%</span>
-                  </div>
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full ${item.cor} rounded-full transition-all duration-500`}
-                      style={{ width: `${item.porcentagem}%` }}
-                    />
-                  </div>
-                </div>
-                
-                <span className="text-sm font-semibold text-gray-800 min-w-[28px] text-right">
-                  {item.valor}
+          <div className="space-y-5">
+            {/* Comparação Anual */}
+            <div>
+              <div className="flex items-center gap-1.5 mb-3">
+                <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Comparação Anual
                 </span>
               </div>
-            ))}
-            
-            {/* Total central elegante */}
-            <div className="pt-4 mt-2 border-t border-gray-100">
+              
+              <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-100">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-bold text-gray-800">{totalAnoAtual}</span>
+                    <span className="text-xs text-gray-400">projetos em {anoAtual}</span>
+                  </div>
+                  {renderIndicador(diferencaAnual, percentualAnual)}
+                </div>
+                
+                <div className="flex items-center gap-3 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="text-gray-600">{anoAtual}: <strong>{totalAnoAtual}</strong></span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-gray-300" />
+                    <span className="text-gray-500">{anoAnterior}: <strong>{totalAnoAnterior}</strong></span>
+                  </div>
+                  {diferencaAnual !== 0 && (
+                    <span className={`ml-auto font-medium ${diferencaAnual > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                      {diferencaAnual > 0 ? '+' : ''}{diferencaAnual}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Comparação Mensal */}
+            <div>
+              <div className="flex items-center gap-1.5 mb-3">
+                <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  {mesNome}/{anoAnterior} vs {mesNome}/{anoAtual}
+                </span>
+              </div>
+              
+              <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-100">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-bold text-gray-800">{totalMesAnoAtual}</span>
+                    <span className="text-xs text-gray-500">projetos em {mesNome}/{anoAtual}</span>
+                  </div>
+                  {renderIndicador(diferencaMensal, percentualMensal)}
+                </div>
+                
+                <div className="flex items-center gap-3 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="text-gray-600">{mesNome}/{anoAtual}: <strong>{totalMesAnoAtual}</strong></span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-gray-300" />
+                    <span className="text-gray-500">{mesNome}/{anoAnterior}: <strong>{totalMesAnoAnterior}</strong></span>
+                  </div>
+                  {diferencaMensal !== 0 && (
+                    <span className={`ml-auto font-medium ${diferencaMensal > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                      {diferencaMensal > 0 ? '+' : ''}{diferencaMensal}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Total geral */}
+            <div className="pt-3 mt-2 border-t border-gray-100">
               <div className="flex items-center justify-center gap-2">
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-gray-800">{stats.total}</p>
-                  <p className="text-[11px] text-gray-400 uppercase tracking-wide">Total de Projetos</p>
+                  <p className="text-3xl font-bold text-gray-800">{todosProjetos.length}</p>
+                  <p className="text-[11px] text-gray-400 uppercase tracking-wide">Total Geral</p>
                 </div>
               </div>
             </div>

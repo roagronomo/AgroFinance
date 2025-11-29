@@ -943,120 +943,147 @@ const GrupoARTCard = ({ grupo, arts, onEditarART, onExcluirART, getCulturaLabel 
   const totalPDF = arts.reduce((sum, art) => sum + (art.anexos_car_pdf?.length || 0), 0);
 
   return (
-    <Card className="shadow-lg border-green-100 hover:shadow-xl transition-shadow overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all duration-200 overflow-hidden">
       <div 
-        className="p-6 cursor-pointer hover:bg-green-50/30 transition-colors"
+        className="p-5 cursor-pointer hover:bg-gray-50/50 transition-colors"
         onClick={() => setExpandido(!expandido)}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 space-y-3">
-            <div className="flex items-center gap-3">
-              <h3 className="text-xl font-bold text-green-900">{grupo.contratante}</h3>
-              <Badge className="bg-green-600 text-white px-2.5 py-0.5">
+        <div className="flex items-start gap-4">
+          {/* Indicador lateral */}
+          <div className="w-1 h-20 rounded-full bg-emerald-500 flex-shrink-0" />
+          
+          <div className="flex-1 min-w-0">
+            {/* Header com nome e badge */}
+            <div className="flex items-center gap-3 mb-3">
+              <h3 className="text-lg font-bold text-gray-800 truncate">{grupo.contratante}</h3>
+              <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white text-xs px-2 py-0.5 font-medium">
                 {arts.length} ART{arts.length > 1 ? 's' : ''}
               </Badge>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-2 text-sm">
-              <div>
-                <span className="font-semibold text-gray-700">Cultura:</span>
-                <span className="ml-2 text-gray-600">{getCulturaLabel(grupo.cultura)}</span>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-700">Safra:</span>
-                <span className="ml-2 text-gray-600">{grupo.safra}</span>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-700">Área Total:</span>
-                <span className="ml-2 text-gray-600">{formatarArea(areaTotal)} ha</span>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-700">Custo Total:</span>
-                <span className="ml-2 text-green-700 font-semibold">
-                  R$ {custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-              {(totalKML > 0 || totalPDF > 0) && (
-                <div className="md:col-span-2 flex gap-3">
-                  {totalKML > 0 && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
-                      <Map className="w-3.5 h-3.5" />
-                      <span className="font-medium">{totalKML} KML</span>
-                    </div>
-                  )}
-                  {totalPDF > 0 && (
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-50 border border-red-200 rounded text-xs text-red-700">
-                      <FileText className="w-3.5 h-3.5" />
-                      <span className="font-medium">{totalPDF} PDF</span>
-                    </div>
-                  )}
+            {/* Grid de informações */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                  <span className="text-amber-600 text-xs font-bold">🌾</span>
                 </div>
-              )}
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400">Cultura</p>
+                  <p className="font-medium text-gray-700 truncate">{getCulturaLabel(grupo.cultura)}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                  <span className="text-blue-600 text-xs font-bold">📅</span>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400">Safra</p>
+                  <p className="font-medium text-gray-700">{grupo.safra}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+                  <span className="text-green-600 text-xs font-bold">📐</span>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400">Área Total</p>
+                  <p className="font-medium text-gray-700">{formatarArea(areaTotal)} ha</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                  <span className="text-emerald-600 text-xs font-bold">💰</span>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400">Custo Total</p>
+                  <p className="font-semibold text-emerald-700">R$ {custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                </div>
+              </div>
             </div>
+
+            {/* Badges de anexos */}
+            {(totalKML > 0 || totalPDF > 0) && (
+              <div className="flex gap-2 mt-3 pt-3 border-t border-gray-50">
+                {totalKML > 0 && (
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-sky-50 border border-sky-200 rounded-lg text-xs text-sky-700 font-medium">
+                    <Map className="w-3.5 h-3.5" />
+                    {totalKML} KML
+                  </div>
+                )}
+                {totalPDF > 0 && (
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700 font-medium">
+                    <FileText className="w-3.5 h-3.5" />
+                    {totalPDF} PDF
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           
-          <Button
-            variant="ghost"
-            size="icon"
-            className="flex-shrink-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+          {/* Botão expandir */}
+          <button
+            className="p-2 rounded-lg text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors flex-shrink-0"
             onClick={(e) => {
               e.stopPropagation();
               setExpandido(!expandido);
             }}
           >
             {expandido ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-          </Button>
+          </button>
         </div>
       </div>
 
       {expandido && (
-        <div className="border-t border-green-100 bg-gray-50/50">
-          <div className="p-6 space-y-4">
+        <div className="border-t border-gray-100 bg-gradient-to-b from-gray-50/80 to-gray-50/30">
+          <div className="p-5 space-y-3">
             {arts.map((art, index) => (
-              <Card key={art.id} className="bg-white border-l-4 border-l-green-500">
-                <CardContent className="p-4">
+              <div key={art.id} className="bg-white rounded-xl border border-gray-100 hover:border-gray-200 transition-colors overflow-hidden">
+                <div className="p-4">
                   <div className="flex flex-col lg:flex-row justify-between gap-4">
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 space-y-3">
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-xs">
-                          ART #{index + 1}
-                        </Badge>
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">
+                          {index + 1}
+                        </span>
                         <h4 className="font-semibold text-gray-800">{art.obra_imovel}</h4>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1.5 text-sm">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-sm">
                         {art.obra_matricula && (
-                          <div>
-                            <span className="text-gray-600">Matrícula: </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-gray-500">Matrícula:</span>
                             <span className="font-medium text-gray-800">{formatarMatricula(art.obra_matricula)}</span>
                           </div>
                         )}
                         {art.obra_car && (
-                          <div className="lg:col-span-2">
-                            <span className="text-gray-600">CAR: </span>
-                            <span className="font-medium text-gray-800">{art.obra_car}</span>
+                          <div className="flex items-center gap-1.5 lg:col-span-2">
+                            <span className="text-gray-500">CAR:</span>
+                            <span className="font-medium text-gray-800 truncate">{art.obra_car}</span>
                           </div>
                         )}
-                        <div>
-                          <span className="text-gray-600">Área: </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-gray-500">Área:</span>
                           <span className="font-medium text-gray-800">{formatarArea(art.obra_area_ha)} ha</span>
                         </div>
-                        <div>
-                          <span className="text-gray-600">Custo: </span>
-                          <span className="font-medium text-green-700">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-gray-500">Custo:</span>
+                          <span className="font-semibold text-emerald-700">
                             R$ {art.obra_custo_medio?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </span>
                         </div>
-                        <div>
-                          <span className="text-gray-600">Localização: </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-gray-500">Local:</span>
                           <span className="font-medium text-gray-800">{art.obra_cidade}/{art.obra_uf}</span>
                         </div>
                         {art.obra_proprietario_nome && (
-                          <div className="md:col-span-2 lg:col-span-3">
-                            <span className="text-gray-600">Proprietário: </span>
+                          <div className="flex items-center gap-1.5 md:col-span-2 lg:col-span-3">
+                            <span className="text-gray-500">Proprietário:</span>
                             <span className="font-medium text-gray-800">{art.obra_proprietario_nome}</span>
                             {art.obra_proprietario_cpf_cnpj && (
-                              <span className="text-gray-500 ml-2">({art.obra_proprietario_cpf_cnpj})</span>
+                              <span className="text-gray-400">({art.obra_proprietario_cpf_cnpj})</span>
                             )}
                           </div>
                         )}
@@ -1065,15 +1092,15 @@ const GrupoARTCard = ({ grupo, arts, onEditarART, onExcluirART, getCulturaLabel 
                       {(art.anexos_kml?.length > 0 || art.anexos_car_pdf?.length > 0) && (
                         <div className="flex gap-2 pt-2">
                           {art.anexos_kml?.length > 0 && (
-                            <div className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                            <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-sky-50 border border-sky-100 rounded text-xs text-sky-600">
                               <Map className="w-3 h-3" />
-                              <span className="font-medium">{art.anexos_kml.length}</span>
+                              {art.anexos_kml.length}
                             </div>
                           )}
                           {art.anexos_car_pdf?.length > 0 && (
-                            <div className="flex items-center gap-1.5 px-2 py-1 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                            <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-50 border border-rose-100 rounded text-xs text-rose-600">
                               <FileText className="w-3 h-3" />
-                              <span className="font-medium">{art.anexos_car_pdf.length}</span>
+                              {art.anexos_car_pdf.length}
                             </div>
                           )}
                         </div>
@@ -1085,29 +1112,29 @@ const GrupoARTCard = ({ grupo, arts, onEditarART, onExcluirART, getCulturaLabel 
                         variant="outline"
                         size="sm"
                         onClick={() => onEditarART(art)}
-                        className="flex-1 lg:flex-none border-green-300 text-green-700 hover:bg-green-50"
+                        className="flex-1 lg:flex-none h-9 border-gray-200 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 hover:border-emerald-200"
                       >
-                        <Edit className="w-4 h-4 mr-2" />
+                        <Edit className="w-3.5 h-3.5 mr-1.5" />
                         Editar
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => onExcluirART(art.id)}
-                        className="flex-1 lg:flex-none border-red-300 text-red-700 hover:bg-red-50"
+                        className="flex-1 lg:flex-none h-9 border-gray-200 text-gray-600 hover:text-red-600 hover:bg-red-50 hover:border-red-200"
                       >
-                        <Trash2 className="w-4 h-4 mr-2" />
+                        <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                         Excluir
                       </Button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       )}
-    </Card>
+    </div>
   );
 };
 

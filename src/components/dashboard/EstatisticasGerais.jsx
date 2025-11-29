@@ -1,121 +1,137 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { 
   TrendingUp, 
   DollarSign,
   PiggyBank,
   Wallet,
-  Hourglass
+  Hourglass,
+  Eye
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EstatisticasGerais({ stats, isLoading, onCardClick }) {
+  const formatarValorDiscreto = (valor) => {
+    if (valor >= 1000000) {
+      return `R$ ${(valor / 1000000).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mi`;
+    } else if (valor >= 1000) {
+      return `R$ ${(valor / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mil`;
+    }
+    return `R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  };
+
   const estatisticas = [
     {
       titulo: "Total de Projetos",
       valor: stats.total,
       icone: TrendingUp,
-      cor: "bg-blue-500",
+      gradiente: "from-emerald-500 to-green-600",
+      bgLight: "bg-emerald-50",
+      iconBg: "bg-emerald-100",
+      iconColor: "text-emerald-600",
       mudanca: "Total acumulado",
       onClick: () => onCardClick('todos'),
-      clickable: true
+      clickable: true,
+      isMonetary: false
     },
     {
-      titulo: "A Receber (Análise)",
-      valor: `R$ ${stats.valorAReceber.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      titulo: "A Receber",
+      subtitulo: "Em Análise",
+      valor: stats.valorAReceber,
       icone: Hourglass,
-      cor: "bg-yellow-500",
-      mudanca: `${stats.emAnalise} projeto(s) em análise`,
+      gradiente: "from-amber-400 to-yellow-500",
+      bgLight: "bg-amber-50",
+      iconBg: "bg-amber-100",
+      iconColor: "text-amber-600",
+      mudanca: `${stats.emAnalise} projeto(s)`,
       onClick: () => onCardClick('em_analise'),
-      clickable: true
+      clickable: true,
+      isMonetary: true
     },
     {
-      titulo: "Recebido (Concluído)",
-      valor: `R$ ${stats.valorRecebido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      titulo: "Recebido",
+      subtitulo: "Concluído",
+      valor: stats.valorRecebido,
       icone: Wallet,
-      cor: "bg-green-500",
-      mudanca: `${stats.concluidos} projeto(s) concluídos`,
+      gradiente: "from-green-500 to-emerald-600",
+      bgLight: "bg-green-50",
+      iconBg: "bg-green-100",
+      iconColor: "text-green-600",
+      mudanca: `${stats.concluidos} projeto(s)`,
       onClick: () => onCardClick('concluido'),
-      clickable: true
+      clickable: true,
+      isMonetary: true
     },
     {
       titulo: "Valor Financiado",
-      valor: `R$ ${stats.valorTotalFinanciado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      valor: stats.valorTotalFinanciado,
       icone: PiggyBank,
-      cor: "bg-purple-500",
-      mudanca: "Total (exceto cancelados)",
-      clickable: false
+      gradiente: "from-violet-500 to-purple-600",
+      bgLight: "bg-violet-50",
+      iconBg: "bg-violet-100",
+      iconColor: "text-violet-600",
+      mudanca: "Exceto cancelados",
+      clickable: false,
+      isMonetary: true
     },
     {
       titulo: "Taxa Média",
       valor: `${stats.taxaJurosMedia.toFixed(2)}%`,
       icone: DollarSign,
-      cor: "bg-orange-500",
-      mudanca: "Média de juros a.a.",
-      clickable: false
+      gradiente: "from-orange-400 to-amber-500",
+      bgLight: "bg-orange-50",
+      iconBg: "bg-orange-100",
+      iconColor: "text-orange-600",
+      mudanca: "Juros a.a.",
+      clickable: false,
+      isMonetary: false
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
       {estatisticas.map((stat, index) => (
         <Card 
           key={index} 
-          className={`relative overflow-hidden shadow-lg border-green-100 transition-all duration-300 ${
-            stat.clickable 
-              ? 'cursor-pointer hover:shadow-2xl hover:scale-[1.02] hover:border-green-300' 
-              : 'hover:shadow-xl'
+          className={`relative overflow-hidden border-0 shadow-sm hover:shadow-md transition-all duration-300 ${stat.bgLight} ${
+            stat.clickable ? 'cursor-pointer hover:scale-[1.02]' : ''
           }`}
           onClick={stat.clickable && !isLoading ? stat.onClick : undefined}
         >
-          <div className={`absolute top-0 right-0 w-24 h-24 transform translate-x-6 -translate-y-6 ${stat.cor} rounded-full opacity-10`} />
-          {stat.clickable && (
-            <div className="absolute top-3 right-3">
-              <div className="bg-white/80 backdrop-blur-sm rounded-full p-1.5 shadow-sm">
-                <svg 
-                  className="w-4 h-4 text-green-600" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" 
-                  />
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" 
-                  />
-                </svg>
+          <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${stat.gradiente}`} />
+          
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div className={`p-2.5 rounded-xl ${stat.iconBg}`}>
+                <stat.icone className={`w-5 h-5 ${stat.iconColor}`} />
               </div>
-            </div>
-          )}
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-green-700">
-              {stat.titulo}
-            </CardTitle>
-            <div className={`p-2 rounded-lg ${stat.cor} bg-opacity-20`}>
-              <stat.icone className={`w-5 h-5 ${stat.cor.replace('bg-', 'text-')}`} />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl md:text-3xl font-bold text-green-900 mb-1">
-              {isLoading ? <Skeleton className="h-8 w-20" /> : stat.valor}
-            </div>
-            <p className="text-xs text-green-600 flex items-center gap-1">
-              {isLoading ? <Skeleton className="h-4 w-16" /> : (
-                <>
-                  {stat.mudanca}
-                  {stat.clickable && (
-                    <span className="text-green-500 font-semibold ml-1">• Clique para ver</span>
-                  )}
-                </>
+              {stat.clickable && (
+                <div className="opacity-40 hover:opacity-70 transition-opacity">
+                  <Eye className="w-4 h-4 text-gray-500" />
+                </div>
               )}
-            </p>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                {stat.titulo}
+              </p>
+              {stat.subtitulo && (
+                <p className="text-[10px] text-gray-400 -mt-0.5">{stat.subtitulo}</p>
+              )}
+              
+              <div className={`font-semibold text-gray-800 ${stat.isMonetary ? 'text-base' : 'text-2xl'}`}>
+                {isLoading ? (
+                  <Skeleton className="h-6 w-20" />
+                ) : (
+                  stat.isMonetary ? formatarValorDiscreto(stat.valor) : stat.valor
+                )}
+              </div>
+              
+              <p className="text-[11px] text-gray-400 pt-1">
+                {isLoading ? <Skeleton className="h-3 w-16" /> : stat.mudanca}
+              </p>
+            </div>
           </CardContent>
         </Card>
       ))}

@@ -27,7 +27,7 @@ export default function Dashboard() {
   const [todosProjetos, setTodosProjetos] = useState([]);
   const [projetos, setProjetos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [anoSelecionado, setAnoSelecionado] = useState("todos");
+  const [anoSelecionado, setAnoSelecionado] = useState(new Date().getFullYear().toString());
   const [filtroModal, setFiltroModal] = useState(null);
 
   useEffect(() => {

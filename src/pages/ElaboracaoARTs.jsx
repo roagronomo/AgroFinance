@@ -1265,46 +1265,49 @@ export default function ElaboracaoARTs() {
   }
 
   return (
-    <div className="p-4 md:p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen">
+    <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-slate-100 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        {/* Header moderno */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-green-900 flex items-center gap-3">
-              <FileSignature className="w-8 h-8" />
+            <h1 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-emerald-100">
+                <FileSignature className="w-5 h-5 text-emerald-600" />
+              </div>
               Elaboração de ARTs
             </h1>
-            <p className="text-green-600 mt-1">
+            <p className="text-gray-500 text-sm mt-1">
               {gruposOrdenados.length} grupo(s) • {arts.length} ART(s) total
             </p>
           </div>
           {!mostrarFormulario && (
             <Button 
               onClick={handleNovaART}
-              className="bg-green-600 hover:bg-green-700 shadow-lg w-full md:w-auto"
+              className="bg-emerald-600 hover:bg-emerald-700 shadow-sm h-10 px-5 rounded-lg w-full md:w-auto"
             >
-              <Plus className="w-5 h-5 mr-2" />
+              <Plus className="w-4 h-4 mr-2" />
               Nova ART
             </Button>
           )}
         </div>
 
         {mensagem && (
-          <Alert className="mb-6 bg-green-50 border-green-200">
-            <AlertDescription className="text-green-800">
+          <Alert className="mb-5 bg-emerald-50 border-emerald-200 rounded-xl">
+            <AlertDescription className="text-emerald-800">
               {mensagem}
             </AlertDescription>
           </Alert>
         )}
 
         {mostrarFormulario ? (
-          <Card className="shadow-xl border-green-100">
-            <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-3">
-                <FileSignature className="w-6 h-6" />
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-r from-emerald-500 to-green-600 px-6 py-4">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <FileSignature className="w-5 h-5" />
                 {artEditando ? 'Editar ART' : 'Nova ART'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
+              </h2>
+            </div>
+            <div className="p-6">
               <FormularioART
                 artInicial={artEditando}
                 onSalvar={handleSalvarART}
@@ -1313,66 +1316,64 @@ export default function ElaboracaoARTs() {
                   setArtEditando(null);
                 }}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ) : (
           <>
             {arts.length > 0 && (
-              <Card className="mb-6 shadow-lg border-green-100">
-                <CardContent className="p-6">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-green-500" />
-                    <Input
-                      placeholder="Buscar por contratante, CPF/CNPJ, imóvel, proprietário, matrícula ou CAR..."
-                      value={filtro}
-                      onChange={(e) => setFiltro(e.target.value)}
-                      className="pl-10 border-green-200 focus:border-green-500"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="bg-white rounded-xl border border-gray-100 p-4 mb-5 shadow-sm">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Buscar por contratante, CPF/CNPJ, imóvel, proprietário, matrícula ou CAR..."
+                    value={filtro}
+                    onChange={(e) => setFiltro(e.target.value)}
+                    className="pl-10 h-10 border-gray-200 focus:border-emerald-500 rounded-lg text-sm"
+                  />
+                </div>
+              </div>
             )}
 
             {arts.length === 0 ? (
-              <Card className="shadow-lg border-green-100">
-                <CardContent className="p-12 text-center">
-                  <FileSignature className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                    Nenhuma ART cadastrada
-                  </h3>
-                  <p className="text-gray-500 mb-6">
-                    Comece cadastrando sua primeira ART
-                  </p>
-                  <Button 
-                    onClick={handleNovaART}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <Plus className="w-5 h-5 mr-2" />
-                    Cadastrar Primeira ART
-                  </Button>
-                </CardContent>
-              </Card>
+              <div className="bg-white rounded-xl border border-gray-100 p-12 text-center shadow-sm">
+                <div className="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <FileSignature className="w-6 h-6 text-gray-300" />
+                </div>
+                <h3 className="text-base font-semibold text-gray-700 mb-1">
+                  Nenhuma ART cadastrada
+                </h3>
+                <p className="text-gray-400 text-sm mb-6">
+                  Comece cadastrando sua primeira ART
+                </p>
+                <Button 
+                  onClick={handleNovaART}
+                  className="bg-emerald-600 hover:bg-emerald-700 rounded-lg"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Cadastrar Primeira ART
+                </Button>
+              </div>
             ) : gruposOrdenados.length === 0 ? (
-              <Card className="shadow-lg border-green-100">
-                <CardContent className="p-12 text-center">
-                  <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                    Nenhuma ART encontrada
-                  </h3>
-                  <p className="text-gray-500 mb-6">
-                    Tente outro termo de busca
-                  </p>
-                  <Button 
-                    onClick={() => setFiltro('')}
-                    variant="outline"
-                    className="border-green-300 text-green-700 hover:bg-green-50"
-                  >
-                    Limpar Busca
-                  </Button>
-                </CardContent>
-              </Card>
+              <div className="bg-white rounded-xl border border-gray-100 p-12 text-center shadow-sm">
+                <div className="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Search className="w-6 h-6 text-gray-300" />
+                </div>
+                <h3 className="text-base font-semibold text-gray-700 mb-1">
+                  Nenhuma ART encontrada
+                </h3>
+                <p className="text-gray-400 text-sm mb-6">
+                  Tente outro termo de busca
+                </p>
+                <Button 
+                  onClick={() => setFiltro('')}
+                  variant="outline"
+                  className="border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg"
+                >
+                  Limpar Busca
+                </Button>
+              </div>
             ) : (
-              <div className="grid gap-4">
+              <div className="space-y-3">
                 {gruposOrdenados.map((grupo, index) => (
                   <GrupoARTCard
                     key={`${grupo.contratante}-${grupo.safra}-${grupo.cultura}-${index}`}

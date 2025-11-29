@@ -800,7 +800,6 @@ export default function Vencimentos() {
                             <span>{format(new Date(parcela.data_vencimento), "dd/MM/yyyy", { locale: ptBR })}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
                             <span className="text-emerald-700 font-semibold">
                               R$ {parcela.valor_parcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </span>

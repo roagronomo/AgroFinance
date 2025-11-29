@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
@@ -15,35 +14,41 @@ import {
   XCircle,
   Pause,
   Edit,
-  Trash2 
+  Trash2,
+  ChevronRight,
+  Layers
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { ProjetoFinanciamento } from "@/entities/ProjetoFinanciamento";
-import { Parcela } from "@/entities/Parcela"; // Import Parcela entity
+import { Parcela } from "@/entities/Parcela";
 import ConfirmacaoExclusao from "../projetos/ConfirmacaoExclusao";
 
 const statusConfig = {
   em_analise: {
     label: "Em Análise",
     icon: Clock,
-    className: "bg-yellow-100 text-yellow-800 border-yellow-200"
+    className: "bg-amber-50 text-amber-700 border-amber-200",
+    dotColor: "bg-amber-500"
   },
   parado: {
     label: "Parado",
     icon: Pause,
-    className: "bg-red-100 text-red-800 border-red-200"
+    className: "bg-red-50 text-red-700 border-red-200",
+    dotColor: "bg-red-500"
   },
   concluido: {
     label: "Concluído",
     icon: CheckCircle,
-    className: "bg-green-100 text-green-800 border-green-200"
+    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    dotColor: "bg-emerald-500"
   },
   cancelado: {
     label: "Cancelado",
     icon: XCircle,
-    className: "bg-gray-100 text-gray-800 border-gray-200"
+    className: "bg-gray-50 text-gray-600 border-gray-200",
+    dotColor: "bg-gray-400"
   }
 };
 
@@ -65,159 +70,169 @@ export default function ProjetosRecentes({ projetos, isLoading, onUpdate }) {
   const handleExcluir = async (projeto) => {
     setExcluindo(true);
     try {
-      // Primeiro, buscar e excluir todas as parcelas relacionadas ao projeto
       const parcelasRelacionadas = await Parcela.filter({ projeto_id: projeto.id });
       for (const parcela of parcelasRelacionadas) {
         await Parcela.delete(parcela.id);
       }
-      
-      // Depois excluir o projeto
       await ProjetoFinanciamento.delete(projeto.id);
       setProjetoParaExcluir(null);
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error("Erro ao excluir projeto:", error);
-      // Optionally, add a toast notification for the error
     } finally {
       setExcluindo(false);
     }
   };
 
+  const formatarValor = (valor) => {
+    if (!valor) return 'R$ 0';
+    if (valor >= 1000000) {
+      return `R$ ${(valor / 1000000).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mi`;
+    } else if (valor >= 1000) {
+      return `R$ ${(valor / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} mil`;
+    }
+    return `R$ ${valor.toLocaleString('pt-BR')}`;
+  };
+
   return (
     <>
-      <Card className="shadow-lg border-green-100">
-        <CardHeader className="border-b border-green-100">
-          <CardTitle className="flex items-center gap-2 text-xl font-bold text-green-900">
-            <FileText className="w-6 h-6" />
-            Projetos Recentes
-          </CardTitle>
-        </CardHeader>
+      <Card className="border-0 shadow-sm bg-white overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-lg bg-emerald-50">
+                <Layers className="w-4 h-4 text-emerald-600" />
+              </div>
+              <h2 className="text-base font-semibold text-gray-800">Projetos Recentes</h2>
+            </div>
+            <Link to={createPageUrl("TodosProjetos")}>
+              <Button variant="ghost" size="sm" className="text-xs text-gray-500 hover:text-emerald-600 gap-1 h-8">
+                Ver todos
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+
         <CardContent className="p-0">
-          <div className="divide-y divide-green-50">
+          <div className="divide-y divide-gray-50">
             {isLoading ? (
               Array(3).fill(0).map((_, i) => (
-                <div key={i} className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="space-y-2">
-                      <Skeleton className="h-5 w-48" />
-                      <Skeleton className="h-4 w-32" />
+                <div key={i} className="p-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-10 w-10 rounded-lg" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-28" />
                     </div>
                     <Skeleton className="h-6 w-20 rounded-full" />
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Skeleton className="h-4 w-16" />
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-4 w-18" />
                   </div>
                 </div>
               ))
             ) : projetos.length === 0 ? (
-              <div className="p-8 text-center">
-                <FileText className="w-12 h-12 text-green-300 mx-auto mb-4" />
-                <p className="text-green-600 font-medium">Nenhum projeto encontrado</p>
-                <p className="text-green-500 text-sm mt-1">Crie seu primeiro projeto de financiamento</p>
+              <div className="p-10 text-center">
+                <div className="w-14 h-14 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-3">
+                  <FileText className="w-6 h-6 text-gray-300" />
+                </div>
+                <p className="text-gray-600 font-medium text-sm">Nenhum projeto encontrado</p>
+                <p className="text-gray-400 text-xs mt-1">Crie seu primeiro projeto</p>
               </div>
             ) : (
               projetos.map((projeto) => {
                 const StatusIcon = statusConfig[projeto.status]?.icon || Clock;
                 const isCancelado = projeto.status === 'cancelado';
-                // Vermelho FORTE e INTENSO: #DC0000
-                const canceladoClass = 'line-through [text-decoration-color:#DC0000] [text-decoration-thickness:2px]';
+                const canceladoClass = 'line-through text-gray-400';
                 
                 return (
                   <div 
                     key={projeto.id} 
                     data-project-id={projeto.id}
-                    className={`p-6 hover:bg-green-50 transition-colors duration-200 group ${
-                      isCancelado ? 'is-cancelled' : ''
+                    className={`p-4 hover:bg-gray-50/50 transition-all duration-200 group ${
+                      isCancelado ? 'opacity-60' : ''
                     }`}
                   >
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-1">
-                          <h3 className={`font-semibold text-green-900 text-lg ${
-                            isCancelado ? canceladoClass : ''
-                          }`}>
-                            {projeto.nome_cliente}
-                          </h3>
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <Link to={createPageUrl("EditarProjeto") + `?id=${projeto.id}`}>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                className="h-8 px-2 text-green-600 hover:text-green-800 hover:bg-green-100"
-                              >
-                                <Edit className="w-3 h-3" />
-                              </Button>
-                            </Link>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => setProjetoParaExcluir(projeto)}
-                              className={`h-8 px-2 ${
-                                isCancelado
-                                  ? 'text-[#DC0000] hover:text-[#B80000] hover:bg-[rgba(220,0,0,0.14)]'
-                                  : 'text-red-600 hover:text-red-800 hover:bg-red-100'
-                              }`}
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
+                    <div className="flex items-start gap-3">
+                      {/* Indicador lateral */}
+                      <div className={`w-1 h-12 rounded-full ${statusConfig[projeto.status]?.dotColor || 'bg-gray-300'} flex-shrink-0 mt-1`} />
+                      
+                      {/* Conteúdo principal */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-1.5">
+                          <div className="flex-1 min-w-0">
+                            <h3 className={`font-medium text-gray-800 text-sm truncate ${
+                              isCancelado ? canceladoClass : ''
+                            }`}>
+                              {projeto.nome_cliente}
+                            </h3>
+                            <p className={`text-xs text-gray-500 truncate ${
+                              isCancelado ? canceladoClass : ''
+                            }`}>
+                              {projeto.item_financiado}
+                            </p>
+                          </div>
+                          
+                          <Badge 
+                            variant="outline" 
+                            className={`${statusConfig[projeto.status]?.className} text-[10px] px-2 py-0.5 font-medium border flex-shrink-0`}
+                          >
+                            {statusConfig[projeto.status]?.label}
+                          </Badge>
+                        </div>
+                        
+                        {/* Info grid compacto */}
+                        <div className="flex items-center gap-4 text-xs text-gray-500 mt-2">
+                          <div className="flex items-center gap-1">
+                            <Building2 className="w-3 h-3" />
+                            <span className={`truncate max-w-[80px] ${isCancelado ? canceladoClass : ''}`}>
+                              {bancoNomes[projeto.banco]?.split(' ')[0] || projeto.banco}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            <span className={isCancelado ? canceladoClass : ''}>
+                              {format(new Date(projeto.data_protocolo), "dd/MM/yy", { locale: ptBR })}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 font-medium text-gray-700">
+                            <DollarSign className="w-3 h-3" />
+                            <span className={isCancelado ? canceladoClass : ''}>
+                              {formatarValor(projeto.valor_financiado)}
+                            </span>
                           </div>
                         </div>
-                        <p className={`text-green-600 font-medium ${
-                          isCancelado ? canceladoClass : ''
-                        }`}>
-                          {projeto.item_financiado}
-                        </p>
-                      </div>
-                      <Badge className={`${statusConfig[projeto.status]?.className} border flex items-center gap-1`}>
-                        <StatusIcon className="w-3 h-3" />
-                        {statusConfig[projeto.status]?.label}
-                      </Badge>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="w-4 h-4 text-green-500" />
-                        <span className={`text-green-700 ${
-                          isCancelado ? canceladoClass : ''
-                        }`}>
-                          {bancoNomes[projeto.banco] || projeto.banco}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-green-500" />
-                        <span className={`text-green-700 ${
-                          isCancelado ? canceladoClass : ''
-                        }`}>
-                          {format(new Date(projeto.data_protocolo), "dd/MM/yyyy", { locale: ptBR })}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-green-500" />
-                        <span className={`text-green-700 font-semibold ${
-                          isCancelado ? canceladoClass : ''
-                        }`}>
-                          R$ {projeto.valor_financiado?.toLocaleString('pt-BR') || '0'}
-                        </span>
-                      </div>
-                      <div className={`text-green-600 font-medium ${
-                        isCancelado ? canceladoClass : ''
-                      }`}>
-                        {projeto.agencia}
-                      </div>
-                    </div>
 
-                    {projeto.observacoes && (
-                      <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-100">
-                        <p className={`text-green-700 text-sm ${
-                          isCancelado ? canceladoClass : ''
-                        }`}>
-                          <strong>Obs:</strong> {projeto.observacoes}
-                        </p>
+                        {projeto.observacoes && (
+                          <div className="mt-2 px-2.5 py-1.5 bg-amber-50/50 rounded-md border border-amber-100/50">
+                            <p className={`text-[11px] text-amber-700 truncate ${
+                              isCancelado ? 'text-gray-400' : ''
+                            }`}>
+                              {projeto.observacoes}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    )}
+
+                      {/* Ações */}
+                      <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <Link to={createPageUrl("EditarProjeto") + `?id=${projeto.id}`}>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className="h-7 w-7 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </Button>
+                        </Link>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => setProjetoParaExcluir(projeto)}
+                          className="h-7 w-7 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 );
               })

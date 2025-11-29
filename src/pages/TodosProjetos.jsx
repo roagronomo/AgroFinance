@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { ProjetoFinanciamento } from "@/entities/ProjetoFinanciamento";
 import { Parcela } from "@/entities/Parcela";
@@ -302,35 +301,40 @@ export default function TodosProjetos() {
 
 
   return (
-    <div className="p-4 md:p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen">
+    <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-slate-100 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        {/* Header moderno */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div className="flex items-center gap-4">
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
               onClick={() => navigate(createPageUrl("Dashboard"))}
-              className="border-green-300 text-green-700 hover:bg-green-50"
+              className="h-9 w-9 rounded-lg text-gray-500 hover:text-emerald-600 hover:bg-emerald-50"
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-green-900">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-800">
                 Todos os Projetos
               </h1>
-              <p className="text-green-600 mt-1">
+              <p className="text-gray-500 text-sm">
                 {projetosFiltrados.length} projeto(s) encontrado(s)
               </p>
             </div>
           </div>
-          <div className="flex gap-3">
-             <Button onClick={imprimirRelatorio} variant="outline" className="border-green-300 text-green-700 hover:bg-green-50">
-              <Printer className="w-5 h-5 mr-2" />
+          <div className="flex gap-2">
+            <Button 
+              onClick={imprimirRelatorio} 
+              variant="outline" 
+              className="h-10 px-4 border-gray-200 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 hover:border-emerald-200 rounded-lg"
+            >
+              <Printer className="w-4 h-4 mr-2" />
               Imprimir
             </Button>
             <Link to={createPageUrl("NovoProjeto")}>
-              <Button className="bg-green-600 hover:bg-green-700 shadow-lg">
-                <Plus className="w-5 h-5 mr-2" />
+              <Button className="h-10 px-5 bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm">
+                <Plus className="w-4 h-4 mr-2" />
                 Novo Projeto
               </Button>
             </Link>

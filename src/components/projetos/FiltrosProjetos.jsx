@@ -47,136 +47,134 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
     .sort((a, b) => b.localeCompare(a));
 
   return (
-    <Card className="mb-6 shadow-lg border-green-100">
-      <CardContent className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="flex-1 relative lg:col-span-3">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-green-500" />
-            <Input
-              placeholder="Buscar por cliente, item ou agência..."
-              value={filtros.busca}
-              onChange={(e) => onFiltroChange('busca', e.target.value)}
-              className="pl-10 border-green-200 focus:border-green-500"
-            />
-          </div>
+    <div className="bg-white rounded-xl border border-gray-100 p-4 mb-5 shadow-sm">
+      {/* Busca principal */}
+      <div className="relative mb-3">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Input
+          placeholder="Buscar por cliente, item ou agência..."
+          value={filtros.busca}
+          onChange={(e) => onFiltroChange('busca', e.target.value)}
+          className="pl-10 h-10 border-gray-200 focus:border-emerald-500 rounded-lg text-sm"
+        />
+      </div>
+
+      {/* Filtros em linha */}
+      <div className="flex flex-wrap gap-2">
+        <Select
+          value={filtros.status}
+          onValueChange={(value) => onFiltroChange('status', value)}
+        >
+          <SelectTrigger className="h-9 min-w-[140px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+            <div className="flex items-center gap-1.5">
+              <Filter className="w-3.5 h-3.5 text-gray-400" />
+              <SelectValue placeholder="Status" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os Status</SelectItem>
+            {STATUS_OPTIONS.map((status) => (
+              <SelectItem key={status.value} value={status.value}>
+                {status.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filtros.banco}
+          onValueChange={(value) => onFiltroChange('banco', value)}
+        >
+          <SelectTrigger className="h-9 min-w-[140px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+            <div className="flex items-center gap-1.5">
+              <Filter className="w-3.5 h-3.5 text-gray-400" />
+              <SelectValue placeholder="Banco" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os Bancos</SelectItem>
+            {BANCOS.map((banco) => (
+              <SelectItem key={banco.value} value={banco.value}>
+                {banco.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        
+        <Select
+          value={filtros.status_art}
+          onValueChange={(value) => onFiltroChange('status_art', value)}
+        >
+          <SelectTrigger className="h-9 min-w-[150px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+            <div className="flex items-center gap-1.5">
+              <FileSignature className="w-3.5 h-3.5 text-gray-400" />
+              <SelectValue placeholder="Status ART" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os Status ART</SelectItem>
+            {ART_STATUS_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        
+        <Select
+          value={filtros.ano || "todos"}
+          onValueChange={(value) => onFiltroChange('ano', value === "todos" ? "todos" : value)}
+        >
+          <SelectTrigger className="h-9 min-w-[130px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+            <div className="flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-gray-400" />
+              <SelectValue placeholder="Ano" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os Anos</SelectItem>
+            {yearOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filtros.safra || "todos"}
+          onValueChange={(value) => onFiltroChange('safra', value === "todos" ? "todos" : value)}
+        >
+          <SelectTrigger className="h-9 min-w-[140px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+            <div className="flex items-center gap-1.5">
+              <Wheat className="w-3.5 h-3.5 text-gray-400" />
+              <SelectValue placeholder="Safra" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todas as Safras</SelectItem>
+            {safrasDisponiveis.map((safra) => (
+              <SelectItem key={safra} value={safra}>
+                {safra}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <div className="relative flex-1 min-w-[160px]">
+          <Hash className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
+          <Input
+            placeholder="Contrato (ex.: 21)"
+            value={filtros.contrato}
+            onChange={(e) => {
+              const valor = e.target.value.replace(/[^0-9/.\-\s]/g, '');
+              onFiltroChange('contrato', valor);
+            }}
+            inputMode="numeric"
+            className="h-9 pl-9 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50"
+          />
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mt-4">
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-green-600" />
-            <Select
-              value={filtros.status}
-              onValueChange={(value) => onFiltroChange('status', value)}
-            >
-              <SelectTrigger className="border-green-200 focus:border-green-500">
-                <SelectValue placeholder="Status do Projeto" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os Status</SelectItem>
-                {STATUS_OPTIONS.map((status) => (
-                  <SelectItem key={status.value} value={status.value}>
-                    {status.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-green-600" />
-            <Select
-              value={filtros.banco}
-              onValueChange={(value) => onFiltroChange('banco', value)}
-            >
-              <SelectTrigger className="border-green-200 focus:border-green-500">
-                <SelectValue placeholder="Banco" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os Bancos</SelectItem>
-                {BANCOS.map((banco) => (
-                  <SelectItem key={banco.value} value={banco.value}>
-                    {banco.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <FileSignature className="w-4 h-4 text-green-600" />
-            <Select
-              value={filtros.status_art}
-              onValueChange={(value) => onFiltroChange('status_art', value)}
-            >
-              <SelectTrigger className="border-green-200 focus:border-green-500">
-                <SelectValue placeholder="Status da ART" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os Status ART</SelectItem>
-                {ART_STATUS_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-green-600" />
-            <Select
-              value={filtros.ano || "todos"}
-              onValueChange={(value) => onFiltroChange('ano', value === "todos" ? "todos" : value)}
-            >
-              <SelectTrigger className="border-green-200 focus:border-green-500">
-                <SelectValue placeholder="Todos os Anos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os Anos</SelectItem>
-                {yearOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Wheat className="w-4 h-4 text-green-600" />
-            <Select
-              value={filtros.safra || "todos"}
-              onValueChange={(value) => onFiltroChange('safra', value === "todos" ? "todos" : value)}
-            >
-              <SelectTrigger className="border-green-200 focus:border-green-500">
-                <SelectValue placeholder="Todas as Safras" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todas as Safras</SelectItem>
-                {safrasDisponiveis.map((safra) => (
-                  <SelectItem key={safra} value={safra}>
-                    {safra}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center gap-2 relative">
-            <Hash className="w-4 h-4 text-green-600 absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
-            <Input
-              placeholder="Contrato (ex.: 218031/4517/2024)"
-              value={filtros.contrato}
-              onChange={(e) => {
-                const valor = e.target.value.replace(/[^0-9/.\-\s]/g, '');
-                onFiltroChange('contrato', valor);
-              }}
-              inputMode="numeric"
-              className="pl-10 border-green-200 focus:border-green-500"
-            />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

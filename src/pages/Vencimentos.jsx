@@ -28,17 +28,20 @@ const statusConfig = {
   pendente: {
     label: "Pendente",
     icon: Clock,
-    className: "bg-yellow-100 text-yellow-800 border-yellow-200"
+    className: "bg-amber-50 text-amber-700 border-amber-200",
+    dot: "bg-amber-500"
   },
   paga: {
     label: "Paga",
     icon: CheckCircle2,
-    className: "bg-green-100 text-green-800 border-green-200"
+    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    dot: "bg-emerald-500"
   },
   em_atraso: {
     label: "Em Atraso",
     icon: AlertCircle,
-    className: "bg-red-100 text-red-800 border-red-200"
+    className: "bg-red-50 text-red-700 border-red-200",
+    dot: "bg-red-500"
   }
 };
 
@@ -593,212 +596,226 @@ export default function Vencimentos() {
   const anos = [...new Set(parcelas.map(p => new Date(p.data_vencimento).getFullYear()))].sort();
 
   return (
-    <div className="p-4 md:p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen">
+    <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-slate-100 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        {/* Header moderno */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div className="flex items-center gap-4">
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
               onClick={() => navigate(createPageUrl("Dashboard"))}
-              className="border-green-300 text-green-700 hover:bg-green-50"
+              className="h-9 w-9 rounded-lg text-gray-500 hover:text-emerald-600 hover:bg-emerald-50"
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-green-900">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-800">
                 Controle de Vencimentos
               </h1>
-              <p className="text-green-600 mt-1">
+              <p className="text-gray-500 text-sm">
                 {parcelasFiltradas.length} parcela(s) encontrada(s)
               </p>
             </div>
           </div>
-          <div className="flex gap-3 flex-wrap">
+          <div className="flex gap-2">
             <Button
               onClick={exportarParaExcel}
               variant="outline"
-              className="bg-white border-green-300 text-green-700 hover:bg-green-50 shadow-lg"
+              className="h-10 px-4 border-gray-200 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 hover:border-emerald-200 rounded-lg"
             >
-              <FileSpreadsheet className="w-5 h-5 mr-2" />
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
               Exportar Excel
             </Button>
             <Button
               onClick={salvarPDF}
-              className="bg-green-600 hover:bg-green-700 shadow-lg"
+              className="h-10 px-5 bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm"
             >
-              <Printer className="w-5 h-5 mr-2" />
+              <Printer className="w-4 h-4 mr-2" />
               Salvar PDF
             </Button>
           </div>
         </div>
 
-        <Card className="mb-6 shadow-lg border-green-100">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-green-500" />
-                <Input
-                  placeholder="Buscar por cliente..."
-                  value={filtros.busca}
-                  onChange={(e) => handleFiltroChange('busca', e.target.value)}
-                  className="pl-10 border-green-200 focus:border-green-500"
-                />
-              </div>
-
-              <Select
-                value={filtros.ano}
-                onValueChange={(value) => handleFiltroChange('ano', value)}
-              >
-                <SelectTrigger className="border-green-200 focus:border-green-500">
-                  <SelectValue placeholder="Ano" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os anos</SelectItem>
-                  {anos.map(ano => (
-                    <SelectItem key={ano} value={ano.toString()}>{ano}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={filtros.mes}
-                onValueChange={(value) => handleFiltroChange('mes', value)}
-              >
-                <SelectTrigger className="border-green-200 focus:border-green-500">
-                  <SelectValue placeholder="Mês" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os meses</SelectItem>
-                  <SelectItem value="1">Janeiro</SelectItem>
-                  <SelectItem value="2">Fevereiro</SelectItem>
-                  <SelectItem value="3">Março</SelectItem>
-                  <SelectItem value="4">Abril</SelectItem>
-                  <SelectItem value="5">Maio</SelectItem>
-                  <SelectItem value="6">Junho</SelectItem>
-                  <SelectItem value="7">Julho</SelectItem>
-                  <SelectItem value="8">Agosto</SelectItem>
-                  <SelectItem value="9">Setembro</SelectItem>
-                  <SelectItem value="10">Outubro</SelectItem>
-                  <SelectItem value="11">Novembro</SelectItem>
-                  <SelectItem value="12">Dezembro</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={filtros.status}
-                onValueChange={(value) => handleFiltroChange('status', value)}
-              >
-                <SelectTrigger className="border-green-200 focus:border-green-500">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os status</SelectItem>
-                  <SelectItem value="pendente">Pendente</SelectItem>
-                  <SelectItem value="paga">Paga</SelectItem>
-                  <SelectItem value="em_atraso">Em Atraso</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <div className="relative">
-                <FileText className="absolute left-3 top-3 h-4 w-4 text-green-500" />
-                <Input
-                  placeholder="Nº do contrato..."
-                  value={filtros.contrato}
-                  onChange={(e) => handleFiltroChange('contrato', e.target.value)}
-                  className="pl-10 border-green-200 focus:border-green-500"
-                />
-              </div>
+        {/* Filtros modernos */}
+        <div className="bg-white rounded-xl border border-gray-100 p-4 mb-5 shadow-sm">
+          <div className="flex flex-wrap gap-2">
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Buscar por cliente..."
+                value={filtros.busca}
+                onChange={(e) => handleFiltroChange('busca', e.target.value)}
+                className="pl-10 h-10 border-gray-200 focus:border-emerald-500 rounded-lg text-sm"
+              />
             </div>
-          </CardContent>
-        </Card>
 
-        <div className="space-y-4">
+            <Select
+              value={filtros.ano}
+              onValueChange={(value) => handleFiltroChange('ano', value)}
+            >
+              <SelectTrigger className="h-10 min-w-[100px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os anos</SelectItem>
+                {anos.map(ano => (
+                  <SelectItem key={ano} value={ano.toString()}>{ano}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={filtros.mes}
+              onValueChange={(value) => handleFiltroChange('mes', value)}
+            >
+              <SelectTrigger className="h-10 min-w-[150px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os meses</SelectItem>
+                <SelectItem value="1">Janeiro</SelectItem>
+                <SelectItem value="2">Fevereiro</SelectItem>
+                <SelectItem value="3">Março</SelectItem>
+                <SelectItem value="4">Abril</SelectItem>
+                <SelectItem value="5">Maio</SelectItem>
+                <SelectItem value="6">Junho</SelectItem>
+                <SelectItem value="7">Julho</SelectItem>
+                <SelectItem value="8">Agosto</SelectItem>
+                <SelectItem value="9">Setembro</SelectItem>
+                <SelectItem value="10">Outubro</SelectItem>
+                <SelectItem value="11">Novembro</SelectItem>
+                <SelectItem value="12">Dezembro</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={filtros.status}
+              onValueChange={(value) => handleFiltroChange('status', value)}
+            >
+              <SelectTrigger className="h-10 min-w-[140px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os status</SelectItem>
+                <SelectItem value="pendente">Pendente</SelectItem>
+                <SelectItem value="paga">Paga</SelectItem>
+                <SelectItem value="em_atraso">Em Atraso</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="relative min-w-[150px]">
+              <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Nº do contrato..."
+                value={filtros.contrato}
+                onChange={(e) => handleFiltroChange('contrato', e.target.value)}
+                className="pl-10 h-10 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-3">
           {isLoading ? (
-            <Card className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
-              <p className="text-green-600">Carregando vencimentos...</p>
-            </Card>
+              <div className="bg-white rounded-xl border border-gray-100 p-8">
+                <div className="flex items-center justify-center gap-3">
+                  <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-gray-500 text-sm">Carregando vencimentos...</span>
+                </div>
+              </div>
           ) : parcelasFiltradas.length === 0 ? (
-            <Card className="p-12 text-center">
-              <Calendar className="w-16 h-16 text-green-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-green-900 mb-2">
+            <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+              <div className="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Calendar className="w-6 h-6 text-gray-300" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-700 mb-1">
                 Nenhum vencimento encontrado
               </h3>
-              <p className="text-green-600">
-                Não há parcelas que correspondam aos filtros aplicados.
+              <p className="text-gray-400 text-sm">
+                Ajuste os filtros para ver parcelas
               </p>
-            </Card>
+            </div>
           ) : (
             parcelasFiltradas.map((parcela) => {
               const projeto = projetos.find(p => p.id === parcela.projeto_id);
               const StatusIcon = statusConfig[parcela.status]?.icon || Clock;
+              const statusStyle = statusConfig[parcela.status] || statusConfig.pendente;
 
               return (
-                <Card key={parcela.id} className="shadow-lg border-green-100 hover:shadow-xl transition-all duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="text-lg font-bold text-green-900">
-                            {projeto?.nome_cliente || 'Cliente não encontrado'}
-                          </h3>
-                          <Badge className={`${statusConfig[parcela.status]?.className} border flex items-center gap-2`}>
-                            <StatusIcon className="w-4 h-4" />
-                            {statusConfig[parcela.status]?.label}
-                          </Badge>
+                <div 
+                  key={parcela.id} 
+                  className="bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-200 overflow-hidden"
+                >
+                  <div className="p-5">
+                    <div className="flex items-start gap-3">
+                      {/* Indicador lateral */}
+                      <div className={`w-1 h-16 rounded-full flex-shrink-0 ${statusStyle.dot}`} />
+
+                      <div className="flex-1 min-w-0">
+                        {/* Header */}
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base font-semibold text-gray-800 truncate">
+                              {projeto?.nome_cliente || 'Cliente não encontrado'}
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                              <span className="font-medium">Projeto:</span> {projeto?.item_financiado || 'N/A'}
+                              {projeto?.numero_contrato && (
+                                <span className="text-gray-400 ml-1">(Contrato: {projeto.numero_contrato})</span>
+                              )}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <Badge 
+                              variant="outline"
+                              className={`${statusStyle.className} text-xs px-2.5 py-1 font-medium border`}
+                            >
+                              <StatusIcon className="w-3 h-3 mr-1.5" />
+                              {statusStyle.label}
+                            </Badge>
+                            {parcela.status !== 'paga' && (
+                              <Button
+                                onClick={() => marcarComoPaga(parcela.id)}
+                                variant="outline"
+                                size="sm"
+                                className="h-8 px-3 text-xs border-gray-200 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 hover:border-emerald-200"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                                Marcar como Paga
+                              </Button>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-green-700 mb-2">
-                          <strong>Projeto:</strong> {projeto?.item_financiado || 'N/A'}
-                          {projeto?.numero_contrato && (
-                            <span className="ml-2">
-                              (Contrato: {projeto.numero_contrato})
-                            </span>
-                          )}
-                        </p>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-                          <div className="flex items-center gap-2">
-                            <FileText className="w-4 h-4 text-green-500" />
-                            <span className="text-green-700">
-                              Parcela {parcela.numero_parcela}
-                            </span>
+
+                        {/* Info grid */}
+                        <div className="flex items-center gap-6 text-sm mt-3">
+                          <div className="flex items-center gap-1.5 text-gray-500">
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>Parcela {parcela.numero_parcela}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-green-500" />
-                            <span className="text-green-700">
-                              {format(new Date(parcela.data_vencimento), "dd/MM/yyyy", { locale: ptBR })}
-                            </span>
+                          <div className="flex items-center gap-1.5 text-gray-500">
+                            <Calendar className="w-3.5 h-3.5" />
+                            <span>{format(new Date(parcela.data_vencimento), "dd/MM/yyyy", { locale: ptBR })}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="w-4 h-4 text-green-500" />
-                            <span className="text-green-700 font-bold">
+                          <div className="flex items-center gap-1.5">
+                            <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-emerald-700 font-semibold">
                               R$ {parcela.valor_parcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </span>
                           </div>
                           {parcela.data_pagamento && (
-                            <div className="flex items-center gap-2">
-                              <CheckCircle2 className="w-4 h-4 text-green-500" />
-                              <span className="text-green-700">
-                                Pago em {format(new Date(parcela.data_pagamento), "dd/MM/yyyy", { locale: ptBR })}
-                              </span>
+                            <div className="flex items-center gap-1.5 text-gray-400 text-xs">
+                              <CheckCircle2 className="w-3 h-3" />
+                              <span>Pago em {format(new Date(parcela.data_pagamento), "dd/MM/yyyy", { locale: ptBR })}</span>
                             </div>
                           )}
                         </div>
                       </div>
-                      {parcela.status !== 'paga' && (
-                        <Button
-                          onClick={() => marcarComoPaga(parcela.id)}
-                          variant="outline"
-                          size="sm"
-                          className="border-green-300 text-green-700 hover:bg-green-50"
-                        >
-                          <CheckCircle2 className="w-4 h-4 mr-2" />
-                          Marcar como Paga
-                        </Button>
-                      )}
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               );
             })
           )}

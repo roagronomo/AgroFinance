@@ -7,7 +7,6 @@ import { ptBR } from "date-fns/locale";
 import { 
   Building2, 
   Calendar,
-  DollarSign,
   FileText,
   Clock,
   CheckCircle,
@@ -194,7 +193,6 @@ export default function ProjetosRecentes({ projetos, isLoading, onUpdate }) {
                             </span>
                           </div>
                           <div className="flex items-center gap-1 font-medium text-gray-700">
-                            <DollarSign className="w-3 h-3" />
                             <span className={isCancelado ? canceladoClass : ''}>
                               {formatarValor(projeto.valor_financiado)}
                             </span>

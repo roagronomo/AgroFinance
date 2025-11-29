@@ -8,7 +8,6 @@ import { ptBR } from "date-fns/locale";
 import { 
   Building2, 
   Calendar,
-  DollarSign,
   Clock,
   CheckCircle,
   XCircle,

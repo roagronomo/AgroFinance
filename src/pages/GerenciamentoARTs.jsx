@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { ArtsNotificacoes } from "@/entities/ArtsNotificacoes";
 import { User } from "@/entities/User";
@@ -24,88 +23,141 @@ const STATUS_OPTIONS = [
   { value: "cancelado", label: "Cancelado" }
 ];
 
+const statusStyles = {
+  aberto: { bg: "bg-blue-50", text: "text-blue-700", dot: "bg-blue-500" },
+  aguardando_cliente: { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" },
+  aguardando_orgao: { bg: "bg-purple-50", text: "text-purple-700", dot: "bg-purple-500" },
+  concluido: { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
+  cancelado: { bg: "bg-gray-50", text: "text-gray-600", dot: "bg-gray-400" }
+};
+
 const TabelaServicos = ({ servicos, isLoading, currentUser, onDelete }) => {
-  if (isLoading) return <p>Carregando serviços...</p>;
-  if (servicos.length === 0) return <p>Nenhum serviço encontrado.</p>;
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-100 p-8">
+        <div className="flex items-center justify-center gap-3">
+          <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          <span className="text-gray-500 text-sm">Carregando serviços...</span>
+        </div>
+      </div>
+    );
+  }
+  
+  if (servicos.length === 0) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
+        <div className="w-14 h-14 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-3">
+          <ClipboardCheck className="w-6 h-6 text-gray-300" />
+        </div>
+        <p className="text-gray-600 font-medium">Nenhum serviço encontrado</p>
+        <p className="text-gray-400 text-sm mt-1">Ajuste os filtros ou crie um novo serviço</p>
+      </div>
+    );
+  }
 
   const podeExcluir = (servico) => {
     if (!currentUser) return false;
-    // Permite exclusão se for admin/gestor ou se for o criador
     const isAdminOrGestor = currentUser.role === 'admin' || currentUser.role === 'gestor';
     const isCriador = servico.created_by === currentUser.email;
     return isAdminOrGestor || isCriador;
   };
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full bg-white rounded-lg shadow">
-        <thead>
-          <tr className="border-b border-green-200 bg-green-50">
-            <th className="p-4 text-left text-sm font-semibold text-green-800">Nº Notificação</th>
-            <th className="p-4 text-left text-sm font-semibold text-green-800">Cliente</th>
-            <th className="p-4 text-left text-sm font-semibold text-green-800">Processo nº</th>
-            <th className="p-4 text-left text-sm font-semibold text-green-800">Atribuído Para</th>
-            <th className="p-4 text-left text-sm font-semibold text-green-800">Anexos</th>
-            <th className="p-4 text-left text-sm font-semibold text-green-800">Status</th>
-            <th className="p-4 text-left text-sm font-semibold text-green-800">Prazo</th>
-            <th className="p-4 text-left text-sm font-semibold text-green-800">Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {servicos.map((servico) => {
-            const totalAnexos = contarAnexosAtivos(servico);
-            const permiteExclusao = podeExcluir(servico);
-            
-            return (
-              <tr key={servico.id} className="border-b border-green-100 hover:bg-green-50">
-                <td className="p-4">{servico.numero_notificacao}</td>
-                <td className="p-4">{servico.cliente_nome}</td>
-                <td className="p-4">{servico.processo_numero || '—'}</td>
-                <td className="p-4">{servico.atribuido_para_nome || '—'}</td>
-                <td className="p-4">
-                  {totalAnexos > 0 ? (
-                    <div className="flex items-center gap-1">
-                      <Paperclip className="w-4 h-4 text-green-600" />
-                      <span className="text-sm">{totalAnexos}</span>
-                    </div>
-                  ) : (
-                    <span className="text-gray-400">—</span>
-                  )}
-                </td>
-                <td className="p-4 capitalize">{servico.status.replace(/_/g, ' ')}</td>
-                <td className="p-4">{servico.prazo ? new Date(servico.prazo + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</td>
-                <td className="p-4">
-                  <div className="flex gap-2">
-                    <Link to={createPageUrl(`EditarServicoART`) + `?id=${servico.id}`}>
-                      <Button variant="outline" size="sm">Ver / Editar</Button>
-                    </Link>
-                    {permiteExclusao && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onDelete(servico)}
-                              className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                              aria-label="Excluir serviço/ART"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Excluir este serviço/ART</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="min-w-full">
+          <thead>
+            <tr className="border-b border-gray-100">
+              <th className="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Notificação</th>
+              <th className="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Cliente</th>
+              <th className="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Processo</th>
+              <th className="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Responsável</th>
+              <th className="px-4 py-3 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Anexos</th>
+              <th className="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Prazo</th>
+              <th className="px-4 py-3 text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Ações</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {servicos.map((servico) => {
+              const totalAnexos = contarAnexosAtivos(servico);
+              const permiteExclusao = podeExcluir(servico);
+              const style = statusStyles[servico.status] || statusStyles.aberto;
+              const statusLabel = STATUS_OPTIONS.find(s => s.value === servico.status)?.label || servico.status;
+              
+              return (
+                <tr key={servico.id} className="hover:bg-gray-50/50 transition-colors group">
+                  <td className="px-4 py-3">
+                    <span className="text-sm font-medium text-gray-800">{servico.numero_notificacao}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-sm text-gray-700">{servico.cliente_nome}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-sm text-gray-500">{servico.processo_numero || '—'}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-sm text-gray-600">{servico.atribuido_para_nome || '—'}</span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {totalAnexos > 0 ? (
+                      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
+                        <Paperclip className="w-3 h-3" />
+                        <span className="text-xs font-medium">{totalAnexos}</span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-300">—</span>
                     )}
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+                      {statusLabel}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-sm text-gray-600">
+                      {servico.prazo ? new Date(servico.prazo + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-1">
+                      <Link to={createPageUrl(`EditarServicoART`) + `?id=${servico.id}`}>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 px-3 text-xs text-gray-600 hover:text-emerald-700 hover:bg-emerald-50"
+                        >
+                          Ver / Editar
+                        </Button>
+                      </Link>
+                      {permiteExclusao && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => onDelete(servico)}
+                                className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Excluir</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
@@ -509,105 +561,120 @@ export default function GerenciamentoARTs() {
     };
 
     return (
-        <div className="p-4 md:p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen">
+        <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-slate-100 min-h-screen">
             <div className="max-w-7xl mx-auto">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                {/* Header moderno */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-green-900 flex items-center gap-3">
-                            <ClipboardCheck className="w-8 h-8" />
-                            Gerenciamento de ARTs
-                        </h1>
-                        <p className="text-green-600 mt-1">
+                        <div className="flex items-center gap-3 mb-1">
+                            <div className="p-2.5 rounded-xl bg-emerald-100">
+                                <ClipboardCheck className="w-5 h-5 text-emerald-600" />
+                            </div>
+                            <h1 className="text-xl md:text-2xl font-bold text-gray-800">
+                                Gerenciamento de ARTs
+                            </h1>
+                        </div>
+                        <p className="text-gray-500 text-sm ml-12">
                             {servicosFiltrados.length} serviço(s) encontrado(s)
                         </p>
                     </div>
                     <Link to={createPageUrl("AbrirServicoART")}>
-                        <Button className="bg-green-600 hover:bg-green-700 shadow-lg w-full md:w-auto">
-                            <Plus className="w-5 h-5 mr-2" />
-                            Abrir Novo Serviço
+                        <Button className="bg-emerald-600 hover:bg-emerald-700 shadow-sm h-10 px-5 rounded-lg w-full md:w-auto">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Novo Serviço
                         </Button>
                     </Link>
                 </div>
 
                 {mensagemSucesso && (
-                    <Alert className="mb-4 bg-green-50 border-green-200">
-                        <AlertDescription className="text-green-800">
+                    <Alert className="mb-4 bg-emerald-50 border-emerald-200 rounded-lg">
+                        <AlertDescription className="text-emerald-800">
                             {mensagemSucesso}
                         </AlertDescription>
                     </Alert>
                 )}
                 
                 {mensagemErro && (
-                    <Alert variant="destructive" className="mb-4">
+                    <Alert variant="destructive" className="mb-4 rounded-lg">
                         <AlertDescription>{mensagemErro}</AlertDescription>
                     </Alert>
                 )}
 
-                <Card className="mb-6 shadow-lg border-green-100">
-                    <CardContent className="p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-3 h-4 w-4 text-green-500" />
-                                <Input
-                                    placeholder="Buscar por cliente, CPF/CNPJ, Processo, ART..."
-                                    value={filtros.busca}
-                                    onChange={(e) => handleFiltroChange('busca', e.target.value)}
-                                    className="pl-10 border-green-200 focus:border-green-500"
-                                />
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Filter className="w-4 h-4 text-green-600" />
-                                <Select value={filtros.status} onValueChange={(value) => handleFiltroChange('status', value)}>
-                                    <SelectTrigger className="border-green-200 focus:border-green-500">
-                                        <SelectValue placeholder="Status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="todos">Todos os Status</SelectItem>
-                                        {STATUS_OPTIONS.map(opt => (
-                                            <SelectItem key={opt.value} value={opt.value}>
-                                                {opt.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <UserCheck className="w-4 h-4 text-green-600" />
-                                <Select value={filtros.atribuido} onValueChange={(value) => handleFiltroChange('atribuido', value)}>
-                                    <SelectTrigger className="border-green-200 focus:border-green-500">
-                                        <SelectValue placeholder="Atribuído Para" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="todos">Todos os Responsáveis</SelectItem>
-                                        {usuariosOrganizacao.map((usuario) => (
-                                            <SelectItem key={usuario.email} value={usuario.nome}>
-                                                {usuario.nome}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Paperclip className="w-4 h-4 text-green-600" />
-                                <Select value={filtros.com_anexos} onValueChange={(value) => handleFiltroChange('com_anexos', value)}>
-                                    <SelectTrigger className="border-green-200 focus:border-green-500">
-                                        <SelectValue placeholder="Com Anexos" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="todos">Todos</SelectItem>
-                                        <SelectItem value="sim">Com Anexos</SelectItem>
-                                        <SelectItem value="nao">Sem Anexos</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                {/* Filtros modernos */}
+                <div className="bg-white rounded-xl border border-gray-100 p-4 mb-5 shadow-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input
+                                placeholder="Buscar cliente, CPF, processo..."
+                                value={filtros.busca}
+                                onChange={(e) => handleFiltroChange('busca', e.target.value)}
+                                className="pl-10 h-10 border-gray-200 focus:border-emerald-500 rounded-lg text-sm"
+                            />
                         </div>
-                    </CardContent>
-                </Card>
+                        <Select value={filtros.status} onValueChange={(value) => handleFiltroChange('status', value)}>
+                            <SelectTrigger className="h-10 border-gray-200 focus:border-emerald-500 rounded-lg text-sm">
+                                <div className="flex items-center gap-2">
+                                    <Filter className="w-3.5 h-3.5 text-gray-400" />
+                                    <SelectValue placeholder="Status" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="todos">Todos os Status</SelectItem>
+                                {STATUS_OPTIONS.map(opt => (
+                                    <SelectItem key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select value={filtros.atribuido} onValueChange={(value) => handleFiltroChange('atribuido', value)}>
+                            <SelectTrigger className="h-10 border-gray-200 focus:border-emerald-500 rounded-lg text-sm">
+                                <div className="flex items-center gap-2">
+                                    <UserCheck className="w-3.5 h-3.5 text-gray-400" />
+                                    <SelectValue placeholder="Responsável" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="todos">Todos os Responsáveis</SelectItem>
+                                {usuariosOrganizacao.map((usuario) => (
+                                    <SelectItem key={usuario.email} value={usuario.nome}>
+                                        {usuario.nome}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select value={filtros.com_anexos} onValueChange={(value) => handleFiltroChange('com_anexos', value)}>
+                            <SelectTrigger className="h-10 border-gray-200 focus:border-emerald-500 rounded-lg text-sm">
+                                <div className="flex items-center gap-2">
+                                    <Paperclip className="w-3.5 h-3.5 text-gray-400" />
+                                    <SelectValue placeholder="Anexos" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="todos">Todos</SelectItem>
+                                <SelectItem value="sim">Com Anexos</SelectItem>
+                                <SelectItem value="nao">Sem Anexos</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
 
+                {/* Tabs modernos */}
                 <Tabs defaultValue="tabela" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 bg-green-100 text-green-800">
-                        <TabsTrigger value="tabela">Tabela</TabsTrigger>
-                        <TabsTrigger value="kanban">Kanban</TabsTrigger>
+                    <TabsList className="inline-flex h-10 p-1 bg-gray-100 rounded-lg mb-4">
+                        <TabsTrigger 
+                            value="tabela" 
+                            className="px-6 rounded-md text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm"
+                        >
+                            Tabela
+                        </TabsTrigger>
+                        <TabsTrigger 
+                            value="kanban"
+                            className="px-6 rounded-md text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm"
+                        >
+                            Kanban
+                        </TabsTrigger>
                     </TabsList>
                     <TabsContent value="tabela" className="mt-4">
                         <TabelaServicos 

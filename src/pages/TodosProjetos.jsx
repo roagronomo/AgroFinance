@@ -244,7 +244,7 @@ export default function TodosProjetos() {
       ? filtrosAtivos.join(" | ")
       : "Mostrando todos os projetos";
 
-    // Paginação: 15 linhas por página
+    // Paginação: 15 linhas por página (sem páginas em branco desnecessárias)
     const ROWS_PER_PAGE = 15;
     const pages = [];
 
@@ -254,9 +254,15 @@ export default function TodosProjetos() {
     } else {
       for (let i = 0; i < projetosOrdenados.length; i += ROWS_PER_PAGE) {
         const pageItems = projetosOrdenados.slice(i, i + ROWS_PER_PAGE);
-        const fillCount = ROWS_PER_PAGE - pageItems.length;
-        const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
-        pages.push([...pageItems, ...filler]);
+        // Só adiciona linhas em branco se não for a última página
+        const isLastPage = i + ROWS_PER_PAGE >= projetosOrdenados.length;
+        if (isLastPage) {
+          pages.push(pageItems); // Última página sem preenchimento
+        } else {
+          const fillCount = ROWS_PER_PAGE - pageItems.length;
+          const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
+          pages.push([...pageItems, ...filler]);
+        }
       }
     }
 

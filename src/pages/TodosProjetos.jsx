@@ -27,10 +27,9 @@ export default function TodosProjetos() {
     banco: "todos",
     ano: "todos",
     mes: "todos",
-    status_art: "todos", // Novo filtro: status da ART
-    contrato: "", // Novo filtro: número de contrato
-    safra: "todos", // Novo filtro
-    cliente: "todos", // Filtro por cliente
+    status_art: "todos", // Filtro de status da ART
+    contrato: "", // Filtro: número de contrato
+    safra: "todos", // Filtro de safra
     contratos_selecionados: [] // IDs dos contratos selecionados
   });
   const [contratoDebounced, setContratoDebounced] = useState(""); // New state for debounced contract

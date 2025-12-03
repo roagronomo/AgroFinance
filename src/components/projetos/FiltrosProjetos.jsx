@@ -37,6 +37,9 @@ const ART_STATUS_OPTIONS = [
 ];
 
 export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = [] }) {
+  const [contratosSelecionados, setContratosSelecionados] = useState([]);
+  const [popoverOpen, setPopoverOpen] = useState(false);
+
   // Gerar opções de ano baseadas nos projetos
   const anosDisponiveis = [...new Set(projetos
     .map(p => p.data_protocolo ? new Date(p.data_protocolo).getFullYear() : null)
@@ -53,6 +56,58 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
     .map(p => p.safra)
     .filter(Boolean))]
     .sort((a, b) => b.localeCompare(a));
+
+  // Gerar lista de clientes únicos
+  const clientesDisponiveis = useMemo(() => {
+    return [...new Set(projetos.map(p => p.nome_cliente).filter(Boolean))].sort();
+  }, [projetos]);
+
+  // Contratos do cliente selecionado
+  const contratosDoCliente = useMemo(() => {
+    if (!filtros.cliente || filtros.cliente === "todos") return [];
+    return projetos
+      .filter(p => p.nome_cliente === filtros.cliente && p.numero_contrato)
+      .map(p => ({
+        id: p.id,
+        numero_contrato: p.numero_contrato,
+        item_financiado: p.item_financiado,
+        safra: p.safra
+      }));
+  }, [projetos, filtros.cliente]);
+
+  // Quando o cliente muda, limpar contratos selecionados
+  const handleClienteChange = (value) => {
+    onFiltroChange('cliente', value);
+    setContratosSelecionados([]);
+    onFiltroChange('contratos_selecionados', []);
+  };
+
+  // Toggle de contrato selecionado
+  const toggleContrato = (contratoId) => {
+    const novos = contratosSelecionados.includes(contratoId)
+      ? contratosSelecionados.filter(id => id !== contratoId)
+      : [...contratosSelecionados, contratoId];
+    setContratosSelecionados(novos);
+    onFiltroChange('contratos_selecionados', novos);
+  };
+
+  // Selecionar/Desselecionar todos
+  const toggleTodos = () => {
+    if (contratosSelecionados.length === contratosDoCliente.length) {
+      setContratosSelecionados([]);
+      onFiltroChange('contratos_selecionados', []);
+    } else {
+      const todos = contratosDoCliente.map(c => c.id);
+      setContratosSelecionados(todos);
+      onFiltroChange('contratos_selecionados', todos);
+    }
+  };
+
+  // Limpar seleção de contratos
+  const limparContratos = () => {
+    setContratosSelecionados([]);
+    onFiltroChange('contratos_selecionados', []);
+  };
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-4 mb-5 shadow-sm">

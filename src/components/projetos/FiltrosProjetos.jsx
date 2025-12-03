@@ -57,30 +57,23 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
     .filter(Boolean))]
     .sort((a, b) => b.localeCompare(a));
 
-  // Gerar lista de clientes únicos
-  const clientesDisponiveis = useMemo(() => {
-    return [...new Set(projetos.map(p => p.nome_cliente).filter(Boolean))].sort();
-  }, [projetos]);
-
-  // Contratos do cliente selecionado
+  // Contratos filtrados pela busca (quando há texto de busca)
   const contratosDoCliente = useMemo(() => {
-    if (!filtros.cliente || filtros.cliente === "todos") return [];
+    if (!filtros.busca || filtros.busca.length < 2) return [];
+    const buscaLower = filtros.busca.toLowerCase();
     return projetos
-      .filter(p => p.nome_cliente === filtros.cliente && p.numero_contrato)
+      .filter(p => 
+        p.nome_cliente?.toLowerCase().includes(buscaLower) && 
+        p.numero_contrato
+      )
       .map(p => ({
         id: p.id,
         numero_contrato: p.numero_contrato,
         item_financiado: p.item_financiado,
-        safra: p.safra
+        safra: p.safra,
+        nome_cliente: p.nome_cliente
       }));
-  }, [projetos, filtros.cliente]);
-
-  // Quando o cliente muda, limpar contratos selecionados
-  const handleClienteChange = (value) => {
-    onFiltroChange('cliente', value);
-    setContratosSelecionados([]);
-    onFiltroChange('contratos_selecionados', []);
-  };
+  }, [projetos, filtros.busca]);
 
   // Toggle de contrato selecionado
   const toggleContrato = (contratoId) => {

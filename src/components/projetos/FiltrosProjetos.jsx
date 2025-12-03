@@ -164,25 +164,7 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
           </SelectContent>
         </Select>
         
-        <Select
-          value={filtros.status_art}
-          onValueChange={(value) => onFiltroChange('status_art', value)}
-        >
-          <SelectTrigger className="h-9 min-w-[150px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
-            <div className="flex items-center gap-1.5">
-              <FileSignature className="w-3.5 h-3.5 text-gray-400" />
-              <SelectValue placeholder="Status ART" />
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os Status ART</SelectItem>
-            {ART_STATUS_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+
         
         <Select
           value={filtros.ano || "todos"}

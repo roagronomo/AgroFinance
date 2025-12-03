@@ -238,6 +238,130 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
           />
         </div>
       </div>
+
+      {/* Filtro de Cliente e Seleção de Contratos */}
+      <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-100">
+        <Select
+          value={filtros.cliente || "todos"}
+          onValueChange={handleClienteChange}
+        >
+          <SelectTrigger className="h-9 min-w-[200px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+            <div className="flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5 text-gray-400" />
+              <SelectValue placeholder="Selecionar Cliente" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os Clientes</SelectItem>
+            {clientesDisponiveis.map((cliente) => (
+              <SelectItem key={cliente} value={cliente}>
+                {cliente}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Seleção de Contratos - só aparece quando cliente está selecionado */}
+        {filtros.cliente && filtros.cliente !== "todos" && contratosDoCliente.length > 0 && (
+          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="h-9 min-w-[180px] border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 rounded-lg text-sm bg-gray-50/50 justify-start"
+              >
+                <FileCheck className="w-3.5 h-3.5 text-gray-400 mr-1.5" />
+                {contratosSelecionados.length === 0 
+                  ? "Selecionar Contratos" 
+                  : `${contratosSelecionados.length} contrato(s)`}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-0" align="start">
+              <div className="p-3 border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-sm text-gray-700">Contratos de {filtros.cliente.split(' ')[0]}</h4>
+                  <div className="flex gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-7 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                      onClick={toggleTodos}
+                    >
+                      {contratosSelecionados.length === contratosDoCliente.length ? "Desmarcar" : "Marcar"} todos
+                    </Button>
+                    {contratosSelecionados.length > 0 && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-7 text-xs text-gray-500 hover:text-gray-700"
+                        onClick={limparContratos}
+                      >
+                        Limpar
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="max-h-60 overflow-y-auto p-2">
+                {contratosDoCliente.map((contrato) => (
+                  <div 
+                    key={contrato.id}
+                    className={`flex items-start gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
+                      contratosSelecionados.includes(contrato.id) 
+                        ? 'bg-emerald-50 border border-emerald-200' 
+                        : 'hover:bg-gray-50 border border-transparent'
+                    }`}
+                    onClick={() => toggleContrato(contrato.id)}
+                  >
+                    <Checkbox 
+                      checked={contratosSelecionados.includes(contrato.id)}
+                      className="mt-0.5 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 truncate">
+                        {contrato.numero_contrato}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {contrato.item_financiado}
+                        {contrato.safra && <span className="ml-1">• {contrato.safra}</span>}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {contratosSelecionados.length > 0 && (
+                <div className="p-3 border-t border-gray-100 bg-gray-50">
+                  <Button 
+                    className="w-full h-8 bg-emerald-600 hover:bg-emerald-700 text-sm"
+                    onClick={() => setPopoverOpen(false)}
+                  >
+                    Aplicar ({contratosSelecionados.length})
+                  </Button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+        )}
+
+        {/* Badge mostrando contratos selecionados */}
+        {contratosSelecionados.length > 0 && (
+          <div className="flex items-center gap-1">
+            <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs px-2 py-1">
+              {contratosSelecionados.length} contrato(s) selecionado(s)
+            </Badge>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-gray-400 hover:text-red-500 hover:bg-red-50"
+              onClick={() => {
+                setContratosSelecionados([]);
+                onFiltroChange('contratos_selecionados', []);
+              }}
+            >
+              <X className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

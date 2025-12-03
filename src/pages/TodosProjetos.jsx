@@ -191,11 +191,11 @@ export default function TodosProjetos() {
     const statusNomes = {
       em_analise: "Em Análise",
       parado: "Parado",
-      concluido: "Concluido",
+      concluido: "Concluído",
       cancelado: "Cancelado"
     };
     const statusArtNomes = {
-      nao_se_aplica: "Não se aplica",
+      nao_se_aplica: "N/A",
       a_fazer: "A fazer",
       feita: "Feita",
       paga: "Paga"
@@ -209,7 +209,9 @@ export default function TodosProjetos() {
 
     // Calcular totais dos projetos filtrados
     const totalProjetos = projetosOrdenados.length;
-    // A variável valorTotal foi removida pois não será mais exibida.
+    const valorTotal = projetosOrdenados
+      .filter(p => p.status !== 'cancelado')
+      .reduce((sum, p) => sum + (p.valor_financiado || 0), 0);
 
     // Criar descrição dos filtros aplicados
     let filtrosAtivos = [];
@@ -239,67 +241,338 @@ export default function TodosProjetos() {
     }
 
     const filtrosTexto = filtrosAtivos.length > 0
-      ? `Filtros aplicados: ${filtrosAtivos.join(" | ")}`
+      ? filtrosAtivos.join(" | ")
       : "Mostrando todos os projetos";
 
+    // Paginação: 15 linhas por página
+    const ROWS_PER_PAGE = 15;
+    const pages = [];
+
+    if (projetosOrdenados.length === 0) {
+      const filler = Array.from({ length: ROWS_PER_PAGE }, () => ({ __blank: true }));
+      pages.push(filler);
+    } else {
+      for (let i = 0; i < projetosOrdenados.length; i += ROWS_PER_PAGE) {
+        const pageItems = projetosOrdenados.slice(i, i + ROWS_PER_PAGE);
+        const fillCount = ROWS_PER_PAGE - pageItems.length;
+        const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
+        pages.push([...pageItems, ...filler]);
+      }
+    }
+
     const conteudo = `
-      <div style="font-family: Arial, sans-serif; padding: 20px;">
-        <h1 style="text-align: center; color: #059669; margin-bottom: 10px;">Relatório de Projetos</h1>
-        <p style="text-align: center; font-size: 14px; color: #666; margin-bottom: 5px;">
-          ${filtrosTexto}
-        </p>
-        <p style="text-align: center; margin-bottom: 30px; font-weight: bold;">
-          ${totalProjetos} projeto(s) encontrado(s)
-        </p>
-        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
-          <thead>
-            <tr style="background-color: #f3f4f6;">
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Cliente</th>
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Nº Contrato</th>
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Item Financiado</th>
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Banco</th>
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Protocolo</th>
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: right; white-space: nowrap; min-width: 90px;">Valor</th>
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Status</th>
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Status ART</th>
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Safra</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${projetosOrdenados.map(p => `
-              <tr>
-                <td style="border: 1px solid #ddd; padding: 8px;">${p.nome_cliente}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${p.numero_contrato || 'N/A'}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${p.item_financiado}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${bancoNomes[p.banco] || p.banco}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${p.data_protocolo ? format(new Date(p.data_protocolo), "dd/MM/yyyy") : 'N/A'}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: right; white-space: nowrap;">R$ ${p.valor_financiado ? p.valor_financiado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00'}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${statusNomes[p.status] || p.status}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${statusArtNomes[p.status_art] || p.status_art}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${p.safra || 'N/A'}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-        <div style="margin-top: 30px; padding: 15px; background-color: #f3f4f6; border: 1px solid #ddd; border-radius: 5px;">
-          <div style="display: flex; flex-direction: column; gap: 10px;">
-            <div style="font-size: 14px;">
-              <p style="margin: 0; margin-bottom: 5px;"><strong>Resumo do Relatório</strong></p>
-              <p style="margin: 0; color: #666;">Data de geração: ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}</p>
-            </div>
-            <div style="text-align: right; font-size: 16px;">
-              <p style="margin: 0; margin-bottom: 5px;"><strong>Total de Projetos:</strong> ${totalProjetos}</p>
+      <html>
+        <head>
+          <title>Relatório de Projetos</title>
+          <style>
+            @page {
+              size: A4 landscape;
+              margin: 0.8cm;
+            }
+            body {
+              font-family: 'Calibri Light', Calibri, sans-serif;
+              font-size: 11pt;
+              color: #333;
+              margin: 0;
+              padding: 0;
+            }
+            .page {
+              position: relative;
+              min-height: 100vh;
+              page-break-after: always;
+              padding-top: 2.5cm;
+              padding-bottom: 1.5cm;
+              box-sizing: border-box;
+            }
+            .page:last-child {
+              page-break-after: auto;
+            }
+            .header-container {
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              height: 2cm;
+              background-color: white;
+              border-bottom: 2px solid #059669;
+              padding: 10px 20px;
+              box-sizing: border-box;
+              z-index: 1000;
+            }
+            .header-content {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              height: 100%;
+            }
+            .header-left {
+              display: flex;
+              align-items: center;
+              gap: 15px;
+            }
+            .header-left img {
+              height: 50px;
+              width: auto;
+            }
+            .header-center {
+              text-align: center;
+              flex-grow: 1;
+            }
+            .header-center h1 {
+              font-size: 16pt;
+              margin: 0 0 5px 0;
+              color: #059669;
+              font-weight: bold;
+            }
+            .header-center p {
+              font-size: 10pt;
+              margin: 0;
+              color: #666;
+            }
+            .header-right {
+              text-align: right;
+              min-width: 150px;
+            }
+            .header-right p {
+              margin: 0;
+              font-size: 11pt;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 0;
+            }
+            th, td {
+              border: 1px solid #ddd;
+              padding: 5px 6px;
+              text-align: left;
+              line-height: 1.1;
+            }
+            thead th {
+              background-color: #e6f4ea;
+              font-weight: bold;
+              color: #065f46;
+              font-size: 10pt;
+              text-align: center;
+            }
+            tbody tr:nth-child(even) {
+              background-color: #f9f9f9;
+            }
+            tbody tr:nth-child(odd) {
+              background-color: white;
+            }
+            tbody tr.blank-row td {
+              background-color: white;
+              border-color: #ddd;
+              height: 24px;
+            }
+            .col-num {
+              width: 30px;
+              text-align: center;
+            }
+            .col-cliente {
+              width: 90px;
+            }
+            .col-contrato {
+              width: 110px;
+            }
+            .col-item {
+              width: 120px;
+            }
+            .col-banco {
+              width: 100px;
+            }
+            .col-protocolo {
+              width: 75px;
+              text-align: center;
+            }
+            .col-valor {
+              width: 95px;
+              text-align: right;
+            }
+            .col-status {
+              width: 70px;
+              text-align: center;
+            }
+            .col-art {
+              width: 55px;
+              text-align: center;
+            }
+            .col-safra {
+              width: 70px;
+              text-align: center;
+            }
+            .status-concluido {
+              color: #15803d;
+              font-weight: bold;
+            }
+            .status-em_analise {
+              color: #ca8a04;
+              font-weight: bold;
+            }
+            .status-parado {
+              color: #dc2626;
+              font-weight: bold;
+            }
+            .status-cancelado {
+              color: #6b7280;
+              font-weight: bold;
+            }
+            .art-a_fazer {
+              color: #ca8a04;
+              font-weight: bold;
+            }
+            .art-feita {
+              color: #2563eb;
+              font-weight: bold;
+            }
+            .art-paga {
+              color: #15803d;
+              font-weight: bold;
+            }
+
+            .footer-container {
+              position: fixed;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              height: 1.2cm;
+              background-color: white;
+              border-top: 1px solid #e5e7eb;
+              padding: 5px 20px;
+              font-size: 9pt;
+              color: #666;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            .footer-total {
+              font-size: 9pt;
+              color: #065f46;
+              font-weight: 500;
+            }
+
+            @media print {
+              .page {
+                page-break-after: always;
+              }
+              .page:last-child {
+                page-break-after: auto;
+              }
+              table {
+                page-break-inside: avoid;
+              }
+              tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+              }
+              thead {
+                display: table-header-group;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header-container">
+            <div class="header-content">
+              <div class="header-left">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68c43a9d96ab992732fde594/c21e63e22_LogoSemente2.png" alt="Logo">
+                <div>
+                  <p style="font-weight: bold; font-size: 12pt; margin: 0; color: #059669;">Cerrado Consultoria</p>
+                  <p style="font-size: 10pt; margin: 0; color: #666;">Financiamentos Agrícolas</p>
+                </div>
+              </div>
+              <div class="header-center">
+                <h1>Relatório de Projetos</h1>
+                <p>${filtrosTexto}</p>
+              </div>
+              <div class="header-right">
+                <p style="font-weight: bold; color: #059669;">Total de Projetos:</p>
+                <p style="font-size: 14pt; font-weight: bold; color: #059669;">${totalProjetos}</p>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+
+          ${pages.map((page, pageIndex) => {
+            const startIndex = pageIndex * ROWS_PER_PAGE;
+
+            return `
+              <div class="page">
+                <table>
+                  <thead>
+                    <tr>
+                      <th class="col-num">#</th>
+                      <th class="col-cliente">Cliente</th>
+                      <th class="col-contrato">Nº Contrato</th>
+                      <th class="col-item">Item Financiado</th>
+                      <th class="col-banco">Banco</th>
+                      <th class="col-protocolo">Protocolo</th>
+                      <th class="col-valor">Valor</th>
+                      <th class="col-status">Status</th>
+                      <th class="col-art">ART</th>
+                      <th class="col-safra">Safra</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${page.map((item, idx) => {
+                      if (item.__blank) {
+                        return `
+                          <tr class="blank-row">
+                            <td class="col-num"></td>
+                            <td class="col-cliente"></td>
+                            <td class="col-contrato"></td>
+                            <td class="col-item"></td>
+                            <td class="col-banco"></td>
+                            <td class="col-protocolo"></td>
+                            <td class="col-valor"></td>
+                            <td class="col-status"></td>
+                            <td class="col-art"></td>
+                            <td class="col-safra"></td>
+                          </tr>
+                        `;
+                      }
+
+                      const p = item;
+                      const statusClass = 'status-' + (p.status || '');
+                      const artClass = 'art-' + (p.status_art || '');
+                      return `
+                        <tr>
+                          <td class="col-num">${startIndex + idx + 1}</td>
+                          <td class="col-cliente">${p.nome_cliente?.split(' ')[0] || ''}</td>
+                          <td class="col-contrato">${p.numero_contrato || 'N/A'}</td>
+                          <td class="col-item">${p.item_financiado || 'N/A'}</td>
+                          <td class="col-banco">${bancoNomes[p.banco] || p.banco || 'N/A'}</td>
+                          <td class="col-protocolo">${p.data_protocolo ? format(new Date(p.data_protocolo), "dd/MM/yyyy") : 'N/A'}</td>
+                          <td class="col-valor">R$ ${p.valor_financiado ? p.valor_financiado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00'}</td>
+                          <td class="col-status ${statusClass}">${statusNomes[p.status] || p.status || 'N/A'}</td>
+                          <td class="col-art ${artClass}">${statusArtNomes[p.status_art] || 'N/A'}</td>
+                          <td class="col-safra">${p.safra || 'N/A'}</td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `;
+          }).join('')}
+
+          <div class="footer-container">
+            <span>Relatório gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}</span>
+            <span class="footer-total">Total Geral: R$ ${valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+            <span>Cerrado Consultoria - Financiamentos Agrícolas</span>
+          </div>
+        </body>
+      </html>
     `;
 
     const janela = window.open('', '_blank');
     if (janela) {
       janela.document.write(conteudo);
       janela.document.close();
-      janela.print();
+      janela.document.title = `Relatorio_Projetos_${format(new Date(), 'dd-MM-yyyy')}`;
+      setTimeout(() => {
+        janela.print();
+      }, 500);
     } else {
       alert("Seu navegador bloqueou a abertura da janela de impressão. Por favor, desative o bloqueador de pop-ups para este site.");
     }

@@ -221,35 +221,30 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
         </div>
       </div>
 
-      {/* Filtro de Cliente e Seleção de Contratos */}
-      <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-100">
-        <Select
-          value={filtros.cliente || "todos"}
-          onValueChange={handleClienteChange}
+      {/* Filtro rápido ART a fazer */}
+      <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+        <Button
+          variant={filtros.status_art === "a_fazer" ? "default" : "outline"}
+          size="sm"
+          onClick={() => onFiltroChange('status_art', filtros.status_art === "a_fazer" ? "todos" : "a_fazer")}
+          className={`h-8 rounded-lg text-xs ${
+            filtros.status_art === "a_fazer" 
+              ? "bg-amber-500 hover:bg-amber-600 text-white" 
+              : "border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300"
+          }`}
         >
-          <SelectTrigger className="h-9 min-w-[200px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
-            <div className="flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-gray-400" />
-              <SelectValue placeholder="Selecionar Cliente" />
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os Clientes</SelectItem>
-            {clientesDisponiveis.map((cliente) => (
-              <SelectItem key={cliente} value={cliente}>
-                {cliente}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <ClipboardList className="w-3.5 h-3.5 mr-1.5" />
+          ART a fazer
+        </Button>
 
-        {/* Seleção de Contratos - só aparece quando cliente está selecionado */}
-        {filtros.cliente && filtros.cliente !== "todos" && contratosDoCliente.length > 0 && (
+        {/* Seleção de Contratos - só aparece quando há busca por cliente */}
+        {filtros.busca && contratosDoCliente.length > 0 && (
           <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
             <PopoverTrigger asChild>
               <Button 
                 variant="outline" 
-                className="h-9 min-w-[180px] border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 rounded-lg text-sm bg-gray-50/50 justify-start"
+                size="sm"
+                className="h-8 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 rounded-lg text-xs"
               >
                 <FileCheck className="w-3.5 h-3.5 text-gray-400 mr-1.5" />
                 {contratosSelecionados.length === 0 
@@ -260,7 +255,7 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
             <PopoverContent className="w-80 p-0" align="start">
               <div className="p-3 border-b border-gray-100">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-sm text-gray-700">Contratos de {filtros.cliente.split(' ')[0]}</h4>
+                  <h4 className="font-medium text-sm text-gray-700">Contratos encontrados</h4>
                   <div className="flex gap-1">
                     <Button 
                       variant="ghost" 

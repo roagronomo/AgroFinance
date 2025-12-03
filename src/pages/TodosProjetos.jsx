@@ -394,7 +394,10 @@ export default function TodosProjetos() {
             }
             .col-valor {
               width: 95px;
-              text-align: right;
+              text-align: center;
+            }
+            .col-valor-data {
+              text-align: left;
             }
             .col-status {
               width: 70px;

@@ -552,7 +552,7 @@ export default function TodosProjetos() {
                           <td class="col-item">${p.item_financiado || 'N/A'}</td>
                           <td class="col-banco">${bancoNomes[p.banco] || p.banco || 'N/A'}</td>
                           <td class="col-protocolo">${p.data_protocolo ? format(new Date(p.data_protocolo), "dd/MM/yyyy") : 'N/A'}</td>
-                          <td class="col-valor">R$ ${p.valor_financiado ? p.valor_financiado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00'}</td>
+                          <td class="col-valor col-valor-data">R$ ${p.valor_financiado ? p.valor_financiado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00'}</td>
                           <td class="col-status ${statusClass}">${statusNomes[p.status] || p.status || 'N/A'}</td>
                           <td class="col-art ${artClass}">${statusArtNomes[p.status_art] || 'N/A'}</td>
                           <td class="col-safra">${p.safra || 'N/A'}</td>

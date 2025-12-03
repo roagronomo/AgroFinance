@@ -132,18 +132,13 @@ export default function TodosProjetos() {
       }
     }
 
-    // Filtro de Cliente
-    if (filtros.cliente && filtros.cliente !== "todos") {
-      resultado = resultado.filter(p => p.nome_cliente === filtros.cliente);
-    }
-
-    // Filtro de Contratos Selecionados (tem prioridade sobre filtro de cliente se houver seleção)
+    // Filtro de Contratos Selecionados (tem prioridade se houver seleção)
     if (filtros.contratos_selecionados && filtros.contratos_selecionados.length > 0) {
       resultado = resultado.filter(p => filtros.contratos_selecionados.includes(p.id));
     }
 
     setProjetosFiltrados(resultado);
-  }, [projetos, filtros.busca, filtros.status, filtros.banco, filtros.ano, filtros.mes, filtros.status_art, filtros.safra, filtros.cliente, filtros.contratos_selecionados, contratoDebounced]); // Dependencies for useCallback
+  }, [projetos, filtros.busca, filtros.status, filtros.banco, filtros.ano, filtros.mes, filtros.status_art, filtros.safra, filtros.contratos_selecionados, contratoDebounced]); // Dependencies for useCallback
 
   useEffect(() => {
     aplicarFiltros();

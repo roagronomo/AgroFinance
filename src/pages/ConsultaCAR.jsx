@@ -135,10 +135,11 @@ export default function ConsultaCAR() {
           cql_filter: cqlFilter
         });
 
-        const url = `http://geoserver.car.gov.br/geoserver/wfs?${params.toString()}`;
+        const apiUrl = `https://geoserver.car.gov.br/geoserver/wfs?${params.toString()}`;
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
 
         try {
-          const response = await fetch(url);
+          const response = await fetch(proxyUrl);
           
           if (!response.ok) {
             throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`);

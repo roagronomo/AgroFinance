@@ -122,21 +122,13 @@ export default function ConsultaCAR() {
 
         setCoordenadas(coords);
 
-        // Construir URL da API SICAR
-        const typeName = `sicar:sicar_imoveis_${uf.toLowerCase()}`;
-        const cqlFilter = `INTERSECTS(the_geom,POINT(${coords.longitude} ${coords.latitude}))`;
+        // Construir URL original do GeoServer (HTTP)
+        const geoServerUrl = `http://geoserver.car.gov.br/geoserver/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=sicar:sicar_imoveis_${uf.toLowerCase()}&outputFormat=application/json&cql_filter=INTERSECTS(the_geom,POINT(${coords.longitude} ${coords.latitude}))`;
         
-        const params = new URLSearchParams({
-          service: 'WFS',
-          version: '1.0.0',
-          request: 'GetFeature',
-          outputFormat: 'application/json',
-          typeName: typeName,
-          cql_filter: cqlFilter
-        });
-
-        const apiUrl = `https://geoserver.car.gov.br/geoserver/wfs?${params.toString()}`;
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`;
+        // Usar corsproxy.io para fazer a ponte segura
+        const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(geoServerUrl);
+        
+        console.log(proxyUrl);
 
         try {
           const response = await fetch(proxyUrl);
@@ -165,7 +157,8 @@ export default function ConsultaCAR() {
 
         } catch (fetchError) {
           console.error('Erro ao consultar API:', fetchError);
-          setErro(`Erro ao consultar API do SICAR: ${fetchError.message}. Verifique a conexão e se o estado selecionado está disponível.`);
+          alert("Erro: " + fetchError.message);
+          setErro(`Erro ao consultar API do SICAR: ${fetchError.message}`);
         } finally {
           setBuscando(false);
         }

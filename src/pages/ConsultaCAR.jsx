@@ -66,8 +66,6 @@ export default function ConsultaCAR() {
   const [uf, setUf] = useState("");
   const [arquivo, setArquivo] = useState(null);
   const [nomeArquivo, setNomeArquivo] = useState("");
-  const [buscando, setBuscando] = useState(false);
-  const [resultado, setResultado] = useState(null);
   const [erro, setErro] = useState("");
   const [coordenadas, setCoordenadas] = useState(null);
 
@@ -87,87 +85,32 @@ export default function ConsultaCAR() {
     }
   };
 
-  const buscarImovel = async () => {
+  const extrairCoordenadas = async () => {
     setErro("");
-    setResultado(null);
     setCoordenadas(null);
-
-    if (!uf) {
-      setErro("Por favor, selecione um estado (UF).");
-      return;
-    }
 
     if (!arquivo) {
       setErro("Por favor, selecione um arquivo KML.");
       return;
     }
 
-    setBuscando(true);
-
     try {
-      // Ler conteúdo do arquivo KML
       const reader = new FileReader();
       
-      reader.onload = async (event) => {
+      reader.onload = (event) => {
         const conteudoKML = event.target.result;
-        
-        // Extrair primeira coordenada
         const coords = extrairCoordenadaKML(conteudoKML);
         
         if (!coords) {
           setErro("Não foi possível extrair coordenadas do arquivo KML. Verifique se o arquivo contém tags <coordinates>.");
-          setBuscando(false);
           return;
         }
 
         setCoordenadas(coords);
-
-        // Construir URL original do GeoServer (HTTP)
-        const geoServerUrl = `http://geoserver.car.gov.br/geoserver/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=sicar:sicar_imoveis_${uf.toLowerCase()}&outputFormat=application/json&cql_filter=INTERSECTS(the_geom,POINT(${coords.longitude} ${coords.latitude}))`;
-        
-        // Usar AllOrigins para fazer a ponte segura
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(geoServerUrl)}`;
-        
-        console.log(proxyUrl);
-
-        try {
-          const response = await fetch(proxyUrl);
-          
-          if (!response.ok) {
-            throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`);
-          }
-
-          const data = await response.json();
-          const geoData = JSON.parse(data.contents); // O JSON real do governo está aqui dentro
-
-          if (!geoData.features || geoData.features.length === 0) {
-            setErro("Nenhum imóvel encontrado nesta coordenada.");
-            setBuscando(false);
-            return;
-          }
-
-          // Pegar primeiro resultado
-          const imovel = geoData.features[0].properties;
-          
-          setResultado({
-            cod_imovel: imovel.cod_imovel || 'N/A',
-            municipio: imovel.municipio || imovel.nom_munici || 'N/A',
-            area: imovel.num_area || imovel.area_ha || 'N/A',
-            status: imovel.des_situacao || imovel.status || 'N/A'
-          });
-
-        } catch (fetchError) {
-          console.error('Erro ao consultar API:', fetchError);
-          alert("Erro: " + fetchError.message);
-          setErro(`Erro ao consultar API do SICAR: ${fetchError.message}`);
-        } finally {
-          setBuscando(false);
-        }
       };
 
       reader.onerror = () => {
         setErro("Erro ao ler o arquivo KML.");
-        setBuscando(false);
       };
 
       reader.readAsText(arquivo);
@@ -175,8 +118,12 @@ export default function ConsultaCAR() {
     } catch (error) {
       console.error('Erro geral:', error);
       setErro(`Erro: ${error.message}`);
-      setBuscando(false);
     }
+  };
+
+  const abrirGeoServer = () => {
+    const url = "http://geoserver.car.gov.br/geoserver/web/wicket/bookmarkable/org.geoserver.web.demo.MapPreviewPage?filter=false";
+    window.open(url, '_blank');
   };
 
   return (
@@ -205,23 +152,6 @@ export default function ConsultaCAR() {
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
-              {/* Estado */}
-              <div className="space-y-2">
-                <Label htmlFor="uf" className="text-sm font-medium">Estado (UF) *</Label>
-                <Select value={uf} onValueChange={setUf}>
-                  <SelectTrigger id="uf" className="h-10">
-                    <SelectValue placeholder="Selecione o estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ESTADOS_BRASIL.map(estado => (
-                      <SelectItem key={estado.value} value={estado.value}>
-                        {estado.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               {/* Upload KML */}
               <div className="space-y-2">
                 <Label htmlFor="kml-file" className="text-sm font-medium">Arquivo KML *</Label>
@@ -252,24 +182,15 @@ export default function ConsultaCAR() {
                 )}
               </div>
 
-              {/* Botão Pesquisar */}
+              {/* Botão Extrair Coordenadas */}
               <div className="pt-2">
                 <Button
-                  onClick={buscarImovel}
-                  disabled={buscando || !uf || !arquivo}
+                  onClick={extrairCoordenadas}
+                  disabled={!arquivo}
                   className="w-full bg-blue-600 hover:bg-blue-700 h-11"
                 >
-                  {buscando ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      Pesquisando...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="w-4 h-4 mr-2" />
-                      Pesquisar Imóvel
-                    </>
-                  )}
+                  <MapIcon className="w-4 h-4 mr-2" />
+                  Extrair Coordenadas
                 </Button>
               </div>
             </div>
@@ -278,12 +199,48 @@ export default function ConsultaCAR() {
 
         {/* Coordenadas Extraídas */}
         {coordenadas && (
-          <Alert className="mb-6 bg-blue-50 border-blue-200 rounded-xl">
-            <MapIcon className="h-4 w-4 text-blue-600" />
-            <AlertDescription className="text-blue-800">
-              <strong>Coordenadas extraídas:</strong> Latitude {coordenadas.latitude.toFixed(6)}, Longitude {coordenadas.longitude.toFixed(6)}
-            </AlertDescription>
-          </Alert>
+          <Card className="mb-6 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200 rounded-xl shadow-md overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-emerald-500 to-green-600 px-6 py-4">
+              <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5" />
+                Coordenadas Extraídas com Sucesso
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="bg-white rounded-lg p-6 mb-4 border-2 border-emerald-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-wide text-gray-500">Latitude</Label>
+                    <p className="text-3xl font-bold text-emerald-700 font-mono select-all">
+                      {coordenadas.latitude.toFixed(6)}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-wide text-gray-500">Longitude</Label>
+                    <p className="text-3xl font-bold text-emerald-700 font-mono select-all">
+                      {coordenadas.longitude.toFixed(6)}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={abrirGeoServer}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 h-14 text-lg"
+                >
+                  <MapIcon className="w-6 h-6 mr-2" />
+                  Abrir GeoServer (Visual)
+                </Button>
+              </div>
+
+              <Alert className="bg-yellow-50 border-yellow-300">
+                <AlertCircle className="h-4 w-4 text-yellow-600" />
+                <AlertDescription className="text-yellow-800 text-sm">
+                  <strong>Instruções:</strong> Devido à instabilidade do sistema do governo, o número do CAR deve ser consultado visualmente. 
+                  Clique no botão acima, selecione a camada do seu estado e dê zoom na coordenada informada: 
+                  <span className="font-mono font-bold"> Latitude {coordenadas.latitude.toFixed(6)}, Longitude {coordenadas.longitude.toFixed(6)}</span>.
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
         )}
 
         {/* Mensagem de Erro */}
@@ -296,39 +253,7 @@ export default function ConsultaCAR() {
           </Alert>
         )}
 
-        {/* Resultado */}
-        {resultado && (
-          <Card className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-emerald-500 to-green-600 px-6 py-4">
-              <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5" />
-                Imóvel Encontrado
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label className="text-xs uppercase tracking-wide text-gray-500">Número do Recibo CAR</Label>
-                  <p className="text-base font-semibold text-gray-800">{resultado.cod_imovel}</p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs uppercase tracking-wide text-gray-500">Município</Label>
-                  <p className="text-base font-semibold text-gray-800">{resultado.municipio}</p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs uppercase tracking-wide text-gray-500">Área do Imóvel</Label>
-                  <p className="text-base font-semibold text-gray-800">
-                    {typeof resultado.area === 'number' ? `${resultado.area.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} ha` : resultado.area}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs uppercase tracking-wide text-gray-500">Status</Label>
-                  <p className="text-base font-semibold text-gray-800">{resultado.status}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+
       </div>
     </div>
   );

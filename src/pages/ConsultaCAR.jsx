@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Upload, Search, AlertCircle, CheckCircle2, FileText, Map as MapIcon } from "lucide-react";
+import { MapPin, Upload, Search, AlertCircle, CheckCircle2, FileText, Map as MapIcon, Copy, Check } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const ESTADOS_BRASIL = [
@@ -63,12 +63,11 @@ const extrairCoordenadaKML = (conteudoKML) => {
 };
 
 export default function ConsultaCAR() {
-  const [uf, setUf] = useState("");
   const [arquivo, setArquivo] = useState(null);
   const [nomeArquivo, setNomeArquivo] = useState("");
   const [erro, setErro] = useState("");
   const [coordenadas, setCoordenadas] = useState(null);
-  const [mostrarResultado, setMostrarResultado] = useState(false);
+  const [copiado, setCopiado] = useState(false);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -86,15 +85,9 @@ export default function ConsultaCAR() {
     }
   };
 
-  const pesquisarCAR = async () => {
+  const extrairLocalizacao = async () => {
     setErro("");
     setCoordenadas(null);
-    setMostrarResultado(false);
-
-    if (!uf) {
-      setErro("Por favor, selecione um estado (UF).");
-      return;
-    }
 
     if (!arquivo) {
       setErro("Por favor, selecione um arquivo KML.");
@@ -114,7 +107,6 @@ export default function ConsultaCAR() {
         }
 
         setCoordenadas(coords);
-        setMostrarResultado(true);
       };
 
       reader.onerror = () => {
@@ -129,6 +121,27 @@ export default function ConsultaCAR() {
     }
   };
 
+  const copiarCoordenadas = () => {
+    if (coordenadas) {
+      const texto = `${coordenadas.latitude.toFixed(6)}, ${coordenadas.longitude.toFixed(6)}`;
+      navigator.clipboard.writeText(texto);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    }
+  };
+
+  const abrirGoogleMaps = () => {
+    if (coordenadas) {
+      const url = `https://www.google.com/maps/search/?api=1&query=${coordenadas.latitude},${coordenadas.longitude}&t=k`;
+      window.open(url, '_blank');
+    }
+  };
+
+  const abrirSICAR = () => {
+    const url = "https://consultapublica.car.gov.br/publico/imoveis/index";
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-slate-100 min-h-screen">
       <div className="max-w-4xl mx-auto">
@@ -138,10 +151,10 @@ export default function ConsultaCAR() {
             <div className="p-2 rounded-xl bg-blue-100">
               <MapPin className="w-5 h-5 text-blue-600" />
             </div>
-            Consulta CAR
+            Assistente de Localização CAR
           </h1>
           <p className="text-gray-500 text-sm mt-1">
-            Busque informações de imóveis rurais através de arquivo KML
+            Localize sua área no mapa e consulte o CAR de forma visual
           </p>
         </div>
 
@@ -149,32 +162,15 @@ export default function ConsultaCAR() {
         <Card className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-6">
           <CardHeader className="bg-gradient-to-r from-blue-500 to-cyan-600 px-6 py-4">
             <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
-              <Search className="w-5 h-5" />
-              Buscar Imóvel
+              <Upload className="w-5 h-5" />
+              Enviar Arquivo KML
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
-              {/* Estado */}
-              <div className="space-y-2">
-                <Label htmlFor="uf" className="text-sm font-medium">Estado (UF) *</Label>
-                <Select value={uf} onValueChange={setUf}>
-                  <SelectTrigger id="uf" className="h-10">
-                    <SelectValue placeholder="Selecione o estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ESTADOS_BRASIL.map(estado => (
-                      <SelectItem key={estado.value} value={estado.value}>
-                        {estado.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               {/* Upload KML */}
               <div className="space-y-2">
-                <Label htmlFor="kml-file" className="text-sm font-medium">Arquivo KML *</Label>
+                <Label htmlFor="kml-file" className="text-sm font-medium">Arquivo KML da Área *</Label>
                 <div className="flex items-center gap-3">
                   <label htmlFor="kml-file" className="flex-1">
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-400 hover:bg-blue-50/30 transition-colors cursor-pointer">
@@ -202,69 +198,91 @@ export default function ConsultaCAR() {
                 )}
               </div>
 
-              {/* Botão Pesquisar */}
+              {/* Botão Extrair */}
               <div className="pt-2">
                 <Button
-                  onClick={pesquisarCAR}
-                  disabled={!uf || !arquivo}
+                  onClick={extrairLocalizacao}
+                  disabled={!arquivo}
                   className="w-full bg-blue-600 hover:bg-blue-700 h-11"
                 >
-                  <Search className="w-4 h-4 mr-2" />
-                  Pesquisar
+                  <MapIcon className="w-4 h-4 mr-2" />
+                  Extrair Localização
                 </Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Card de Resultado com Download */}
-        {mostrarResultado && coordenadas && (
+        {/* Card de Resultados */}
+        {coordenadas && (
           <Card className="mb-6 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200 rounded-xl shadow-md overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-emerald-500 to-green-600 px-6 py-4">
               <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5" />
-                Resultado da Pesquisa
+                Localização Extraída
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-6 space-y-6">
+              {/* Coordenadas com Botão de Copiar */}
               <div className="bg-white rounded-lg p-6 border-2 border-emerald-200">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div className="space-y-2">
-                    <Label className="text-xs uppercase tracking-wide text-gray-500">Latitude</Label>
-                    <p className="text-2xl font-bold text-emerald-700 font-mono select-all">
-                      {coordenadas.latitude.toFixed(6)}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs uppercase tracking-wide text-gray-500">Longitude</Label>
-                    <p className="text-2xl font-bold text-emerald-700 font-mono select-all">
-                      {coordenadas.longitude.toFixed(6)}
-                    </p>
-                  </div>
-                </div>
-                
-                <a
-                  href={`http://geoserver.car.gov.br/geoserver/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=sicar:sicar_imoveis_${uf.toLowerCase()}&outputFormat=kml&cql_filter=INTERSECTS(the_geom,POINT(${coordenadas.longitude} ${coordenadas.latitude}))`}
-                  download
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <div className="flex items-center justify-between mb-4">
+                  <Label className="text-sm uppercase tracking-wide text-gray-500 font-semibold">Coordenadas do Centro</Label>
                   <Button
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 h-16 text-lg"
+                    onClick={copiarCoordenadas}
+                    size="sm"
+                    variant="outline"
+                    className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
                   >
-                    <span className="text-2xl mr-2">⬇️</span>
-                    Baixar KML do CAR (Governo)
+                    {copiado ? (
+                      <>
+                        <Check className="w-4 h-4 mr-1" />
+                        Copiado!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4 mr-1" />
+                        Copiar
+                      </>
+                    )}
                   </Button>
-                </a>
-
-                <Alert className="mt-4 bg-blue-50 border-blue-300">
-                  <AlertCircle className="h-4 w-4 text-blue-600" />
-                  <AlertDescription className="text-blue-800 text-sm">
-                    <strong>Como usar:</strong> Se o download não iniciar, clique com o botão direito no botão acima e escolha "Salvar link como". 
-                    Ao abrir este arquivo no Google Earth, você verá o número do CAR.
-                  </AlertDescription>
-                </Alert>
+                </div>
+                <div className="bg-emerald-50 rounded-lg p-4 text-center">
+                  <p className="text-3xl font-bold text-emerald-700 font-mono">
+                    {coordenadas.latitude.toFixed(6)}, {coordenadas.longitude.toFixed(6)}
+                  </p>
+                </div>
               </div>
+
+              {/* Botões de Ação */}
+              <div className="space-y-3">
+                <Button
+                  onClick={abrirGoogleMaps}
+                  className="w-full bg-green-600 hover:bg-green-700 h-14 text-lg"
+                >
+                  <span className="text-2xl mr-2">📍</span>
+                  Ver Local no Google Maps
+                </Button>
+
+                <Button
+                  onClick={abrirSICAR}
+                  className="w-full bg-blue-600 hover:bg-blue-700 h-14 text-lg"
+                >
+                  <span className="text-2xl mr-2">🏛️</span>
+                  Consultar no SICAR
+                </Button>
+              </div>
+
+              {/* Instruções */}
+              <Alert className="bg-blue-50 border-blue-300">
+                <AlertCircle className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800">
+                  <div className="space-y-2">
+                    <p className="font-semibold">Como usar:</p>
+                    <p><strong>Passo 1:</strong> Clique no botão <span className="font-semibold text-green-700">Verde</span> para ver o desenho da lavoura no satélite.</p>
+                    <p><strong>Passo 2:</strong> Clique no botão <span className="font-semibold text-blue-700">Azul</span>, selecione o município e localize visualmente a mesma área para obter o número do CAR.</p>
+                  </div>
+                </AlertDescription>
+              </Alert>
             </CardContent>
           </Card>
         )}

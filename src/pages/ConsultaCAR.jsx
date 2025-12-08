@@ -68,6 +68,7 @@ export default function ConsultaCAR() {
   const [nomeArquivo, setNomeArquivo] = useState("");
   const [erro, setErro] = useState("");
   const [coordenadas, setCoordenadas] = useState(null);
+  const [mostrarResultado, setMostrarResultado] = useState(false);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -85,9 +86,15 @@ export default function ConsultaCAR() {
     }
   };
 
-  const extrairCoordenadas = async () => {
+  const pesquisarCAR = async () => {
     setErro("");
     setCoordenadas(null);
+    setMostrarResultado(false);
+
+    if (!uf) {
+      setErro("Por favor, selecione um estado (UF).");
+      return;
+    }
 
     if (!arquivo) {
       setErro("Por favor, selecione um arquivo KML.");
@@ -107,6 +114,7 @@ export default function ConsultaCAR() {
         }
 
         setCoordenadas(coords);
+        setMostrarResultado(true);
       };
 
       reader.onerror = () => {
@@ -119,11 +127,6 @@ export default function ConsultaCAR() {
       console.error('Erro geral:', error);
       setErro(`Erro: ${error.message}`);
     }
-  };
-
-  const abrirGeoServer = () => {
-    const url = "http://geoserver.car.gov.br/geoserver/web/wicket/bookmarkable/org.geoserver.web.demo.MapPreviewPage?filter=false";
-    window.open(url, '_blank');
   };
 
   return (
@@ -152,6 +155,23 @@ export default function ConsultaCAR() {
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
+              {/* Estado */}
+              <div className="space-y-2">
+                <Label htmlFor="uf" className="text-sm font-medium">Estado (UF) *</Label>
+                <Select value={uf} onValueChange={setUf}>
+                  <SelectTrigger id="uf" className="h-10">
+                    <SelectValue placeholder="Selecione o estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ESTADOS_BRASIL.map(estado => (
+                      <SelectItem key={estado.value} value={estado.value}>
+                        {estado.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Upload KML */}
               <div className="space-y-2">
                 <Label htmlFor="kml-file" className="text-sm font-medium">Arquivo KML *</Label>
@@ -182,63 +202,69 @@ export default function ConsultaCAR() {
                 )}
               </div>
 
-              {/* Botão Extrair Coordenadas */}
+              {/* Botão Pesquisar */}
               <div className="pt-2">
                 <Button
-                  onClick={extrairCoordenadas}
-                  disabled={!arquivo}
+                  onClick={pesquisarCAR}
+                  disabled={!uf || !arquivo}
                   className="w-full bg-blue-600 hover:bg-blue-700 h-11"
                 >
-                  <MapIcon className="w-4 h-4 mr-2" />
-                  Extrair Coordenadas
+                  <Search className="w-4 h-4 mr-2" />
+                  Pesquisar
                 </Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Coordenadas Extraídas */}
-        {coordenadas && (
+        {/* Card de Resultado com Download */}
+        {mostrarResultado && coordenadas && (
           <Card className="mb-6 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200 rounded-xl shadow-md overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-emerald-500 to-green-600 px-6 py-4">
               <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5" />
-                Coordenadas Extraídas com Sucesso
+                Resultado da Pesquisa
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="bg-white rounded-lg p-6 mb-4 border-2 border-emerald-200">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="bg-white rounded-lg p-6 border-2 border-emerald-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   <div className="space-y-2">
                     <Label className="text-xs uppercase tracking-wide text-gray-500">Latitude</Label>
-                    <p className="text-3xl font-bold text-emerald-700 font-mono select-all">
+                    <p className="text-2xl font-bold text-emerald-700 font-mono select-all">
                       {coordenadas.latitude.toFixed(6)}
                     </p>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs uppercase tracking-wide text-gray-500">Longitude</Label>
-                    <p className="text-3xl font-bold text-emerald-700 font-mono select-all">
+                    <p className="text-2xl font-bold text-emerald-700 font-mono select-all">
                       {coordenadas.longitude.toFixed(6)}
                     </p>
                   </div>
                 </div>
-                <Button
-                  onClick={abrirGeoServer}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 h-14 text-lg"
+                
+                <a
+                  href={`http://geoserver.car.gov.br/geoserver/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=sicar:sicar_imoveis_${uf.toLowerCase()}&outputFormat=kml&cql_filter=INTERSECTS(the_geom,POINT(${coordenadas.longitude} ${coordenadas.latitude}))`}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <MapIcon className="w-6 h-6 mr-2" />
-                  Abrir GeoServer (Visual)
-                </Button>
-              </div>
+                  <Button
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 h-16 text-lg"
+                  >
+                    <span className="text-2xl mr-2">⬇️</span>
+                    Baixar KML do CAR (Governo)
+                  </Button>
+                </a>
 
-              <Alert className="bg-yellow-50 border-yellow-300">
-                <AlertCircle className="h-4 w-4 text-yellow-600" />
-                <AlertDescription className="text-yellow-800 text-sm">
-                  <strong>Instruções:</strong> Devido à instabilidade do sistema do governo, o número do CAR deve ser consultado visualmente. 
-                  Clique no botão acima, selecione a camada do seu estado e dê zoom na coordenada informada: 
-                  <span className="font-mono font-bold"> Latitude {coordenadas.latitude.toFixed(6)}, Longitude {coordenadas.longitude.toFixed(6)}</span>.
-                </AlertDescription>
-              </Alert>
+                <Alert className="mt-4 bg-blue-50 border-blue-300">
+                  <AlertCircle className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-blue-800 text-sm">
+                    <strong>Como usar:</strong> Se o download não iniciar, clique com o botão direito no botão acima e escolha "Salvar link como". 
+                    Ao abrir este arquivo no Google Earth, você verá o número do CAR.
+                  </AlertDescription>
+                </Alert>
+              </div>
             </CardContent>
           </Card>
         )}

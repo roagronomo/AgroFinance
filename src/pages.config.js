@@ -7,6 +7,7 @@ import GerenciamentoARTs from './pages/GerenciamentoARTs';
 import AbrirServicoART from './pages/AbrirServicoART';
 import EditarServicoART from './pages/EditarServicoART';
 import ElaboracaoARTs from './pages/ElaboracaoARTs';
+import ConsultaCAR from './pages/ConsultaCAR';
 import __Layout from './Layout.jsx';
 
 
@@ -20,6 +21,7 @@ export const PAGES = {
     "AbrirServicoART": AbrirServicoART,
     "EditarServicoART": EditarServicoART,
     "ElaboracaoARTs": ElaboracaoARTs,
+    "ConsultaCAR": ConsultaCAR,
 }
 
 export const pagesConfig = {

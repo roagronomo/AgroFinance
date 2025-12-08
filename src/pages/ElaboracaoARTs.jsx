@@ -34,6 +34,30 @@ const formatarMatricula = (valor) => {
   return new Intl.NumberFormat('pt-BR').format(numero);
 };
 
+const formatarMultiplasMatriculas = (valor) => {
+  // Remover tudo exceto números, espaços e vírgulas
+  const limpo = valor.replace(/[^\d\s,]/g, '');
+  
+  // Dividir por vírgulas ou espaços múltiplos
+  const partes = limpo.split(/[\s,]+/).filter(p => p.length > 0);
+  
+  if (partes.length === 0) return '';
+  
+  // Formatar cada número com pontos de milhar
+  const formatados = partes.map(p => {
+    const num = parseInt(p, 10);
+    if (isNaN(num)) return '';
+    return new Intl.NumberFormat('pt-BR').format(num);
+  }).filter(Boolean);
+  
+  if (formatados.length === 0) return '';
+  if (formatados.length === 1) return formatados[0];
+  
+  // Juntar com vírgulas e "e" antes do último
+  const ultimos = formatados.slice(0, -1).join(', ');
+  return `${ultimos} e ${formatados[formatados.length - 1]}`;
+};
+
 const formatarArea = (valor) => {
   if (!valor && valor !== 0) return '';
   const numero = parseFloat(valor);
@@ -455,8 +479,14 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
     setErros(prev => ({...prev, [field]: erro}));
   };
 
+  const handleMatriculaChange = (value) => {
+    // Permitir apenas números, espaços e vírgulas
+    const valorLimpo = value.replace(/[^\d\s,]/g, '');
+    handleInputChange('obra_matricula', valorLimpo);
+  };
+
   const handleMatriculaBlur = (value) => {
-    const valorFormatado = formatarMatricula(value);
+    const valorFormatado = formatarMultiplasMatriculas(value);
     handleInputChange('obra_matricula', valorFormatado);
   };
 
@@ -762,14 +792,14 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
             <Input
               id="obra_matricula"
               value={dados.obra_matricula}
-              onChange={e => handleInputChange('obra_matricula', e.target.value)}
+              onChange={e => handleMatriculaChange(e.target.value)}
               onBlur={e => handleMatriculaBlur(e.target.value)}
-              placeholder="Ex: 2.563"
+              placeholder="Ex: 2560, 21250, 7890"
               className="h-9"
             />
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 lg:col-span-2">
             <Label htmlFor="obra_car" className="text-sm">CAR nº</Label>
             <Input
               id="obra_car"
@@ -1055,7 +1085,7 @@ const GrupoARTCard = ({ grupo, arts, onEditarART, onExcluirART, getCulturaLabel 
                         {art.obra_matricula && (
                           <div className="flex items-center gap-1.5">
                             <span className="text-gray-500">Matrícula:</span>
-                            <span className="font-medium text-gray-800">{formatarMatricula(art.obra_matricula)}</span>
+                            <span className="font-medium text-gray-800">{art.obra_matricula}</span>
                           </div>
                         )}
                         {art.obra_car && (

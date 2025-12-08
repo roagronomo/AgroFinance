@@ -125,8 +125,8 @@ export default function ConsultaCAR() {
         // Construir URL original do GeoServer (HTTP)
         const geoServerUrl = `http://geoserver.car.gov.br/geoserver/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=sicar:sicar_imoveis_${uf.toLowerCase()}&outputFormat=application/json&cql_filter=INTERSECTS(the_geom,POINT(${coords.longitude} ${coords.latitude}))`;
         
-        // Usar corsproxy.io para fazer a ponte segura
-        const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(geoServerUrl);
+        // Usar AllOrigins para fazer a ponte segura
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(geoServerUrl)}`;
         
         console.log(proxyUrl);
 
@@ -138,15 +138,16 @@ export default function ConsultaCAR() {
           }
 
           const data = await response.json();
+          const geoData = JSON.parse(data.contents); // O JSON real do governo está aqui dentro
 
-          if (!data.features || data.features.length === 0) {
+          if (!geoData.features || geoData.features.length === 0) {
             setErro("Nenhum imóvel encontrado nesta coordenada.");
             setBuscando(false);
             return;
           }
 
           // Pegar primeiro resultado
-          const imovel = data.features[0].properties;
+          const imovel = geoData.features[0].properties;
           
           setResultado({
             cod_imovel: imovel.cod_imovel || 'N/A',

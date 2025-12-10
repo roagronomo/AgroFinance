@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Upload, Search, AlertCircle, CheckCircle2, FileText, Map as MapIcon, Copy, Check } from "lucide-react";
+import { MapPin, Upload, Search, AlertCircle, CheckCircle2, FileText, Map as MapIcon, Copy, Check, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { base44 } from "@/api/base44Client";
 
 const ESTADOS_BRASIL = [
   { value: "ac", label: "AC - Acre" },
@@ -63,11 +64,14 @@ const extrairCoordenadaKML = (conteudoKML) => {
 };
 
 export default function ConsultaCAR() {
+  const [uf, setUf] = useState("");
   const [arquivo, setArquivo] = useState(null);
   const [nomeArquivo, setNomeArquivo] = useState("");
   const [erro, setErro] = useState("");
   const [coordenadas, setCoordenadas] = useState(null);
   const [copiado, setCopiado] = useState(false);
+  const [buscando, setBuscando] = useState(false);
+  const [dadosCAR, setDadosCAR] = useState(null);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -142,6 +146,40 @@ export default function ConsultaCAR() {
     window.open(url, '_blank');
   };
 
+  const buscarCAR = async () => {
+    if (!coordenadas || !uf) {
+      setErro("Extraia as coordenadas e selecione o estado primeiro.");
+      return;
+    }
+
+    setBuscando(true);
+    setErro("");
+    setDadosCAR(null);
+
+    try {
+      const response = await base44.functions.invoke('consultarCAR', {
+        latitude: coordenadas.latitude,
+        longitude: coordenadas.longitude,
+        uf: uf
+      });
+
+      if (response.data.sucesso) {
+        if (response.data.encontrado) {
+          setDadosCAR(response.data);
+        } else {
+          setErro("Nenhum imóvel CAR encontrado nesta localização.");
+        }
+      } else {
+        setErro(response.data.error || "Erro ao consultar CAR.");
+      }
+    } catch (error) {
+      console.error('Erro ao buscar CAR:', error);
+      setErro(`Erro ao consultar: ${error.message || 'Tente novamente'}`);
+    } finally {
+      setBuscando(false);
+    }
+  };
+
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-slate-100 min-h-screen">
       <div className="max-w-4xl mx-auto">
@@ -168,6 +206,23 @@ export default function ConsultaCAR() {
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
+              {/* Estado */}
+              <div className="space-y-2">
+                <Label htmlFor="uf" className="text-sm font-medium">Estado (UF) *</Label>
+                <Select value={uf} onValueChange={setUf}>
+                  <SelectTrigger id="uf" className="h-10">
+                    <SelectValue placeholder="Selecione o estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ESTADOS_BRASIL.map(estado => (
+                      <SelectItem key={estado.value} value={estado.value}>
+                        {estado.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Upload KML */}
               <div className="space-y-2">
                 <Label htmlFor="kml-file" className="text-sm font-medium">Arquivo KML da Área *</Label>
@@ -202,7 +257,7 @@ export default function ConsultaCAR() {
               <div className="pt-2">
                 <Button
                   onClick={extrairLocalizacao}
-                  disabled={!arquivo}
+                  disabled={!arquivo || !uf}
                   className="w-full bg-blue-600 hover:bg-blue-700 h-11"
                 >
                   <MapIcon className="w-4 h-4 mr-2" />
@@ -253,7 +308,69 @@ export default function ConsultaCAR() {
                 </div>
               </div>
 
-              {/* Botões de Ação */}
+              {/* Botão de Busca Automática */}
+              <div>
+                <Button
+                  onClick={buscarCAR}
+                  disabled={buscando || !uf}
+                  className="w-full bg-purple-600 hover:bg-purple-700 h-14 text-lg"
+                >
+                  {buscando ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Consultando Servidor do Governo...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-5 h-5 mr-2" />
+                      Buscar CAR Automaticamente
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Dados do CAR */}
+              {dadosCAR && dadosCAR.encontrado && (
+                <div className="bg-white rounded-lg p-6 border-2 border-purple-200">
+                  <h3 className="text-lg font-semibold text-purple-900 mb-4">📋 Dados do Imóvel CAR</h3>
+                  <div className="space-y-3">
+                    {dadosCAR.dados.cod_imovel && (
+                      <div className="bg-purple-50 p-4 rounded-lg">
+                        <Label className="text-xs uppercase tracking-wide text-gray-500">Código do Imóvel</Label>
+                        <p className="text-xl font-bold text-purple-700 font-mono">{dadosCAR.dados.cod_imovel}</p>
+                      </div>
+                    )}
+                    {dadosCAR.dados.nom_imovel && (
+                      <div>
+                        <Label className="text-xs uppercase tracking-wide text-gray-500">Nome do Imóvel</Label>
+                        <p className="text-base font-medium text-gray-800">{dadosCAR.dados.nom_imovel}</p>
+                      </div>
+                    )}
+                    {dadosCAR.dados.nom_munici && (
+                      <div>
+                        <Label className="text-xs uppercase tracking-wide text-gray-500">Município</Label>
+                        <p className="text-base font-medium text-gray-800">{dadosCAR.dados.nom_munici}</p>
+                      </div>
+                    )}
+                    {dadosCAR.dados.num_area && (
+                      <div>
+                        <Label className="text-xs uppercase tracking-wide text-gray-500">Área (ha)</Label>
+                        <p className="text-base font-medium text-gray-800">{dadosCAR.dados.num_area}</p>
+                      </div>
+                    )}
+                    {dadosCAR.total_encontrados > 1 && (
+                      <Alert className="bg-yellow-50 border-yellow-300 mt-2">
+                        <AlertCircle className="h-4 w-4 text-yellow-600" />
+                        <AlertDescription className="text-yellow-800 text-sm">
+                          Encontrados {dadosCAR.total_encontrados} imóveis nesta localização. Exibindo o primeiro.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Botões de Ação Manuais */}
               <div className="space-y-3">
                 <Button
                   onClick={abrirGoogleMaps}
@@ -268,7 +385,7 @@ export default function ConsultaCAR() {
                   className="w-full bg-blue-600 hover:bg-blue-700 h-14 text-lg"
                 >
                   <span className="text-2xl mr-2">🏛️</span>
-                  Consultar no SICAR
+                  Consultar no SICAR (Manual)
                 </Button>
               </div>
 
@@ -278,8 +395,8 @@ export default function ConsultaCAR() {
                 <AlertDescription className="text-blue-800">
                   <div className="space-y-2">
                     <p className="font-semibold">Como usar:</p>
-                    <p><strong>Passo 1:</strong> Clique no botão <span className="font-semibold text-green-700">Verde</span> para ver o desenho da lavoura no satélite.</p>
-                    <p><strong>Passo 2:</strong> Clique no botão <span className="font-semibold text-blue-700">Azul</span>, selecione o município e localize visualmente a mesma área para obter o número do CAR.</p>
+                    <p><strong>Opção 1 (Automática):</strong> Clique em "Buscar CAR Automaticamente" para consultar diretamente o servidor do governo.</p>
+                    <p><strong>Opção 2 (Manual):</strong> Use o Google Maps para ver a área no satélite e depois consulte manualmente no SICAR.</p>
                   </div>
                 </AlertDescription>
               </Alert>

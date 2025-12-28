@@ -9,7 +9,6 @@ import { FileDown, MapPin, Building2, TrendingUp, AlertTriangle, ExternalLink, C
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
 import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
 
@@ -254,8 +253,11 @@ export default function AreasFinanciaveis() {
   };
 
   // Exportar PDF
-  const exportarPDF = () => {
+  const exportarPDF = async () => {
+    // Importação dinâmica do autoTable
+    const autoTable = (await import('jspdf-autotable')).default;
     const doc = new jsPDF();
+    autoTable(doc, {});  // Inicializa o plugin
     const pageWidth = doc.internal.pageSize.getWidth();
     
     // Cabeçalho

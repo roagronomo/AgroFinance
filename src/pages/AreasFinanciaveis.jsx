@@ -253,12 +253,10 @@ export default function AreasFinanciaveis() {
   };
 
   // Exportar PDF
-  const exportarPDF = async () => {
-    // Importação dinâmica do autoTable
-    const autoTable = (await import('jspdf-autotable')).default;
+  const exportarPDF = () => {
     const doc = new jsPDF();
-    autoTable(doc, {});  // Inicializa o plugin
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     
     // Cabeçalho
     doc.setFontSize(18);
@@ -279,58 +277,79 @@ export default function AreasFinanciaveis() {
     }
     doc.text(`Data: ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR })}`, 14, 48);
     
-    // Tabela de imóveis
-    const tableData = imoveisFiltrados.map(imovel => [
-      imovel.municipio || "—",
-      imovel.nome_imovel || "—",
-      formatarMatricula(imovel.matricula_numero),
-      (imovel.tipo_propriedade === "terceiros" || imovel.tipo_propriedade === "proprio_condominio") 
-        ? formatDate(imovel.data_vencimento_contrato) 
-        : "—",
-      formatArea(imovel.areaFinanciavel) + " ha",
-      formatArea(imovel.areaFinanciada) + " ha",
-      formatArea(imovel.saldoFinanciar) + " ha",
-      getStatusLabel(imovel.tipo_propriedade)
-    ]);
-
-    doc.autoTable({
-      startY: 56,
-      head: [[
-        'Município',
-        'Imóvel',
-        'Matrícula',
-        'Venc. Contrato',
-        'Área Financ.',
-        'Financiada',
-        'Saldo',
-        'Status'
-      ]],
-      body: tableData,
-      theme: 'grid',
-      styles: { fontSize: 7, cellPadding: 1.5 },
-      headStyles: { fillColor: [34, 139, 34], textColor: 255, fontStyle: 'bold', halign: 'center' },
-      margin: { left: 10 },
-      columnStyles: {
-        0: { cellWidth: 26 },
-        1: { cellWidth: 40 },
-        2: { cellWidth: 18, halign: 'center' },
-        3: { cellWidth: 24, halign: 'center' },
-        4: { cellWidth: 22 },
-        5: { cellWidth: 22 },
-        6: { cellWidth: 19 },
-        7: { cellWidth: 21 }
+    // Tabela de imóveis - Desenhada manualmente
+    let currentY = 56;
+    const colWidths = [26, 40, 18, 24, 22, 22, 19, 21];
+    const headers = ['Município', 'Imóvel', 'Matrícula', 'Venc. Contrato', 'Área Financ.', 'Financiada', 'Saldo', 'Status'];
+    let startX = 10;
+    
+    // Cabeçalho da tabela
+    doc.setFillColor(34, 139, 34);
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(7);
+    doc.setFont(undefined, 'bold');
+    doc.rect(startX, currentY, colWidths.reduce((a, b) => a + b, 0), 6, 'F');
+    let xPos = startX;
+    headers.forEach((header, i) => {
+      doc.text(header, xPos + colWidths[i] / 2, currentY + 4, { align: 'center' });
+      xPos += colWidths[i];
+    });
+    currentY += 6;
+    
+    // Dados da tabela
+    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'normal');
+    imoveisFiltrados.forEach((imovel, idx) => {
+      if (currentY > pageHeight - 20) {
+        doc.addPage();
+        currentY = 20;
       }
+      
+      const rowData = [
+        imovel.municipio || "—",
+        imovel.nome_imovel || "—",
+        formatarMatricula(imovel.matricula_numero),
+        (imovel.tipo_propriedade === "terceiros" || imovel.tipo_propriedade === "proprio_condominio") 
+          ? formatDate(imovel.data_vencimento_contrato) 
+          : "—",
+        formatArea(imovel.areaFinanciavel) + " ha",
+        formatArea(imovel.areaFinanciada) + " ha",
+        formatArea(imovel.saldoFinanciar) + " ha",
+        getStatusLabel(imovel.tipo_propriedade)
+      ];
+      
+      if (idx % 2 === 0) {
+        doc.setFillColor(245, 245, 245);
+        doc.rect(startX, currentY, colWidths.reduce((a, b) => a + b, 0), 5, 'F');
+      }
+      
+      doc.setDrawColor(220, 220, 220);
+      xPos = startX;
+      rowData.forEach((data, i) => {
+        const align = (i === 2 || i === 3) ? 'center' : 'left';
+        const textX = align === 'center' ? xPos + colWidths[i] / 2 : xPos + 1;
+        doc.text(String(data).substring(0, 25), textX, currentY + 3.5, { align });
+        doc.rect(xPos, currentY, colWidths[i], 5, 'S');
+        xPos += colWidths[i];
+      });
+      currentY += 5;
     });
     
     // Histórico de Financiamentos
-    let finalY = doc.lastAutoTable.finalY + 10;
+    let finalY = currentY + 10;
     const imoveisComFinanciamentos = imoveisFiltrados.filter(im => 
       im.financiamentos && im.financiamentos.length > 0
     );
     
     if (imoveisComFinanciamentos.length > 0) {
+      if (finalY > pageHeight - 30) {
+        doc.addPage();
+        finalY = 20;
+      }
+      
       doc.setFontSize(12);
       doc.setFont(undefined, 'bold');
+      doc.setTextColor(0, 0, 0);
       doc.text("Histórico de Financiamentos", 14, finalY);
       
       imoveisComFinanciamentos.forEach(imovel => {
@@ -342,27 +361,29 @@ export default function AreasFinanciaveis() {
         
         if (financiamentosFiltrados.length > 0) {
           finalY += 7;
+          if (finalY > pageHeight - 30) {
+            doc.addPage();
+            finalY = 20;
+          }
+          
           doc.setFontSize(10);
           doc.setFont(undefined, 'bold');
           doc.text(`${imovel.nome_imovel} (Matrícula: ${formatarMatricula(imovel.matricula_numero)}):`, 14, finalY);
           
-          const finData = financiamentosFiltrados.map(f => [
-            f.safra || "—",
-            f.cultura_financiada || "—",
-            formatArea(f.area_financiada) + " ha"
-          ]);
+          finalY += 4;
+          doc.setFontSize(8);
+          doc.setFont(undefined, 'normal');
           
-          doc.autoTable({
-            startY: finalY + 2,
-            head: [['Safra', 'Cultura', 'Área Financiada']],
-            body: finData,
-            theme: 'plain',
-            styles: { fontSize: 8, cellPadding: 2 },
-            headStyles: { fillColor: [240, 240, 240], textColor: 60, fontStyle: 'bold' },
-            margin: { left: 20 }
+          financiamentosFiltrados.forEach(f => {
+            if (finalY > pageHeight - 20) {
+              doc.addPage();
+              finalY = 20;
+            }
+            doc.text(`  • ${f.safra || "—"} - ${f.cultura_financiada || "—"}: ${formatArea(f.area_financiada)} ha`, 20, finalY);
+            finalY += 4;
           });
           
-          finalY = doc.lastAutoTable.finalY;
+          finalY += 2;
         }
       });
       
@@ -370,47 +391,98 @@ export default function AreasFinanciaveis() {
     }
     
     // Resumo por município
-    finalY = (finalY || doc.lastAutoTable.finalY) + 10;
+    if (finalY > pageHeight - 40) {
+      doc.addPage();
+      finalY = 20;
+    }
+    
+    finalY += 10;
     doc.setFontSize(12);
     doc.setFont(undefined, 'bold');
+    doc.setTextColor(0, 0, 0);
     doc.text("Resumo por Município", 14, finalY);
+    finalY += 7;
     
-    const resumoData = resumoPorMunicipio.map(res => [
-      res.municipio,
-      res.quantidade.toString(),
-      formatArea(res.areaFinanciavel) + " ha",
-      formatArea(res.areaFinanciada) + " ha",
-      formatArea(res.saldo) + " ha"
-    ]);
+    const resumoColWidths = [50, 25, 35, 35, 35];
+    const resumoHeaders = ['Município', 'Nº Imóveis', 'Financiável', 'Financiada', 'Saldo'];
+    startX = 14;
     
-    doc.autoTable({
-      startY: finalY + 5,
-      head: [['Município', 'Nº Imóveis', 'Financiável', 'Financiada', 'Saldo']],
-      body: resumoData,
-      theme: 'grid',
-      styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [34, 139, 34], textColor: 255, fontStyle: 'bold' }
+    // Cabeçalho resumo
+    doc.setFillColor(34, 139, 34);
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'bold');
+    doc.rect(startX, finalY, resumoColWidths.reduce((a, b) => a + b, 0), 7, 'F');
+    xPos = startX;
+    resumoHeaders.forEach((header, i) => {
+      doc.text(header, xPos + resumoColWidths[i] / 2, finalY + 4.5, { align: 'center' });
+      xPos += resumoColWidths[i];
+    });
+    finalY += 7;
+    
+    // Dados resumo
+    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'normal');
+    resumoPorMunicipio.forEach((res, idx) => {
+      if (finalY > pageHeight - 20) {
+        doc.addPage();
+        finalY = 20;
+      }
+      
+      const rowData = [
+        res.municipio,
+        res.quantidade.toString(),
+        formatArea(res.areaFinanciavel) + " ha",
+        formatArea(res.areaFinanciada) + " ha",
+        formatArea(res.saldo) + " ha"
+      ];
+      
+      if (idx % 2 === 0) {
+        doc.setFillColor(245, 245, 245);
+        doc.rect(startX, finalY, resumoColWidths.reduce((a, b) => a + b, 0), 6, 'F');
+      }
+      
+      doc.setDrawColor(220, 220, 220);
+      xPos = startX;
+      rowData.forEach((data, i) => {
+        const textX = xPos + resumoColWidths[i] / 2;
+        doc.text(String(data), textX, finalY + 4, { align: 'center' });
+        doc.rect(xPos, finalY, resumoColWidths[i], 6, 'S');
+        xPos += resumoColWidths[i];
+      });
+      finalY += 6;
     });
     
     // Alertas (se houver)
     const pendencias = imoveisFiltrados.filter(im => im.temPendencia || im.temExcesso);
     if (pendencias.length > 0) {
-      finalY = doc.lastAutoTable.finalY + 10;
+      finalY += 10;
+      if (finalY > pageHeight - 30) {
+        doc.addPage();
+        finalY = 20;
+      }
+      
       doc.setFontSize(11);
       doc.setFont(undefined, 'bold');
+      doc.setTextColor(0, 0, 0);
       doc.text("⚠️ Alertas", 14, finalY);
       
       doc.setFontSize(9);
       doc.setFont(undefined, 'normal');
-      let alertY = finalY + 7;
+      finalY += 7;
       pendencias.forEach((imovel) => {
+        if (finalY > pageHeight - 15) {
+          doc.addPage();
+          finalY = 20;
+        }
+        
         if (imovel.temPendencia) {
-          doc.text(`• ${imovel.nome_imovel}: Contrato sem vencimento informado`, 14, alertY);
-          alertY += 5;
+          doc.text(`• ${imovel.nome_imovel}: Contrato sem vencimento informado`, 14, finalY);
+          finalY += 5;
         }
         if (imovel.temExcesso) {
-          doc.text(`• ${imovel.nome_imovel}: Financiamento acima da área financiável`, 14, alertY);
-          alertY += 5;
+          doc.text(`• ${imovel.nome_imovel}: Financiamento acima da área financiável`, 14, finalY);
+          finalY += 5;
         }
       });
     }

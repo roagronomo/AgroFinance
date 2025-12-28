@@ -1,4 +1,3 @@
-// Páginas do AgroFinance (Financiamentos)
 import AbrirServicoART from './pages/AbrirServicoART';
 import Dashboard from './pages/Dashboard';
 import EditarProjeto from './pages/EditarProjeto';
@@ -9,39 +8,34 @@ import Home from './pages/Home';
 import NovoProjeto from './pages/NovoProjeto';
 import TodosProjetos from './pages/TodosProjetos';
 import Vencimentos from './pages/Vencimentos';
-
-// Páginas do Cerrado Consultoria (Cadastro)
+import AnaliseCertidoes from './pages/AnaliseCertidoes';
 import CadastroClientes from './pages/CadastroClientes';
 import CadastroImoveis from './pages/CadastroImoveis';
 import ProducaoAgricola from './pages/ProducaoAgricola';
 import AreasFinanciaveis from './pages/AreasFinanciaveis';
-import AnaliseCertidoes from './pages/AnaliseCertidoes';
-
 import __Layout from './Layout.jsx';
 
+
 export const PAGES = {
-  // Páginas de Financiamentos
-  "AbrirServicoART": AbrirServicoART,
-  "Dashboard": Dashboard,
-  "EditarProjeto": EditarProjeto,
-  "EditarServicoART": EditarServicoART,
-  "ElaboracaoARTs": ElaboracaoARTs,
-  "GerenciamentoARTs": GerenciamentoARTs,
-  "Home": Home,
-  "NovoProjeto": NovoProjeto,
-  "TodosProjetos": TodosProjetos,
-  "Vencimentos": Vencimentos,
-  
-  // Páginas de Cadastro
-  "CadastroClientes": CadastroClientes,
-  "CadastroImoveis": CadastroImoveis,
-  "ProducaoAgricola": ProducaoAgricola,
-  "AreasFinanciaveis": AreasFinanciaveis,
-  "AnaliseCertidoes": AnaliseCertidoes,
+    "AbrirServicoART": AbrirServicoART,
+    "Dashboard": Dashboard,
+    "EditarProjeto": EditarProjeto,
+    "EditarServicoART": EditarServicoART,
+    "ElaboracaoARTs": ElaboracaoARTs,
+    "GerenciamentoARTs": GerenciamentoARTs,
+    "Home": Home,
+    "NovoProjeto": NovoProjeto,
+    "TodosProjetos": TodosProjetos,
+    "Vencimentos": Vencimentos,
+    "AnaliseCertidoes": AnaliseCertidoes,
+    "CadastroClientes": CadastroClientes,
+    "CadastroImoveis": CadastroImoveis,
+    "ProducaoAgricola": ProducaoAgricola,
+    "AreasFinanciaveis": AreasFinanciaveis,
 }
 
 export const pagesConfig = {
-  mainPage: "Dashboard",
-  Pages: PAGES,
-  Layout: __Layout,
+    mainPage: "Dashboard",
+    Pages: PAGES,
+    Layout: __Layout,
 };

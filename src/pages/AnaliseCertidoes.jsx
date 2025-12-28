@@ -39,7 +39,7 @@ export default function AnaliseCertidoes() {
   const carregarImoveisSalvos = async () => {
     try {
       setCarregandoImoveis(true);
-      const imoveis = await base44.entities.Imovel.list("-created_date", 100);
+      const imoveis = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.list("-created_date", 100);
       
       // Filtrar imóveis com análise de certidão
       const imoveisComAnalise = (imoveis || []).filter(imovel => 
@@ -374,7 +374,7 @@ OUTRAS INFORMAÇÕES:
       console.log("👥 Proprietários a salvar:", dadosCompletosAnalise.proprietarios);
       console.log("👥 Usufrutuários a salvar:", dadosCompletosAnalise.usufrutuarios);
       
-      const imoveisExistentes = await base44.entities.Imovel.filter({ 
+      const imoveisExistentes = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.filter({ 
         matricula_numero: matriculaParaSalvar 
       });
 
@@ -407,7 +407,7 @@ OUTRAS INFORMAÇÕES:
         }
 
         const imovelExistente = imoveisExistentes[0];
-        await base44.entities.Imovel.update(imovelExistente.id, dadosParaSalvar);
+        await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.update(imovelExistente.id, dadosParaSalvar);
 
         console.log("✅ Imóvel atualizado com ID:", imovelExistente.id);
         toast.success("Imóvel atualizado com sucesso");
@@ -420,7 +420,7 @@ OUTRAS INFORMAÇÕES:
           tipo_uso: "Lavoura"
         };
         
-        const novoImovel = await base44.entities.Imovel.create(dadosParaCriar);
+        const novoImovel = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.create(dadosParaCriar);
         
         console.log("✅ Novo imóvel criado com ID:", novoImovel.id);
         toast.success("Imóvel salvo com sucesso");
@@ -455,7 +455,7 @@ OUTRAS INFORMAÇÕES:
 
     try {
       setExcluindo(true);
-      await base44.entities.Imovel.delete(imovelId);
+      await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.delete(imovelId);
       toast.success("Imóvel excluído com sucesso");
       setImovelVisualizandoId(null);
       await carregarImoveisSalvos();

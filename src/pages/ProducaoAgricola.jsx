@@ -1,8 +1,5 @@
-
 import React, { useState, useEffect, useCallback } from "react";
-import { Cliente } from "@/entities/Cliente";
-import { Imovel } from "@/entities/Imovel";
-import { PlanoProducao } from "@/entities/PlanoProducao";
+import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2, FileText } from "lucide-react";
 import SeletorCliente from "../components/clientes/SeletorCliente";
@@ -182,7 +179,7 @@ export default function ProducaoAgricola() {
   const loadClientes = async () => {
     try {
       setIsLoadingClientes(true);
-      const data = await Cliente.list("nome");
+      const data = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Cliente.list("nome");
       setClientes(data);
     } catch (error) {
       console.error("Erro ao carregar clientes:", error);
@@ -196,8 +193,8 @@ export default function ProducaoAgricola() {
     try {
       setIsLoadingData(true);
       const [imoveisData, planosData] = await Promise.all([
-        Imovel.filter({ cliente_id: clienteId }),
-        PlanoProducao.filter({ cliente_id: clienteId }, "-created_date")
+        base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.filter({ cliente_id: clienteId }),
+        base44.entities['68cdb2d792e5fbfc65ac3e5d'].PlanoProducao.filter({ cliente_id: clienteId }, "-created_date")
       ]);
       setImoveisCliente(imoveisData);
       setPlanosExistentes(planosData);
@@ -290,12 +287,12 @@ export default function ProducaoAgricola() {
 
       let planoSalvo;
       if (planoExistente) {
-        planoSalvo = await PlanoProducao.update(planoExistente.id, dadosParaSalvar);
+        planoSalvo = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].PlanoProducao.update(planoExistente.id, dadosParaSalvar);
         setPlanosExistentes(prev =>
           prev.map(p => p.id === planoExistente.id ? { ...p, ...dadosParaSalvar } : p)
         );
       } else {
-        planoSalvo = await PlanoProducao.create(dadosParaSalvar);
+        planoSalvo = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].PlanoProducao.create(dadosParaSalvar);
         setPlanosExistentes(prev => [...prev, { id: planoSalvo.id, ...dadosParaSalvar }]);
       }
 

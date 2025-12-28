@@ -113,7 +113,7 @@ export default function CadastroClientes() {
 
   const loadClientes = async () => {
     try {
-      const data = await base44.entities.Cliente.list("-created_date");
+      const data = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Cliente.list("-created_date");
       const sortedData = sortClientesAlphabetically(data || []);
       setClientes(sortedData);
     } catch (error) {
@@ -125,9 +125,9 @@ export default function CadastroClientes() {
   const handleSubmit = async (clienteData) => {
     try {
       if (editingCliente) {
-        await base44.entities.Cliente.update(editingCliente.id, clienteData);
+        await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Cliente.update(editingCliente.id, clienteData);
       } else {
-        await base44.entities.Cliente.create(clienteData);
+        await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Cliente.create(clienteData);
       }
       
       setShowForm(false);
@@ -150,7 +150,7 @@ export default function CadastroClientes() {
     }
 
     try {
-      await base44.entities.Cliente.delete(cliente.id);
+      await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Cliente.delete(cliente.id);
       await loadClientes();
     } catch (error) {
       console.error("Erro ao excluir cliente:", error);

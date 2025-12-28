@@ -1,4 +1,8 @@
 import AbrirServicoART from './pages/AbrirServicoART';
+import AnaliseCertidoes from './pages/AnaliseCertidoes';
+import AreasFinanciaveis from './pages/AreasFinanciaveis';
+import CadastroClientes from './pages/CadastroClientes';
+import CadastroImoveis from './pages/CadastroImoveis';
 import Dashboard from './pages/Dashboard';
 import EditarProjeto from './pages/EditarProjeto';
 import EditarServicoART from './pages/EditarServicoART';
@@ -6,18 +10,18 @@ import ElaboracaoARTs from './pages/ElaboracaoARTs';
 import GerenciamentoARTs from './pages/GerenciamentoARTs';
 import Home from './pages/Home';
 import NovoProjeto from './pages/NovoProjeto';
+import ProducaoAgricola from './pages/ProducaoAgricola';
 import TodosProjetos from './pages/TodosProjetos';
 import Vencimentos from './pages/Vencimentos';
-import AnaliseCertidoes from './pages/AnaliseCertidoes';
-import CadastroClientes from './pages/CadastroClientes';
-import CadastroImoveis from './pages/CadastroImoveis';
-import ProducaoAgricola from './pages/ProducaoAgricola';
-import AreasFinanciaveis from './pages/AreasFinanciaveis';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AbrirServicoART": AbrirServicoART,
+    "AnaliseCertidoes": AnaliseCertidoes,
+    "AreasFinanciaveis": AreasFinanciaveis,
+    "CadastroClientes": CadastroClientes,
+    "CadastroImoveis": CadastroImoveis,
     "Dashboard": Dashboard,
     "EditarProjeto": EditarProjeto,
     "EditarServicoART": EditarServicoART,
@@ -25,13 +29,9 @@ export const PAGES = {
     "GerenciamentoARTs": GerenciamentoARTs,
     "Home": Home,
     "NovoProjeto": NovoProjeto,
+    "ProducaoAgricola": ProducaoAgricola,
     "TodosProjetos": TodosProjetos,
     "Vencimentos": Vencimentos,
-    "AnaliseCertidoes": AnaliseCertidoes,
-    "CadastroClientes": CadastroClientes,
-    "CadastroImoveis": CadastroImoveis,
-    "ProducaoAgricola": ProducaoAgricola,
-    "AreasFinanciaveis": AreasFinanciaveis,
 }
 
 export const pagesConfig = {

@@ -31,7 +31,7 @@ export default function AreasFinanciaveis() {
     const loadClientes = async () => {
       try {
         setIsLoadingClientes(true);
-        const data = await base44.entities.Cliente.list("nome");
+        const data = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Cliente.list("nome");
         setClientes(data || []);
       } catch (error) {
         console.error("Erro ao carregar clientes:", error);
@@ -49,7 +49,7 @@ export default function AreasFinanciaveis() {
       const loadImoveis = async () => {
         try {
           setIsLoadingImoveis(true);
-          const data = await base44.entities.Imovel.filter(
+          const data = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.filter(
             { 
               cliente_id: clienteSelecionado.id,
               financiavel_banco: "sim"

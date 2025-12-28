@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Cliente } from "@/entities/Cliente";
-import { Imovel } from "@/entities/Imovel";
+import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Building2, MapPin, TrendingUp, Users } from "lucide-react";
@@ -35,8 +34,8 @@ export default function CadastroImoveis() {
       try {
         setIsLoadingClientes(true);
         const [clientesData, imoveisData] = await Promise.all([
-          Cliente.list("nome"),
-          Imovel.list("-created_date", 500)
+          base44.entities['68cdb2d792e5fbfc65ac3e5d'].Cliente.list("nome"),
+          base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.list("-created_date", 500)
         ]);
         if (isMounted) {
           setClientes(clientesData || []);
@@ -69,7 +68,7 @@ export default function CadastroImoveis() {
       const loadImoveisSafe = async (clienteId) => {
         try {
           setIsLoadingImoveis(true);
-          const data = await Imovel.filter({ cliente_id: clienteId }, "-created_date");
+          const data = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.filter({ cliente_id: clienteId }, "-created_date");
           if (isMounted) {
             setImoveis(data || []);
           }
@@ -125,14 +124,14 @@ export default function CadastroImoveis() {
     try {
       const dataToSave = { ...imovelData, cliente_id: clienteSelecionado.id };
       if (editingImovel) {
-        await Imovel.update(editingImovel.id, dataToSave);
+        await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.update(editingImovel.id, dataToSave);
       } else {
-        await Imovel.create(dataToSave);
+        await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.create(dataToSave);
       }
       setShowForm(false);
       setEditingImovel(null);
       
-      const data = await Imovel.filter({ cliente_id: clienteSelecionado.id }, "-created_date");
+      const data = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.filter({ cliente_id: clienteSelecionado.id }, "-created_date");
       setImoveis(data || []);
     } catch (error) {
       console.error("Erro ao salvar imóvel:", error);
@@ -151,8 +150,8 @@ export default function CadastroImoveis() {
 
   const handleDelete = async (imovel) => {
     try {
-      await Imovel.delete(imovel.id);
-      const data = await Imovel.filter({ cliente_id: clienteSelecionado.id }, "-created_date");
+      await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.delete(imovel.id);
+      const data = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.filter({ cliente_id: clienteSelecionado.id }, "-created_date");
       setImoveis(data || []);
     } catch (error) {
       console.error("Erro ao excluir imóvel:", error);

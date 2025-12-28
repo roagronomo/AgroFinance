@@ -12,8 +12,16 @@ import {
   Building2,
   RefreshCw,
   Check,
-  Trash2, // Added for cache clear functionality
-  FileSignature // Added FileSignature icon
+  Trash2,
+  FileSignature,
+  User,
+  Home,
+  Sprout,
+  FileSearch,
+  ChevronDown,
+  ChevronRight,
+  FolderOpen,
+  Wallet
 } from "lucide-react";
 import {
   Sidebar,
@@ -37,58 +45,103 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"; // Added for dropdown menu
+} from "@/components/ui/dropdown-menu";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import PwaUpdateNotification from './components/common/PwaUpdateNotification';
 import OfflineIndicator from './components/common/OfflineIndicator';
 import AppVersion from './components/common/AppVersion';
 
-const navigationItems = [
+// Navegação organizada em seções
+const navigationSections = [
   {
-    title: "Dashboard",
-    url: createPageUrl("Dashboard"),
-    icon: LayoutDashboard,
+    title: "Cadastro",
+    icon: FolderOpen,
+    items: [
+      {
+        title: "Cadastro de Clientes",
+        url: createPageUrl("CadastroClientes"),
+        icon: User,
+      },
+      {
+        title: "Cadastro de Imóveis",
+        url: createPageUrl("CadastroImoveis"),
+        icon: Home,
+      },
+      {
+        title: "Produção Agrícola",
+        url: createPageUrl("ProducaoAgricola"),
+        icon: Sprout,
+      },
+      {
+        title: "Áreas Financiáveis",
+        url: createPageUrl("AreasFinanciaveis"),
+        icon: TrendingUp,
+      },
+      {
+        title: "Análise de Certidões",
+        url: createPageUrl("AnaliseCertidoes"),
+        icon: FileSearch,
+      },
+    ]
   },
   {
-    title: "Novo Projeto",
-    url: createPageUrl("NovoProjeto"),
-    icon: Plus,
-  },
-  {
-    title: "Todos Projetos",
-    url: createPageUrl("TodosProjetos"), 
-    icon: FileText,
-  },
-  {
-    title: "Vencimentos",
-    url: createPageUrl("Vencimentos"),
-    icon: Calendar,
-  },
-  {
-    title: "Notificações CREA", // Changed title from "ARTs & Notificações" to "Notificações CREA"
-    url: createPageUrl("GerenciamentoARTs"),
-    icon: ClipboardCheck,
-  },
-  {
-    title: "Elaboração de ARTs", // Added new navigation item
-    url: createPageUrl("ElaboracaoARTs"),
-    icon: FileSignature,
-  },
+    title: "Financiamentos",
+    icon: Wallet,
+    items: [
+      {
+        title: "Dashboard",
+        url: createPageUrl("Dashboard"),
+        icon: LayoutDashboard,
+      },
+      {
+        title: "Novo Projeto",
+        url: createPageUrl("NovoProjeto"),
+        icon: Plus,
+      },
+      {
+        title: "Todos Projetos",
+        url: createPageUrl("TodosProjetos"), 
+        icon: FileText,
+      },
+      {
+        title: "Vencimentos",
+        url: createPageUrl("Vencimentos"),
+        icon: Calendar,
+      },
+      {
+        title: "Notificações CREA",
+        url: createPageUrl("GerenciamentoARTs"),
+        icon: ClipboardCheck,
+      },
+      {
+        title: "Elaboração de ARTs",
+        url: createPageUrl("ElaboracaoARTs"),
+        icon: FileSignature,
+      },
+    ]
+  }
 ];
 
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const [stats, setStats] = useState({ totalProjetos: 0, emAnalise: 0 });
-  const [swRegistration, setSwRegistration] = useState(null); // State to store service worker registration
-  const [isCheckingForUpdate, setIsCheckingForUpdate] = useState(false); // State to indicate if an update check is in progress
-  const [updateCheckStatus, setUpdateCheckStatus] = useState(''); // 'checking', 'updated', 'no-update', 'error'
+  const [swRegistration, setSwRegistration] = useState(null);
+  const [isCheckingForUpdate, setIsCheckingForUpdate] = useState(false);
+  const [updateCheckStatus, setUpdateCheckStatus] = useState('');
+  const [openSections, setOpenSections] = useState({
+    "Cadastro": true,
+    "Financiamentos": true
+  });
 
   // Proteção global contra erros fatais - executar uma única vez no boot
   useEffect(() => {
-    // Patch para proteger contra erros de removeChild
     if (!window.__pwa_protected) {
       window.__pwa_protected = true;
       
-      // Ignorar falhas de removeChild disparadas por desmontes rápidos
       const _removeChild = Node.prototype.removeChild;
       Node.prototype.removeChild = function(node) {
         if (!node || node.parentNode !== this) return node;
@@ -111,7 +164,6 @@ export default function Layout({ children, currentPageName }) {
         }
       };
 
-      // Handler global para recuperação de chunks e outros erros críticos
       const handleCriticalError = (e) => {
         const error = e.error || e.reason || e;
         const message = String(error?.message || error || '').toLowerCase();
@@ -126,17 +178,14 @@ export default function Layout({ children, currentPageName }) {
         if (isCriticalError) {
           console.warn('Erro crítico detectado:', message);
           
-          // Evitar loop infinito de recarregamento
           const recoverKey = 'pwa_recover_once';
           if (!sessionStorage.getItem(recoverKey)) {
             sessionStorage.setItem(recoverKey, '1');
             
             console.warn('Iniciando auto-recuperação...');
             
-            // Limpar Service Workers e caches
             const cleanup = async () => {
               try {
-                // Desregistrar Service Workers
                 if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
                   const registrations = await navigator.serviceWorker.getRegistrations();
                   for (const registration of registrations) {
@@ -145,7 +194,6 @@ export default function Layout({ children, currentPageName }) {
                   }
                 }
                 
-                // Limpar caches
                 if ('caches' in window && caches.keys) {
                   const cacheKeys = await caches.keys();
                   await Promise.all(cacheKeys.map(key => {
@@ -156,7 +204,6 @@ export default function Layout({ children, currentPageName }) {
               } catch (cleanupError) {
                 console.error('Erro na limpeza:', cleanupError);
               } finally {
-                // Forçar recarregamento
                 console.log('Forçando recarregamento da página...');
                 window.location.reload(true);
               }
@@ -164,7 +211,6 @@ export default function Layout({ children, currentPageName }) {
             
             cleanup();
             
-            // Prevenir propagação do erro
             if (e.preventDefault) e.preventDefault();
             if (e.stopPropagation) e.stopPropagation();
           } else {
@@ -173,18 +219,15 @@ export default function Layout({ children, currentPageName }) {
         }
       };
 
-      // Registrar handlers de erro globais
       window.addEventListener('error', handleCriticalError, true);
       window.addEventListener('unhandledrejection', handleCriticalError, true);
 
-      // Limpar flag de recuperação depois de um tempo
       setTimeout(() => {
         sessionStorage.removeItem('pwa_recover_once');
-      }, 30000); // 30 segundos
+      }, 30000);
     }
   }, []);
 
-  // Lógica de PWA e verificação de atualização
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then(registration => {
@@ -192,17 +235,16 @@ export default function Layout({ children, currentPageName }) {
       });
 
       const checkForUpdateOnFocus = () => {
-        swRegistration?.update(); // Check for updates when tab gains focus
+        swRegistration?.update();
       };
 
-      // Verifica atualizações quando a aba ganha foco
       window.addEventListener('focus', checkForUpdateOnFocus);
 
       return () => {
         window.removeEventListener('focus', checkForUpdateOnFocus);
       };
     }
-  }, [swRegistration]); // Re-run if swRegistration changes
+  }, [swRegistration]);
 
   useEffect(() => {
     async function fetchStats() {
@@ -231,20 +273,15 @@ export default function Layout({ children, currentPageName }) {
     setIsCheckingForUpdate(true);
 
     try {
-      // swRegistration.update() returns a Promise that resolves with a new ServiceWorkerRegistration
-      // It will trigger the 'updatefound' event on the registration if a new SW is found.
       const updatedRegistration = await swRegistration.update();
       
-      // If a new SW is found and is installing or waiting, the PwaUpdateNotification component
-      // will pick this up automatically via the 'updatefound' event or state changes.
       if (updatedRegistration && (updatedRegistration.installing || updatedRegistration.waiting)) {
         console.log("New Service Worker found and is installing/waiting.");
-        // The PwaUpdateNotification component will show the prompt. Clear status here.
         setUpdateCheckStatus(''); 
       } else {
         console.log("No new update found or SW already activated.");
-        setUpdateCheckStatus('updated'); // User is already on the latest version
-        setTimeout(() => setUpdateCheckStatus(''), 2000); // Clear status after a short delay
+        setUpdateCheckStatus('updated');
+        setTimeout(() => setUpdateCheckStatus(''), 2000);
       }
     } catch (error) {
       console.error("Erro ao verificar atualização:", error);
@@ -261,7 +298,6 @@ export default function Layout({ children, currentPageName }) {
     }
 
     try {
-      // 1) Desregistrar todos os Service Workers
       if ('serviceWorker' in navigator) {
         const regs = await navigator.serviceWorker.getRegistrations();
         for (const r of regs) {
@@ -269,7 +305,6 @@ export default function Layout({ children, currentPageName }) {
         }
       }
 
-      // 2) Apagar todos os Cache Storage
       if ('caches' in window) {
         const keys = await caches.keys();
         for (const k of keys) {
@@ -277,11 +312,9 @@ export default function Layout({ children, currentPageName }) {
         }
       }
 
-      // 3) Limpar localStorage e sessionStorage
       try { localStorage.clear(); } catch(e) { console.warn('Erro ao limpar localStorage:', e); }
       try { sessionStorage.clear(); } catch(e) { console.warn('Erro ao limpar sessionStorage:', e); }
 
-      // 4) Apagar todos os IndexedDBs
       const wipeIDB = async (name) => new Promise(res => {
         try {
           const req = indexedDB.deleteDatabase(name);
@@ -294,148 +327,150 @@ export default function Layout({ children, currentPageName }) {
         for (const db of dbs || []) {
           if (db && db.name) await wipeIDB(db.name);
         }
-      } else {
-        // Fallback para nomes comuns ou para iteração manual se `databases()` não estiver disponível
-        // Nota: Esta abordagem é menos precisa, idealmente `databases()` é preferível.
-        // Para uma limpeza completa robusta, pode-se tentar `indexedDB.open()` com nomes comuns
-        // e então deletar, mas isso é mais complexo.
-        for (const guess of ['_pwa', 'app-db', 'app', 'default']) { // Common DB names to try
-          await wipeIDB(guess);
-        }
       }
 
-      // 5) Recarregar forçando rede
       window.location.reload(true);
-    } catch (e) {
-      console.error('Falha na limpeza completa de cache:', e);
-      alert('Erro ao limpar cache. Recarregando página...');
+    } catch (error) {
+      console.error('Erro ao limpar cache:', error);
       window.location.reload(true);
     }
   };
 
+  const toggleSection = (sectionTitle) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [sectionTitle]: !prev[sectionTitle]
+    }));
+  };
+
+  // Verifica se algum item da seção está ativo
+  const isSectionActive = (section) => {
+    return section.items.some(item => location.pathname === item.url);
+  };
 
   return (
     <SidebarProvider>
-      <TooltipProvider> {/* Wrapped entire return with TooltipProvider */}
-        <AppVersion />
-        <PwaUpdateNotification />
-        <OfflineIndicator />
-        <div className="min-h-screen flex w-full bg-gradient-to-br from-green-50 to-emerald-50">
-          <Sidebar className="border-r border-green-200">
-            <SidebarHeader className="border-b border-green-200 p-6">
-              <div className="flex items-center gap-3">
-                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68c43a9d96ab992732fde594/c21e63e22_LogoSemente2.png" alt="Logo" className="w-10 h-10" />
-                <div>
-                  <h2 className="font-bold text-green-900 text-lg">Cerrado Consultoria</h2>
-                  <p className="text-sm text-green-600">Financiamentos Agrícolas</p>
-                </div>
+      <div className="flex min-h-screen w-full bg-gray-50">
+        <Sidebar className="border-r bg-white">
+          <SidebarHeader className="border-b px-4 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-600 text-white">
+                <Sprout className="h-6 w-6" />
               </div>
-            </SidebarHeader>
-            
-            <SidebarContent className="p-3">
-              <SidebarGroup>
-                <SidebarGroupLabel className="text-xs font-semibold text-green-700 uppercase tracking-wider px-3 py-2">
-                  Navegação
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {navigationItems.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton 
-                          asChild 
-                          className={`hover:bg-green-100 hover:text-green-800 transition-all duration-200 rounded-xl mb-1 ${
-                            location.pathname === item.url ? 'bg-green-100 text-green-800 font-semibold' : 'text-green-700'
-                          }`}
-                        >
-                          <Link to={item.url} className="flex items-center gap-3 px-4 py-3">
-                            <item.icon className="w-5 h-5" />
-                            <span className="font-medium">{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-
-              <SidebarGroup className="mt-6">
-                <SidebarGroupLabel className="text-xs font-semibold text-green-700 uppercase tracking-wider px-3 py-2">
-                  Estatísticas Rápidas
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <div className="px-4 py-3 space-y-3">
-                    <div className="flex items-center gap-3 text-sm">
-                      <TrendingUp className="w-4 h-4 text-green-500" />
-                      <span className="text-green-700">Total Projetos</span>
-                      <span className="ml-auto font-bold text-green-800">{stats.totalProjetos}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm">
-                      <Building2 className="w-4 h-4 text-emerald-500" />
-                      <span className="text-green-700">Em Análise</span>
-                      <span className="ml-auto font-bold text-emerald-600">{stats.emAnalise}</span>
-                    </div>
-                  </div>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            </SidebarContent>
-
-            <SidebarFooter className="border-t border-green-200 p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-green-200 rounded-full flex items-center justify-center">
-                  <span className="text-green-800 font-semibold text-sm">U</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-green-900 text-sm truncate">Usuário</p>
-                  <p className="text-xs text-green-600 truncate">Gestor de Projetos</p>
-                </div>
-                
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-green-600 hover:bg-green-100 hover:text-green-800"
-                      disabled={isCheckingForUpdate}
-                      aria-label="Opções de atualização"
-                    >
-                      {updateCheckStatus === 'checking' && <RefreshCw className="w-4 h-4 animate-spin" />}
-                      {updateCheckStatus === 'updated' && <Check className="w-4 h-4 text-green-600" />}
-                      {!updateCheckStatus && <RefreshCw className="w-4 h-4" />}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={handleManualUpdateCheck} disabled={isCheckingForUpdate}>
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      {updateCheckStatus === 'checking' ? 'Verificando...' : 'Verificar Atualizações'}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={handleFullCacheClear}
-                      className="text-red-600 focus:text-red-700 focus:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Limpar Cache Completo
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              <div>
+                <h1 className="text-lg font-bold text-green-800">AgroFinance</h1>
+                <p className="text-xs text-gray-500">Sistema Unificado</p>
               </div>
-            </SidebarFooter>
-          </Sidebar>
-
-          <main className="flex-1 flex flex-col">
-            <header className="bg-white/70 backdrop-blur-sm border-b border-green-200 px-6 py-4 md:hidden">
-              <div className="flex items-center gap-4">
-                <SidebarTrigger className="hover:bg-green-100 p-2 rounded-lg transition-colors duration-200" />
-                <h1 className="text-xl font-bold text-green-900">Cerrado Consultoria</h1>
-              </div>
-            </header>
-
-            <div className="flex-1 overflow-auto">
-              {children}
             </div>
-          </main>
-        </div>
-      </TooltipProvider>
+          </SidebarHeader>
+          
+          <SidebarContent className="px-2 py-4">
+            {navigationSections.map((section) => (
+              <SidebarGroup key={section.title} className="mb-2">
+                <Collapsible
+                  open={openSections[section.title]}
+                  onOpenChange={() => toggleSection(section.title)}
+                >
+                  <CollapsibleTrigger asChild>
+                    <SidebarGroupLabel className="flex items-center justify-between cursor-pointer hover:bg-gray-100 rounded-md px-2 py-2 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <section.icon className={`h-4 w-4 ${isSectionActive(section) ? 'text-green-600' : 'text-gray-500'}`} />
+                        <span className={`text-sm font-semibold ${isSectionActive(section) ? 'text-green-700' : 'text-gray-700'}`}>
+                          {section.title}
+                        </span>
+                      </div>
+                      {openSections[section.title] ? (
+                        <ChevronDown className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-gray-400" />
+                      )}
+                    </SidebarGroupLabel>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        {section.items.map((item) => (
+                          <SidebarMenuItem key={item.title}>
+                            <SidebarMenuButton
+                              asChild
+                              isActive={location.pathname === item.url}
+                              className="pl-8"
+                            >
+                              <Link to={item.url} className="flex items-center gap-3">
+                                <item.icon className="h-4 w-4" />
+                                <span>{item.title}</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ))}
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </CollapsibleContent>
+                </Collapsible>
+              </SidebarGroup>
+            ))}
+
+            {/* Estatísticas Rápidas */}
+            <SidebarGroup className="mt-6">
+              <SidebarGroupLabel className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Estatísticas Rápidas
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <div className="px-2 py-2 space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Total Projetos</span>
+                    <span className="font-semibold text-green-700">{stats.totalProjetos}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Em Análise</span>
+                    <span className="font-semibold text-amber-600">{stats.emAnalise}</span>
+                  </div>
+                </div>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+
+          <SidebarFooter className="border-t p-4">
+            <div className="flex flex-col gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full justify-start gap-2">
+                    <RefreshCw className={`h-4 w-4 ${isCheckingForUpdate ? 'animate-spin' : ''}`} />
+                    <span>Atualização</span>
+                    {updateCheckStatus === 'updated' && <Check className="h-4 w-4 text-green-500 ml-auto" />}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuItem onClick={handleManualUpdateCheck} disabled={isCheckingForUpdate}>
+                    <RefreshCw className={`h-4 w-4 mr-2 ${isCheckingForUpdate ? 'animate-spin' : ''}`} />
+                    {isCheckingForUpdate ? 'Verificando...' : 'Verificar Atualização'}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleFullCacheClear} className="text-red-600">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Limpar Cache Completo
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <AppVersion />
+            </div>
+          </SidebarFooter>
+        </Sidebar>
+
+        <main className="flex-1 overflow-auto">
+          <div className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-white px-4 shadow-sm">
+            <SidebarTrigger />
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold text-gray-800">{currentPageName}</h2>
+            </div>
+            <OfflineIndicator />
+          </div>
+          <div className="p-6">
+            {children}
+          </div>
+        </main>
+      </div>
+      <PwaUpdateNotification />
     </SidebarProvider>
   );
 }

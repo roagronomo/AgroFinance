@@ -13,8 +13,7 @@ import {
   RefreshCw,
   Check,
   Trash2, // Added for cache clear functionality
-  FileSignature, // Added FileSignature icon
-  MapPin // Added for Consulta CAR
+  FileSignature // Added FileSignature icon
 } from "lucide-react";
 import {
   Sidebar,
@@ -73,11 +72,6 @@ const navigationItems = [
     title: "Elaboração de ARTs", // Added new navigation item
     url: createPageUrl("ElaboracaoARTs"),
     icon: FileSignature,
-  },
-  {
-    title: "Consulta CAR",
-    url: createPageUrl("ConsultaCAR"),
-    icon: MapPin,
   },
 ];
 

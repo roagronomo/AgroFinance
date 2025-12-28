@@ -415,7 +415,6 @@ export default function ProducaoAgricola() {
               </div>
             </div>
           )}
-        </div>
       </div>
 
       <div className="hidden print:block">

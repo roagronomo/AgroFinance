@@ -86,6 +86,11 @@ const navigationSections = [
         url: createPageUrl("AnaliseCertidoes"),
         icon: FileSearch,
       },
+      {
+        title: "Correção de Vínculos",
+        url: createPageUrl("CorrecaoVinculos"),
+        icon: RefreshCw,
+      },
     ]
   },
   {

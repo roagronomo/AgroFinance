@@ -179,7 +179,7 @@ export default function ProducaoAgricola() {
   const loadClientes = async () => {
     try {
       setIsLoadingClientes(true);
-      const data = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Cliente.list("nome");
+      const data = await base44.entities.Cliente.list("nome");
       setClientes(data);
     } catch (error) {
       console.error("Erro ao carregar clientes:", error);
@@ -193,8 +193,8 @@ export default function ProducaoAgricola() {
     try {
       setIsLoadingData(true);
       const [imoveisData, planosData] = await Promise.all([
-        base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.filter({ cliente_id: clienteId }),
-        base44.entities['68cdb2d792e5fbfc65ac3e5d'].PlanoProducao.filter({ cliente_id: clienteId }, "-created_date")
+        base44.entities.Imovel.filter({ cliente_id: clienteId }),
+        base44.entities.PlanoProducao.filter({ cliente_id: clienteId }, "-created_date")
       ]);
       setImoveisCliente(imoveisData);
       setPlanosExistentes(planosData);
@@ -287,12 +287,12 @@ export default function ProducaoAgricola() {
 
       let planoSalvo;
       if (planoExistente) {
-        planoSalvo = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].PlanoProducao.update(planoExistente.id, dadosParaSalvar);
+        planoSalvo = await base44.entities.PlanoProducao.update(planoExistente.id, dadosParaSalvar);
         setPlanosExistentes(prev =>
           prev.map(p => p.id === planoExistente.id ? { ...p, ...dadosParaSalvar } : p)
         );
       } else {
-        planoSalvo = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].PlanoProducao.create(dadosParaSalvar);
+        planoSalvo = await base44.entities.PlanoProducao.create(dadosParaSalvar);
         setPlanosExistentes(prev => [...prev, { id: planoSalvo.id, ...dadosParaSalvar }]);
       }
 

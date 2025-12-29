@@ -34,8 +34,8 @@ export default function CadastroImoveis() {
       try {
         setIsLoadingClientes(true);
         const [clientesData, imoveisData] = await Promise.all([
-          base44.entities['68cdb2d792e5fbfc65ac3e5d'].Cliente.list("nome"),
-          base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.list("-created_date", 500)
+          base44.entities.Cliente.list("nome"),
+          base44.entities.Imovel.list("-created_date", 500)
         ]);
         if (isMounted) {
           setClientes(clientesData || []);
@@ -68,7 +68,7 @@ export default function CadastroImoveis() {
       const loadImoveisSafe = async (clienteId) => {
         try {
           setIsLoadingImoveis(true);
-          const data = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.filter({ cliente_id: clienteId }, "-created_date");
+          const data = await base44.entities.Imovel.filter({ cliente_id: clienteId }, "-created_date");
           if (isMounted) {
             setImoveis(data || []);
           }
@@ -124,14 +124,14 @@ export default function CadastroImoveis() {
     try {
       const dataToSave = { ...imovelData, cliente_id: clienteSelecionado.id };
       if (editingImovel) {
-        await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.update(editingImovel.id, dataToSave);
+        await base44.entities.Imovel.update(editingImovel.id, dataToSave);
       } else {
-        await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.create(dataToSave);
+        await base44.entities.Imovel.create(dataToSave);
       }
       setShowForm(false);
       setEditingImovel(null);
       
-      const data = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.filter({ cliente_id: clienteSelecionado.id }, "-created_date");
+      const data = await base44.entities.Imovel.filter({ cliente_id: clienteSelecionado.id }, "-created_date");
       setImoveis(data || []);
     } catch (error) {
       console.error("Erro ao salvar imóvel:", error);
@@ -150,8 +150,8 @@ export default function CadastroImoveis() {
 
   const handleDelete = async (imovel) => {
     try {
-      await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.delete(imovel.id);
-      const data = await base44.entities['68cdb2d792e5fbfc65ac3e5d'].Imovel.filter({ cliente_id: clienteSelecionado.id }, "-created_date");
+      await base44.entities.Imovel.delete(imovel.id);
+      const data = await base44.entities.Imovel.filter({ cliente_id: clienteSelecionado.id }, "-created_date");
       setImoveis(data || []);
     } catch (error) {
       console.error("Erro ao excluir imóvel:", error);

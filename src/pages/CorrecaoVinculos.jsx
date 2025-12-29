@@ -1,198 +1,156 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { diagnosticarVinculos } from "@/functions/diagnosticarVinculos";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, CheckCircle, AlertTriangle, RefreshCw } from "lucide-react";
+import { Loader2, CheckCircle, AlertTriangle } from "lucide-react";
 
 export default function CorrecaoVinculos() {
-  const [diagnostico, setDiagnostico] = useState(null);
-  const [carregando, setCarregando] = useState(true);
-  const [corrigindo, setCorrigindo] = useState(false);
+  const [executando, setExecutando] = useState(false);
   const [resultado, setResultado] = useState(null);
+  const [erro, setErro] = useState(null);
 
-  useEffect(() => {
-    carregarDiagnostico();
-  }, []);
-
-  const carregarDiagnostico = async () => {
-    try {
-      setCarregando(true);
-      const { data } = await diagnosticarVinculos({});
-      setDiagnostico(data);
-    } catch (error) {
-      console.error("Erro ao diagnosticar:", error);
-      alert("Erro ao carregar diagnóstico");
-    } finally {
-      setCarregando(false);
-    }
-  };
-
-  const corrigirVinculos = async () => {
-    if (!window.confirm("Isso irá atualizar os vínculos de todos os imóveis e planos. Continuar?")) {
+  const executarCorrecao = async () => {
+    if (!window.confirm("⚠️ Isso irá atualizar os vínculos de TODOS os imóveis e planos de produção.\n\nDeseja continuar?")) {
       return;
     }
 
     try {
-      setCorrigindo(true);
+      setExecutando(true);
+      setErro(null);
+      setResultado(null);
+
+      const response = await base44.functions.invoke('corrigirVinculosClientes', {});
       
-      // Criar mapa de CPF → ID novo
-      const mapaCpf = {};
-      diagnostico.clientes_disponiveis.forEach(c => {
-        const cpfLimpo = (c.cpf || '').replace(/\D/g, '');
-        if (cpfLimpo) {
-          mapaCpf[cpfLimpo] = c.id;
-        }
-      });
-
-      let imoveisAtualizados = 0;
-      let planosAtualizados = 0;
-      let erros = [];
-
-      // Para cada grupo de imóveis órfãos
-      for (const [clienteIdAntigo, imoveis] of Object.entries(diagnostico.imoveis_por_cliente_antigo)) {
-        // Buscar o primeiro imóvel para ter mais contexto
-        const primeiroImovel = await base44.entities.Imovel.filter({ id: imoveis[0].id });
-        
-        if (!primeiroImovel || primeiroImovel.length === 0) {
-          console.log(`Imóvel ${imoveis[0].id} não encontrado`);
-          continue;
-        }
-
-        // Tentar encontrar cliente pelo nome do município ou manualmente
-        // Como não temos o nome do cliente no imóvel, vamos precisar de uma estratégia diferente
-        // Por ora, vamos apenas reportar o problema
-        erros.push({
-          cliente_id_antigo: clienteIdAntigo,
-          imoveis: imoveis.map(i => i.nome)
-        });
+      if (response.data.error) {
+        throw new Error(response.data.error);
       }
 
-      setResultado({
-        imoveisAtualizados,
-        planosAtualizados,
-        erros
-      });
+      setResultado(response.data);
     } catch (error) {
-      console.error("Erro ao corrigir:", error);
-      alert("Erro ao corrigir vínculos: " + error.message);
+      console.error("Erro:", error);
+      setErro(error.message || "Erro desconhecido ao executar correção");
     } finally {
-      setCorrigindo(false);
+      setExecutando(false);
     }
   };
 
-  if (carregando) {
-    return (
-      <div className="p-8 flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-green-600" />
-      </div>
-    );
-  }
-
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-6">
+    <div className="p-8 max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Correção de Vínculos</h1>
-        <p className="text-gray-500 mt-1">Corrige os vínculos entre clientes, imóveis e planos de produção após importação</p>
+        <h1 className="text-2xl font-bold text-gray-900">Correção Automática de Vínculos</h1>
+        <p className="text-gray-500 mt-1">
+          Corrige automaticamente os vínculos entre clientes, imóveis e planos após a importação
+        </p>
       </div>
 
-      {diagnostico && (
-        <>
-          <Card>
-            <CardHeader>
-              <CardTitle>Diagnóstico</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-gray-600">Total de Clientes</p>
-                  <p className="text-2xl font-bold text-blue-600">{diagnostico.diagnostico.total_clientes}</p>
-                </div>
-                <div className="p-4 bg-green-50 rounded-lg">
-                  <p className="text-sm text-gray-600">Total de Imóveis</p>
-                  <p className="text-2xl font-bold text-green-600">{diagnostico.diagnostico.total_imoveis}</p>
-                </div>
-                <div className="p-4 bg-purple-50 rounded-lg">
-                  <p className="text-sm text-gray-600">Total de Planos</p>
-                  <p className="text-2xl font-bold text-purple-600">{diagnostico.diagnostico.total_planos}</p>
-                </div>
-                <div className="p-4 bg-orange-50 rounded-lg border-2 border-orange-300">
-                  <p className="text-sm text-gray-600">Imóveis Órfãos</p>
-                  <p className="text-2xl font-bold text-orange-600">{diagnostico.diagnostico.imoveis_orfaos}</p>
-                </div>
-                <div className="p-4 bg-red-50 rounded-lg border-2 border-red-300">
-                  <p className="text-sm text-gray-600">Planos Órfãos</p>
-                  <p className="text-2xl font-bold text-red-600">{diagnostico.diagnostico.planos_orfaos}</p>
-                </div>
-              </div>
+      <Card className="border-blue-200 bg-blue-50">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="space-y-2 text-sm text-blue-800">
+              <p className="font-semibold">Como funciona:</p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li>Busca os clientes do app antigo (Cerrado Consultoria) via API</li>
+                <li>Compara os CPFs para mapear IDs antigos → IDs novos</li>
+                <li>Atualiza todos os imóveis e planos com os IDs corretos</li>
+                <li>Mostra um resumo do que foi corrigido</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-              {(diagnostico.diagnostico.imoveis_orfaos > 0 || diagnostico.diagnostico.planos_orfaos > 0) && (
-                <Alert className="border-orange-200 bg-orange-50">
-                  <AlertTriangle className="h-4 w-4 text-orange-600" />
-                  <AlertDescription className="text-orange-800">
-                    <strong>Problema Identificado:</strong> Existem {diagnostico.diagnostico.imoveis_orfaos} imóveis e {diagnostico.diagnostico.planos_orfaos} planos 
-                    com cliente_id de outro aplicativo. Eles precisam ser vinculados aos clientes corretos deste app.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Executar Correção</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button
+            onClick={executarCorrecao}
+            disabled={executando}
+            className="w-full bg-green-600 hover:bg-green-700"
+            size="lg"
+          >
+            {executando ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Corrigindo vínculos...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-5 h-5 mr-2" />
+                Executar Correção Automática
+              </>
+            )}
+          </Button>
 
-          {Object.keys(diagnostico.imoveis_por_cliente_antigo).length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>IDs de Cliente Antigos Detectados</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {Object.entries(diagnostico.imoveis_por_cliente_antigo).map(([clienteIdAntigo, imoveis]) => (
-                    <div key={clienteIdAntigo} className="p-4 bg-gray-50 rounded-lg border">
-                      <p className="font-mono text-xs text-gray-500 mb-2">Cliente ID Antigo: {clienteIdAntigo}</p>
-                      <p className="text-sm font-semibold text-gray-900 mb-2">
-                        {imoveis.length} imóvel(is) órfão(s)
-                      </p>
-                      <div className="space-y-1">
-                        {imoveis.slice(0, 3).map(im => (
-                          <p key={im.id} className="text-xs text-gray-600">
-                            • {im.nome} ({im.municipio})
-                          </p>
-                        ))}
-                        {imoveis.length > 3 && (
-                          <p className="text-xs text-gray-400">... e mais {imoveis.length - 3}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <Alert className="mt-4 border-blue-200 bg-blue-50">
-                  <AlertDescription className="text-blue-800 text-sm">
-                    <strong>💡 Como corrigir:</strong> Você precisa atualizar manualmente o campo <code className="bg-blue-100 px-1 rounded">cliente_id</code> de cada imóvel órfão 
-                    para o ID correto do cliente no novo app. Vá no painel Admin → Dados → Imovel e edite os registros órfãos.
-                  </AlertDescription>
-                </Alert>
-              </CardContent>
-            </Card>
-          )}
-
-          {resultado && (
-            <Alert className="border-green-200 bg-green-50">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-800">
-                ✅ Correção concluída: {resultado.imoveisAtualizados} imóveis e {resultado.planosAtualizados} planos atualizados.
+          {erro && (
+            <Alert className="border-red-200 bg-red-50">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                <strong>Erro:</strong> {erro}
               </AlertDescription>
             </Alert>
           )}
-        </>
-      )}
 
-      <div className="flex gap-3">
-        <Button onClick={carregarDiagnostico} variant="outline" disabled={carregando}>
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Recarregar Diagnóstico
-        </Button>
-      </div>
+          {resultado && (
+            <div className="space-y-4">
+              <Alert className="border-green-200 bg-green-50">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  <strong>✅ Correção concluída com sucesso!</strong>
+                </AlertDescription>
+              </Alert>
+
+              <Card className="border-gray-200">
+                <CardHeader>
+                  <CardTitle className="text-lg">Resumo</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                      <p className="text-sm text-gray-600">Imóveis Atualizados</p>
+                      <p className="text-3xl font-bold text-green-600">
+                        {resultado.resumo?.imoveis_atualizados || 0}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                      <p className="text-sm text-gray-600">Planos Atualizados</p>
+                      <p className="text-3xl font-bold text-purple-600">
+                        {resultado.resumo?.planos_atualizados || 0}
+                      </p>
+                    </div>
+                  </div>
+
+                  {(resultado.resumo?.imoveis_nao_encontrados > 0 || resultado.resumo?.planos_nao_encontrados > 0) && (
+                    <Alert className="mt-4 border-orange-200 bg-orange-50">
+                      <AlertTriangle className="h-4 w-4 text-orange-600" />
+                      <AlertDescription className="text-orange-800">
+                        <p className="font-semibold mb-2">Registros não encontrados:</p>
+                        <ul className="text-sm space-y-1">
+                          {resultado.resumo.imoveis_nao_encontrados > 0 && (
+                            <li>• {resultado.resumo.imoveis_nao_encontrados} imóveis sem correspondência</li>
+                          )}
+                          {resultado.resumo.planos_nao_encontrados > 0 && (
+                            <li>• {resultado.resumo.planos_nao_encontrados} planos sem correspondência</li>
+                          )}
+                        </ul>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Alert className="border-blue-200 bg-blue-50">
+                <AlertDescription className="text-blue-800 text-sm">
+                  💡 Você pode agora ir em <strong>Cadastro de Imóveis</strong> para verificar se os imóveis estão aparecendo corretamente vinculados aos clientes.
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

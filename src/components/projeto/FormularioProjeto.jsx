@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +10,7 @@ import CurrencyInput from "./CurrencyInput";
 import PercentageInput from "./PercentageInput";
 import { format } from "date-fns";
 import { formatarNomeProprio } from "../lib/formatters";
+import { base44 } from "@/api/base44Client";
 
 const BANCOS = [
   { value: "banco_do_brasil", label: "Banco do Brasil" },
@@ -124,6 +124,8 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
       : []
   );
   const [cronogramaPreview, setCronogramaPreview] = useState([]);
+  const [clientes, setClientes] = useState([]);
+  const [carregandoClientes, setCarregandoClientes] = useState(true);
 
   const getMesesPorPeriodo = useCallback((frequencia) => {
     const mapa = {
@@ -365,6 +367,22 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
   ]);
 
   useEffect(() => {
+    const carregarClientes = async () => {
+      try {
+        setCarregandoClientes(true);
+        const data = await base44.entities.Cliente.list("nome");
+        setClientes(data || []);
+      } catch (error) {
+        console.error("Erro ao carregar clientes:", error);
+        setClientes([]);
+      } finally {
+        setCarregandoClientes(false);
+      }
+    };
+    carregarClientes();
+  }, []);
+
+  useEffect(() => {
     if (dadosProjeto.status === "cancelado" && dadosProjeto.status_art !== "nao_se_aplica") {
       setDadosProjeto(prev => ({
         ...prev,
@@ -597,15 +615,22 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
           <Label htmlFor="nome_cliente" className="text-green-800 font-semibold text-sm">
             Nome do Cliente *
           </Label>
-          <Input
-            id="nome_cliente"
+          <Select
             value={dadosProjeto.nome_cliente}
-            onChange={(e) => handleInputChange('nome_cliente', e.target.value)}
-            onBlur={(e) => handleNomeBlur('nome_cliente', e.target.value)}
-            placeholder="Nome completo do cliente"
-            required
-            className="border-green-200 focus:border-green-500 h-9"
-          />
+            onValueChange={(value) => handleInputChange('nome_cliente', value)}
+            disabled={carregandoClientes}
+          >
+            <SelectTrigger className="border-green-200 focus:border-green-500 h-9">
+              <SelectValue placeholder={carregandoClientes ? "Carregando clientes..." : "Selecione o cliente"} />
+            </SelectTrigger>
+            <SelectContent>
+              {clientes.map((cliente) => (
+                <SelectItem key={cliente.id} value={cliente.nome}>
+                  {cliente.nome} - {cliente.cpf}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-1.5">

@@ -9,15 +9,26 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 1. Buscar todos os clientes do APP ANTIGO (Cerrado Consultoria) via função externa
+    // 1. Buscar todos os clientes do APP ANTIGO (Cerrado Consultoria) via API
     const appAntigoId = '68cdb2d792e5fbfc65ac3e5d';
-    const urlClientes = `https://api.base44.com/apps/${appAntigoId}/entities/Cliente/list`;
-    const responseClientes = await fetch(urlClientes, {
+    const serviceToken = Deno.env.get('BASE44_SERVICE_ROLE_KEY');
+    
+    if (!serviceToken) {
+      throw new Error('BASE44_SERVICE_ROLE_KEY não encontrada');
+    }
+
+    const urlClientesAntigos = `https://api.base44.com/apps/${appAntigoId}/entities/Cliente/list`;
+    const resClientesAntigos = await fetch(urlClientesAntigos, {
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('BASE44_SERVICE_ROLE_KEY')}`
+        'Authorization': `Bearer ${serviceToken}`
       }
     });
-    const clientesAntigos = await responseClientes.json();
+    
+    if (!resClientesAntigos.ok) {
+      throw new Error(`Erro ao buscar clientes antigos: ${resClientesAntigos.status}`);
+    }
+    
+    const clientesAntigos = await resClientesAntigos.json();
     
     // 2. Buscar todos os clientes do APP NOVO (AgroFinance)
     const clientesNovos = await base44.asServiceRole.entities.Cliente.list('nome', 500);

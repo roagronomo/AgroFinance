@@ -9,151 +9,62 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 1. Buscar todos os clientes do APP ANTIGO (Cerrado Consultoria) via API
-    const appAntigoId = '68cdb2d792e5fbfc65ac3e5d';
-    const serviceToken = Deno.env.get('BASE44_SERVICE_ROLE_KEY');
-    
-    if (!serviceToken) {
-      throw new Error('BASE44_SERVICE_ROLE_KEY não encontrada');
-    }
+    // Buscar dados do app atual
+    const [clientes, imoveis, planos] = await Promise.all([
+      base44.asServiceRole.entities.Cliente.list('nome', 500),
+      base44.asServiceRole.entities.Imovel.list('-created_date', 1000),
+      base44.asServiceRole.entities.PlanoProducao.list('-created_date', 1000)
+    ]);
 
-    const urlClientesAntigos = `https://api.base44.com/apps/${appAntigoId}/entities/Cliente/list`;
-    const resClientesAntigos = await fetch(urlClientesAntigos, {
-      headers: {
-        'Authorization': `Bearer ${serviceToken}`
-      }
-    });
-    
-    if (!resClientesAntigos.ok) {
-      throw new Error(`Erro ao buscar clientes antigos: ${resClientesAntigos.status}`);
-    }
-    
-    const clientesAntigos = await resClientesAntigos.json();
-    
-    // 2. Buscar todos os clientes do APP NOVO (AgroFinance)
-    const clientesNovos = await base44.asServiceRole.entities.Cliente.list('nome', 500);
-    
-    // 3. Criar mapa: CPF → ID novo
-    const mapaCpfParaIdNovo = {};
-    clientesNovos.forEach(cliente => {
-      const cpfLimpo = (cliente.cpf || '').replace(/\D/g, '');
-      if (cpfLimpo) {
-        mapaCpfParaIdNovo[cpfLimpo] = cliente.id;
-      }
+    // IDs válidos no app novo
+    const idsNovosValidos = new Set(clientes.map(c => c.id));
+
+    // Encontrar imóveis órfãos (com cliente_id que não existe no app novo)
+    const imoveisOrfaos = imoveis.filter(im => {
+      const cid = im.cliente_id;
+      if (cid === "sistema_analise_certidao" || cid === "sistema") return false;
+      return !idsNovosValidos.has(cid);
     });
 
-    // 4. Criar mapa: ID antigo → CPF
-    const mapaIdAntigoParaCpf = {};
-    clientesAntigos.forEach(cliente => {
-      const cpfLimpo = (cliente.cpf || '').replace(/\D/g, '');
-      if (cpfLimpo && cliente.id) {
-        mapaIdAntigoParaCpf[cliente.id] = cpfLimpo;
-      }
+    // Encontrar planos órfãos
+    const planosOrfaos = planos.filter(pl => {
+      const cid = pl.cliente_id;
+      return !idsNovosValidos.has(cid);
     });
 
-    console.log(`📋 ${clientesAntigos.length} clientes no app antigo`);
-    console.log(`📋 ${clientesNovos.length} clientes no app novo`);
-
-    // 5. Atualizar imóveis
-    const imoveis = await base44.asServiceRole.entities.Imovel.list('-created_date', 1000);
-    let imoveisAtualizados = 0;
-    let imoveisNaoEncontrados = [];
-
-    for (const imovel of imoveis) {
-      const clienteIdAntigo = imovel.cliente_id;
-      
-      // Pular sistema
-      if (clienteIdAntigo === "sistema_analise_certidao" || clienteIdAntigo === "sistema") {
-        continue;
+    // Agrupar por cliente_id antigo para análise
+    const gruposImoveis = {};
+    imoveisOrfaos.forEach(im => {
+      if (!gruposImoveis[im.cliente_id]) {
+        gruposImoveis[im.cliente_id] = [];
       }
-
-      // Já está correto?
-      if (clienteIdAntigo && clienteIdAntigo.startsWith('6951')) {
-        continue;
-      }
-
-      // Buscar CPF do cliente antigo
-      const cpf = mapaIdAntigoParaCpf[clienteIdAntigo];
-      
-      if (!cpf) {
-        console.log(`⚠️ Cliente antigo ${clienteIdAntigo} não encontrado`);
-        imoveisNaoEncontrados.push(imovel.nome_imovel);
-        continue;
-      }
-
-      // Buscar ID novo pelo CPF
-      const novoClienteId = mapaCpfParaIdNovo[cpf];
-      
-      if (!novoClienteId) {
-        console.log(`⚠️ Cliente com CPF ${cpf} não encontrado no novo app`);
-        imoveisNaoEncontrados.push(imovel.nome_imovel);
-        continue;
-      }
-
-      // Atualizar imóvel
-      await base44.asServiceRole.entities.Imovel.update(imovel.id, {
-        cliente_id: novoClienteId
+      gruposImoveis[im.cliente_id].push({
+        id: im.id,
+        nome: im.nome_imovel,
+        municipio: im.municipio
       });
-      
-      imoveisAtualizados++;
-      console.log(`✅ Imóvel "${imovel.nome_imovel}" atualizado: ${clienteIdAntigo} → ${novoClienteId}`);
-    }
-
-    // 6. Atualizar planos de produção
-    const planos = await base44.asServiceRole.entities.PlanoProducao.list('-created_date', 1000);
-    let planosAtualizados = 0;
-    let planosNaoEncontrados = [];
-
-    for (const plano of planos) {
-      const clienteIdAntigo = plano.cliente_id;
-      
-      // Já está correto?
-      if (clienteIdAntigo && clienteIdAntigo.startsWith('6951')) {
-        continue;
-      }
-
-      // Buscar CPF do cliente antigo
-      const cpf = mapaIdAntigoParaCpf[clienteIdAntigo];
-      
-      if (!cpf) {
-        console.log(`⚠️ Cliente antigo ${clienteIdAntigo} não encontrado`);
-        planosNaoEncontrados.push(plano.municipio_lavoura);
-        continue;
-      }
-
-      // Buscar ID novo pelo CPF
-      const novoClienteId = mapaCpfParaIdNovo[cpf];
-      
-      if (!novoClienteId) {
-        console.log(`⚠️ Cliente com CPF ${cpf} não encontrado no novo app`);
-        planosNaoEncontrados.push(plano.municipio_lavoura);
-        continue;
-      }
-
-      // Atualizar plano
-      await base44.asServiceRole.entities.PlanoProducao.update(plano.id, {
-        cliente_id: novoClienteId
-      });
-      
-      planosAtualizados++;
-      console.log(`✅ Plano de ${plano.municipio_lavoura} atualizado: ${clienteIdAntigo} → ${novoClienteId}`);
-    }
+    });
 
     return Response.json({
       success: true,
-      resumo: {
-        imoveis_atualizados: imoveisAtualizados,
-        imoveis_nao_encontrados: imoveisNaoEncontrados.length,
-        planos_atualizados: planosAtualizados,
-        planos_nao_encontrados: planosNaoEncontrados.length
+      diagnostico: {
+        total_clientes: clientes.length,
+        total_imoveis: imoveis.length,
+        total_planos: planos.length,
+        imoveis_orfaos: imoveisOrfaos.length,
+        planos_orfaos: planosOrfaos.length
       },
-      detalhes: {
-        imoveis_nao_encontrados: imoveisNaoEncontrados,
-        planos_nao_encontrados: planosNaoEncontrados
-      }
+      grupos_orfaos: gruposImoveis,
+      clientes_disponiveis: clientes.map(c => ({
+        id: c.id,
+        nome: c.nome,
+        cpf: c.cpf,
+        cidade: c.cidade,
+        uf: c.uf
+      }))
     });
   } catch (error) {
-    console.error('Erro na migração:', error);
+    console.error('Erro:', error);
     return Response.json({ 
       error: error.message,
       stack: error.stack 

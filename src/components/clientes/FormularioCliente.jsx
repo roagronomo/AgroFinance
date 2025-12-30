@@ -582,6 +582,112 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
             </p>
           </div>
 
+          {/* Marca do Gado */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-green-100">
+              Marca do Gado
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-green-700 font-medium mb-2 block">Imagem da Marca</Label>
+                {formData.marca_gado_imagem_url ? (
+                  <div className="relative">
+                    <div className="w-32 h-32 border-2 border-green-300 rounded-lg overflow-hidden bg-white flex items-center justify-center">
+                      <img 
+                        src={formData.marca_gado_imagem_url} 
+                        alt="Marca do gado" 
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(formData.marca_gado_imagem_url, '_blank')}
+                        className="text-green-600"
+                      >
+                        <ImageIcon className="w-4 h-4 mr-1" />
+                        Ver
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyToClipboard(formData.marca_gado_imagem_url)}
+                        className="text-blue-600"
+                      >
+                        <Copy className="w-4 h-4 mr-1" />
+                        Copiar URL
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRemoverMarcaGado}
+                        className="text-red-600"
+                      >
+                        <X className="w-4 h-4 mr-1" />
+                        Remover
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-green-300 rounded-lg cursor-pointer hover:border-green-500 hover:bg-green-50 transition-colors">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleMarcaGadoUpload}
+                        className="hidden"
+                        disabled={uploadingMarcaGado}
+                      />
+                      {uploadingMarcaGado ? (
+                        <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
+                      ) : (
+                        <>
+                          <Upload className="w-8 h-8 text-green-600 mb-2" />
+                          <span className="text-xs text-gray-500 text-center px-2">
+                            Clique para enviar
+                          </span>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="marca_gado_texto" className="text-green-700 font-medium">Descrição da Marca (texto)</Label>
+                <div className="flex gap-2">
+                  <Textarea
+                    id="marca_gado_texto"
+                    value={formData.marca_gado_texto || ""}
+                    onChange={e => handleInputChange('marca_gado_texto', e.target.value)}
+                    placeholder="Ex: M ou ABC ou descrição da marca"
+                    rows={4}
+                    className="resize-none"
+                  />
+                  {formData.marca_gado_texto && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => copyToClipboard(formData.marca_gado_texto)}
+                      className="shrink-0"
+                      title="Copiar descrição"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 Descreva as letras ou símbolos da marca do gado
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Acessos e Credenciais */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-green-100">

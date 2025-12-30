@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Save, X, Search, Loader2, Eye, EyeOff, Copy, Plus, Upload, Image as ImageIcon } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { toast } from "sonner";
 
 // Componente para uma única conta bancária (anteriormente era um arquivo separado, agora inline para um único output)
 const ContaBancariaCard = ({ conta, index, onUpdate, onRemove, showRemoveButton }) => {
@@ -172,7 +173,7 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
       handleInputChange('marca_gado_imagem_url', file_url);
     } catch (error) {
       console.error('Erro ao fazer upload da marca:', error);
-      alert('Erro ao fazer upload da imagem');
+      toast.error('Erro ao fazer upload da imagem');
     } finally {
       setUploadingMarcaGado(false);
     }
@@ -203,7 +204,7 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
         observacoes: ""
       }]);
     } else {
-      alert("Você atingiu o limite máximo de 5 contas bancárias.");
+      toast.error("Você atingiu o limite máximo de 5 contas bancárias.");
     }
   };
 
@@ -211,7 +212,7 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
     if (contasBancarias.length > 1) { // Garante que sempre haja pelo menos uma conta
       setContasBancarias(prev => prev.filter((_, i) => i !== index));
     } else {
-      alert("É necessário manter pelo menos uma conta bancária.");
+      toast.error("É necessário manter pelo menos uma conta bancária.");
     }
   };
 
@@ -222,10 +223,10 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
   const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
-      alert('Copiado para a área de transferência!');
+      toast.success('Copiado');
     } catch (err) {
       console.error('Erro ao copiar:', err);
-      alert('Falha ao copiar. Seu navegador pode não suportar esta funcionalidade.');
+      toast.error('Falha ao copiar');
     }
   };
 
@@ -366,7 +367,7 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
     // Validar que pelo menos uma conta tenha banco selecionado
     const contasValidas = contasBancarias.filter(conta => conta.banco);
     if (contasValidas.length === 0) {
-      alert('É necessário cadastrar pelo menos uma conta bancária com o banco selecionado.');
+      toast.error('É necessário cadastrar pelo menos uma conta bancária com o banco selecionado.');
       return;
     }
     

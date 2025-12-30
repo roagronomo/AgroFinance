@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Save, X, Search, Loader2, Eye, EyeOff, Copy, Plus } from "lucide-react";
+import { Save, X, Search, Loader2, Eye, EyeOff, Copy, Plus, Upload, Image as ImageIcon } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
 // Componente para uma única conta bancária (anteriormente era um arquivo separado, agora inline para um único output)
 const ContaBancariaCard = ({ conta, index, onUpdate, onRemove, showRemoveButton }) => {
@@ -87,6 +87,7 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
   const [formData, setFormData] = useState({});
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState("");
+  const [uploadingMarcaGado, setUploadingMarcaGado] = useState(false);
   
   // Estado para contas bancárias
   const [contasBancarias, setContasBancarias] = useState([{
@@ -148,8 +149,10 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
         login_sidago: "",
         senha_sidago: "",
         login_govbr: "",
-        senha_govbr: ""
-      });
+        senha_govbr: "",
+        marca_gado_imagem_url: "",
+        marca_gado_texto: ""
+        });
       setContasBancarias([{
         banco: "",
         agencia: "",
@@ -158,6 +161,26 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
       }]);
     }
   }, [cliente]);
+
+  const handleMarcaGadoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingMarcaGado(true);
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      handleInputChange('marca_gado_imagem_url', file_url);
+    } catch (error) {
+      console.error('Erro ao fazer upload da marca:', error);
+      alert('Erro ao fazer upload da imagem');
+    } finally {
+      setUploadingMarcaGado(false);
+    }
+  };
+
+  const handleRemoverMarcaGado = () => {
+    handleInputChange('marca_gado_imagem_url', '');
+  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));

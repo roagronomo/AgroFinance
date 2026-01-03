@@ -177,7 +177,7 @@ export default function AnaliseCertidoes() {
       const jsonSchema = {
         type: "object",
         properties: {
-          nome_imovel: { type: "string", description: "Nome ATUAL/FINAL do imóvel" },
+          nome_imovel: { type: "string", description: "Nome ATUAL/FINAL do imóvel. IMPORTANTE: Remover prefixos como 'Gleba XX, denominada', 'Gleba XX -', 'Parte da', etc. Extrair APENAS o nome próprio da fazenda/propriedade." },
           matricula: { type: "string", description: "Número da matrícula do imóvel" },
           registro_antigo: { type: "string", description: "Registro antigo/transcrito ou N/C" },
           municipio: { type: "string", description: "Cidade/município com UF (ex: Rio Verde/GO)" },
@@ -259,6 +259,18 @@ export default function AnaliseCertidoes() {
       const prompt = `Você é um especialista em análise de certidões de imóveis rurais brasileiros.
 
 Analise o PDF da certidão anexada e extraia TODAS as informações relevantes.
+
+🏡 IMPORTANTE - NOME DO IMÓVEL:
+Para o campo "nome_imovel", extraia APENAS o nome próprio da fazenda/propriedade.
+REMOVA qualquer prefixo como:
+- "Gleba 01, denominada" → extrair só o que vem depois
+- "Gleba 02 -" → extrair só o que vem depois
+- "Parte da" → extrair só o que vem depois
+- Qualquer numeração de gleba
+
+Exemplo CORRETO:
+❌ "Gleba 01, denominada Fazenda Reunidas do Pontal"
+✅ "Fazenda Reunidas do Pontal"
 
 🚨🚨🚨 ATENÇÃO CRÍTICA - LEIA COM CUIDADO 🚨🚨🚨
 

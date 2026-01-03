@@ -131,8 +131,10 @@ export default function AnaliseCertidoes() {
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    try {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      
       // Verificar apenas o tipo MIME, não o nome do arquivo
       if (file.type !== 'application/pdf') {
         toast.error("Por favor, selecione apenas arquivos PDF");
@@ -154,6 +156,9 @@ export default function AnaliseCertidoes() {
       setErro(null);
       setStatusProcessamento("");
       setMatriculaEditavel("");
+    } catch (error) {
+      console.error("Erro ao processar arquivo:", error);
+      toast.error("Erro ao processar arquivo");
     }
   };
 

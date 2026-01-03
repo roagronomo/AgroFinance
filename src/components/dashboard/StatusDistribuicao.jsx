@@ -36,11 +36,11 @@ export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [
     return data.getFullYear() === anoAnterior && data.getMonth() === mesAtual;
   });
 
-  // Calcular totais
-  const totalAnoAtual = projetosAnoAtual.length;
-  const totalAnoAnterior = projetosAnoAnterior.length;
-  const totalMesAnoAtual = projetosMesAtualAnoAtual.length;
-  const totalMesAnoAnterior = projetosMesAtualAnoAnterior.length;
+  // Calcular totais em VALORES (R$) ao invés de quantidade
+  const totalAnoAtual = projetosAnoAtual.reduce((sum, p) => sum + (p.valor_financiado || 0), 0);
+  const totalAnoAnterior = projetosAnoAnterior.reduce((sum, p) => sum + (p.valor_financiado || 0), 0);
+  const totalMesAnoAtual = projetosMesAtualAnoAtual.reduce((sum, p) => sum + (p.valor_financiado || 0), 0);
+  const totalMesAnoAnterior = projetosMesAtualAnoAnterior.reduce((sum, p) => sum + (p.valor_financiado || 0), 0);
 
   // Calcular diferenças
   const diferencaAnual = totalAnoAtual - totalAnoAnterior;
@@ -54,6 +54,16 @@ export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [
   const percentualMensal = totalMesAnoAnterior > 0 
     ? ((diferencaMensal / totalMesAnoAnterior) * 100).toFixed(0) 
     : totalMesAnoAtual > 0 ? 100 : 0;
+
+  // Formatar valores monetários
+  const formatarMoeda = (valor) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(valor);
+  };
 
   // Nomes dos meses
   const nomesMeses = [
@@ -122,9 +132,9 @@ export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [
               
               <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-100">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold text-gray-800">{totalAnoAtual}</span>
-                    <span className="text-xs text-gray-400">projetos em {anoAtual}</span>
+                  <div className="flex flex-col">
+                    <span className="text-2xl font-bold text-gray-800">{formatarMoeda(totalAnoAtual)}</span>
+                    <span className="text-xs text-gray-400">em {anoAtual}</span>
                   </div>
                   {renderIndicador(diferencaAnual, percentualAnual)}
                 </div>
@@ -132,15 +142,15 @@ export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [
                 <div className="flex items-center gap-3 text-xs">
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span className="text-gray-600">{anoAtual}: <strong>{totalAnoAtual}</strong></span>
+                    <span className="text-gray-600">{anoAtual}: <strong>{formatarMoeda(totalAnoAtual)}</strong></span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-gray-300" />
-                    <span className="text-gray-500">{anoAnterior}: <strong>{totalAnoAnterior}</strong></span>
+                    <span className="text-gray-500">{anoAnterior}: <strong>{formatarMoeda(totalAnoAnterior)}</strong></span>
                   </div>
                   {diferencaAnual !== 0 && (
                     <span className={`ml-auto font-medium ${diferencaAnual > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                      {diferencaAnual > 0 ? '+' : ''}{diferencaAnual}
+                      {diferencaAnual > 0 ? '+' : ''}{formatarMoeda(diferencaAnual)}
                     </span>
                   )}
                 </div>
@@ -158,9 +168,9 @@ export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [
               
               <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-100">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold text-gray-800">{totalMesAnoAtual}</span>
-                    <span className="text-xs text-gray-500">projetos em {mesNome}/{anoAtual}</span>
+                  <div className="flex flex-col">
+                    <span className="text-2xl font-bold text-gray-800">{formatarMoeda(totalMesAnoAtual)}</span>
+                    <span className="text-xs text-gray-500">em {mesNome}/{anoAtual}</span>
                   </div>
                   {renderIndicador(diferencaMensal, percentualMensal)}
                 </div>
@@ -168,15 +178,15 @@ export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [
                 <div className="flex items-center gap-3 text-xs">
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span className="text-gray-600">{mesNome}/{anoAtual}: <strong>{totalMesAnoAtual}</strong></span>
+                    <span className="text-gray-600">{mesNome}/{anoAtual}: <strong>{formatarMoeda(totalMesAnoAtual)}</strong></span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-gray-300" />
-                    <span className="text-gray-500">{mesNome}/{anoAnterior}: <strong>{totalMesAnoAnterior}</strong></span>
+                    <span className="text-gray-500">{mesNome}/{anoAnterior}: <strong>{formatarMoeda(totalMesAnoAnterior)}</strong></span>
                   </div>
                   {diferencaMensal !== 0 && (
                     <span className={`ml-auto font-medium ${diferencaMensal > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                      {diferencaMensal > 0 ? '+' : ''}{diferencaMensal}
+                      {diferencaMensal > 0 ? '+' : ''}{formatarMoeda(diferencaMensal)}
                     </span>
                   )}
                 </div>
@@ -187,7 +197,9 @@ export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [
             <div className="pt-3 mt-2 border-t border-gray-100">
               <div className="flex items-center justify-center gap-2">
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-gray-800">{todosProjetos.length}</p>
+                  <p className="text-3xl font-bold text-gray-800">
+                    {formatarMoeda(todosProjetos.reduce((sum, p) => sum + (p.valor_financiado || 0), 0))}
+                  </p>
                   <p className="text-[11px] text-gray-400 uppercase tracking-wide">Total Geral</p>
                 </div>
               </div>

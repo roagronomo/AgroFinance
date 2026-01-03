@@ -197,10 +197,10 @@ export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [
             <div className="pt-3 mt-2 border-t border-gray-100">
               <div className="flex items-center justify-center gap-2">
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-gray-800">
+                  <p className="text-sm font-medium text-gray-500">
                     {formatarMoeda(todosProjetos.reduce((sum, p) => sum + (p.valor_financiado || 0), 0))}
                   </p>
-                  <p className="text-[11px] text-gray-400 uppercase tracking-wide">Total Geral</p>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide">Total Geral</p>
                 </div>
               </div>
             </div>

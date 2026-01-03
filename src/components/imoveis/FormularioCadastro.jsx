@@ -1172,7 +1172,7 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
                       <p><span className="text-gray-400">Imóvel:</span> {certidaoEncontrada.nome_imovel}</p>
                       <p><span className="text-gray-400">Município:</span> {certidaoEncontrada.municipio}</p>
                       <p><span className="text-gray-400">Área:</span> {certidaoEncontrada.area_total_ha}</p>
-                      <p><span className="text-gray-400">Registro:</span> {certidaoEncontrada.registro_antigo}</p>
+                      <p><span className="text-gray-400">Registro Anterior:</span> {certidaoEncontrada.registro_antigo}</p>
                     </div>
                   </div>
                   <Button

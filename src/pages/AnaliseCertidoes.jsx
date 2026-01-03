@@ -168,12 +168,12 @@ export default function AnaliseCertidoes() {
       return;
     }
 
-    try {
-      setProcessando(true);
-      setErro(null);
-      setResultado(null);
-      setStatusProcessamento("Preparando arquivo...");
+    setProcessando(true);
+    setErro(null);
+    setResultado(null);
+    setStatusProcessamento("Preparando arquivo...");
 
+    try {
       const jsonSchema = {
         type: "object",
         properties: {
@@ -340,17 +340,28 @@ OUTRAS INFORMAÇÕES:
       
     } catch (error) {
       console.error("❌ Erro completo:", error);
-      let mensagemErro = error.message || "Erro desconhecido. Tente novamente.";
+      console.error("Stack trace:", error?.stack);
+      
+      let mensagemErro = "Erro ao analisar a certidão. Tente novamente.";
+      
+      if (error?.message) {
+        mensagemErro = error.message;
+      }
       
       // Mensagem de ajuda mais amigável
       if (mensagemErro.includes("não conseguiu extrair") || mensagemErro.includes("não retornou")) {
         mensagemErro = "Não foi possível analisar este PDF. O arquivo pode estar escaneado, protegido por senha, ou em formato não suportado.\n\n💡 Dica: Abra o PDF no Chrome ou Edge, vá em Imprimir (Ctrl+P) e salve como PDF novamente. Isso geralmente resolve o problema.";
       }
       
+      toast.error("Erro na análise", {
+        description: mensagemErro,
+        duration: 5000
+      });
+      
       setErro(mensagemErro);
-      setStatusProcessamento("");
     } finally {
       setProcessando(false);
+      setStatusProcessamento("");
     }
   };
 

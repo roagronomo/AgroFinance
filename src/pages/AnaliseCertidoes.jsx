@@ -179,7 +179,7 @@ export default function AnaliseCertidoes() {
         properties: {
           nome_imovel: { type: "string", description: "Nome ATUAL/FINAL do imóvel. IMPORTANTE: Remover prefixos como 'Gleba XX, denominada', 'Gleba XX -', 'Parte da', etc. Extrair APENAS o nome próprio da fazenda/propriedade." },
           matricula: { type: "string", description: "Número da matrícula do imóvel" },
-          registro_antigo: { type: "string", description: "Registro antigo/transcrito ou N/C" },
+          registro_antigo: { type: "string", description: "Registro antigo/transcrito. IMPORTANTE: Extrair APENAS o número, SEM prefixos como 'Matrícula nº', 'Registro nº', etc. Se não houver registro antigo, retornar 'N/C'." },
           municipio: { type: "string", description: "Cidade/município com UF (ex: Rio Verde/GO)" },
           area_total_ha: { type: "string", description: "Área total em hectares com vírgula como separador decimal (ex: 216,27 ou 216,2700). SEMPRE incluir ' ha' no final" },
           data_emissao_certidao: { type: "string", description: "Data de emissão da certidão no formato DD/MM/AAAA" },

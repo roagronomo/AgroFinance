@@ -28,24 +28,29 @@ export default function EditarServicoART() {
             try {
                 console.log("📡 Buscando serviço com ID:", servicoId);
                 
-                // Buscar apenas serviços da mesma organização (as regras RLS cuidam disso automaticamente)
-                const data = await ArtsNotificacoes.filter({ id: servicoId });
+                // Buscar todos os serviços e filtrar manualmente por ID
+                const todosServicos = await ArtsNotificacoes.list("-created_date", 500);
                 
-                console.log("📊 Resultado da busca:", data);
-                console.log("📊 Quantidade de registros:", data?.length || 0);
+                console.log("📊 Total de serviços carregados:", todosServicos?.length || 0);
                 
-                if (data && data.length > 0) {
-                    console.log("✅ Serviço encontrado:", data[0]);
-                    setServico(data[0]);
+                const servicoEncontrado = todosServicos.find(s => s.id === servicoId);
+                
+                console.log("📊 Serviço encontrado:", servicoEncontrado);
+                
+                if (servicoEncontrado) {
+                    console.log("✅ Serviço encontrado e carregado com sucesso!");
+                    setServico(servicoEncontrado);
                 } else {
-                    console.error("❌ Serviço não encontrado ou não acessível. Data:", data);
-                    alert("Serviço não encontrado ou você não tem permissão para acessá-lo.");
+                    console.error("❌ Serviço não encontrado. ID buscado:", servicoId);
+                    console.log("IDs disponíveis:", todosServicos.map(s => s.id).slice(0, 5));
+                    alert("Serviço não encontrado.");
                     navigate(createPageUrl('GerenciamentoARTs'));
                 }
             } catch (error) {
                 console.error("❌ ERRO ao carregar serviço:", error);
                 console.error("Stack:", error?.stack);
-                alert("Erro ao carregar serviço. Tente novamente.");
+                console.error("Mensagem:", error?.message);
+                alert(`Erro ao carregar serviço: ${error?.message || 'Erro desconhecido'}`);
                 navigate(createPageUrl('GerenciamentoARTs'));
             } finally {
                 console.log("🏁 Finalizando carregamento, setIsLoading(false)");

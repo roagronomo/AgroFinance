@@ -4,7 +4,7 @@ import { User } from "@/entities/User";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Filter, ClipboardCheck, UserCheck, Paperclip, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, ClipboardCheck, UserCheck, Paperclip, Trash2, AlertTriangle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -70,6 +70,7 @@ const TabelaServicos = ({ servicos, isLoading, currentUser, onDelete }) => {
         <table className="min-w-full">
           <thead>
             <tr className="border-b border-gray-100">
+              <th className="px-4 py-3 text-center text-[11px] font-semibold text-gray-500 uppercase tracking-wider w-12"></th>
               <th className="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Notificação</th>
               <th className="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Cliente</th>
               <th className="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Processo</th>
@@ -89,6 +90,22 @@ const TabelaServicos = ({ servicos, isLoading, currentUser, onDelete }) => {
               
               return (
                 <tr key={servico.id} className="hover:bg-gray-50/50 transition-colors group">
+                  <td className="px-4 py-3 text-center">
+                    {servico.gerou_auto_infracao && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-50">
+                              <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Gerou Auto de Infração</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <span className="text-sm font-medium text-gray-800">{servico.numero_notificacao}</span>
                   </td>
@@ -267,6 +284,18 @@ const KanbanServicos = ({ servicos, isLoading, currentUser, onDelete }) => {
                       <CardContent className="p-3">
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {servico.gerou_auto_infracao && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-50 flex-shrink-0">
+                                    <AlertTriangle className="w-3 h-3 text-red-600" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Gerou Auto de Infração</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
                             {servico.prioridade === 'alta' && (
                               <Tooltip>
                                 <TooltipTrigger asChild>

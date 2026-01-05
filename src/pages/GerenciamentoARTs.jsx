@@ -129,7 +129,7 @@ const TabelaServicos = ({ servicos, isLoading, currentUser, onDelete }) => {
                         size="sm" 
                         onClick={() => {
                           console.log('🔗 Navegando para serviço:', servico.id);
-                          navigate('/EditarServicoART?id=' + servico.id);
+                          navigate(createPageUrl('EditarServicoART') + '?id=' + servico.id);
                         }}
                         className="h-8 px-3 text-xs text-gray-600 hover:text-emerald-700 hover:bg-emerald-50"
                       >
@@ -324,7 +324,7 @@ const KanbanServicos = ({ servicos, isLoading, currentUser, onDelete }) => {
                             size="sm" 
                             onClick={() => {
                               console.log('🔗 Navegando para serviço:', servico.id);
-                              navigate('/EditarServicoART?id=' + servico.id);
+                              navigate(createPageUrl('EditarServicoART') + '?id=' + servico.id);
                             }}
                             className="h-auto p-0 text-xs"
                           >

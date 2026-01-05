@@ -11,7 +11,18 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 export default function EditarServicoART() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const servicoId = searchParams.get('id');
+    
+    // Fallback para ambiente de preview - pegar direto da URL
+    const getServiceId = () => {
+        const fromSearchParams = searchParams.get('id');
+        if (fromSearchParams) return fromSearchParams;
+        
+        // Fallback: pegar direto da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('id');
+    };
+    
+    const servicoId = getServiceId();
     
     const [servico, setServico] = useState(null);
     const [isLoading, setIsLoading] = useState(true);

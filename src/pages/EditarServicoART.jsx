@@ -1,94 +1,121 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArtsNotificacoes } from '@/entities/ArtsNotificacoes';
+import { base44 } from '@/api/base44Client';
 import FormularioServico from '../components/arts/FormularioServico';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit } from 'lucide-react';
+import { ArrowLeft, Edit, Loader2, AlertCircle } from 'lucide-react';
 import { createPageUrl } from '@/utils';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function EditarServicoART() {
     const navigate = useNavigate();
     const [servico, setServico] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [erro, setErro] = useState(null);
 
     const urlParams = new URLSearchParams(window.location.search);
     const servicoId = urlParams.get('id');
 
     useEffect(() => {
-        console.log("🔍 EditarServicoART - servicoId:", servicoId);
+        console.log("🔍 URL Params:", window.location.search);
+        console.log("🔍 ID do serviço:", servicoId);
         
         if (!servicoId) {
-            console.warn("⚠️ Nenhum servicoId fornecido, redirecionando...");
-            navigate(createPageUrl('GerenciamentoARTs'));
+            console.error("❌ Nenhum ID fornecido na URL");
+            setErro("Nenhum ID de serviço fornecido na URL");
+            setIsLoading(false);
             return;
         }
         
-        async function fetchServico() {
-            try {
-                console.log("📡 Buscando serviço com ID:", servicoId);
-                
-                // Buscar todos os serviços e filtrar manualmente por ID
-                const todosServicos = await ArtsNotificacoes.list("-created_date", 500);
-                
-                console.log("📊 Total de serviços carregados:", todosServicos?.length || 0);
-                
-                const servicoEncontrado = todosServicos.find(s => s.id === servicoId);
-                
-                console.log("📊 Serviço encontrado:", servicoEncontrado);
-                
-                if (servicoEncontrado) {
-                    console.log("✅ Serviço encontrado e carregado com sucesso!");
-                    setServico(servicoEncontrado);
-                } else {
-                    console.error("❌ Serviço não encontrado. ID buscado:", servicoId);
-                    console.log("IDs disponíveis:", todosServicos.map(s => s.id).slice(0, 5));
-                    alert("Serviço não encontrado.");
-                    navigate(createPageUrl('GerenciamentoARTs'));
-                }
-            } catch (error) {
-                console.error("❌ ERRO ao carregar serviço:", error);
-                console.error("Stack:", error?.stack);
-                console.error("Mensagem:", error?.message);
-                alert(`Erro ao carregar serviço: ${error?.message || 'Erro desconhecido'}`);
-                navigate(createPageUrl('GerenciamentoARTs'));
-            } finally {
-                console.log("🏁 Finalizando carregamento, setIsLoading(false)");
+        carregarServico();
+    }, [servicoId]);
+
+    const carregarServico = async () => {
+        try {
+            setIsLoading(true);
+            setErro(null);
+            
+            console.log("📡 Buscando serviço ID:", servicoId);
+            
+            // Buscar TODOS os serviços e encontrar o específico
+            const todosServicos = await base44.entities.ArtsNotificacoes.list("-created_date", 500);
+            
+            console.log("📊 Total de serviços:", todosServicos?.length || 0);
+            
+            if (!todosServicos || todosServicos.length === 0) {
+                setErro("Nenhum serviço encontrado no sistema");
                 setIsLoading(false);
+                return;
             }
+            
+            const servicoEncontrado = todosServicos.find(s => s.id === servicoId);
+            
+            if (servicoEncontrado) {
+                console.log("✅ Serviço encontrado:", servicoEncontrado.numero_notificacao);
+                setServico(servicoEncontrado);
+            } else {
+                console.error("❌ Serviço não encontrado com ID:", servicoId);
+                console.log("IDs disponíveis (primeiros 10):", todosServicos.slice(0, 10).map(s => s.id));
+                setErro("Serviço não encontrado");
+            }
+        } catch (error) {
+            console.error("❌ Erro ao carregar serviço:", error);
+            console.error("Stack:", error?.stack);
+            setErro(`Erro ao carregar: ${error?.message || 'Erro desconhecido'}`);
+        } finally {
+            setIsLoading(false);
         }
-        fetchServico();
-    }, [servicoId, navigate]);
+    };
 
     const handleSubmit = async (dados) => {
         try {
-            await ArtsNotificacoes.update(servicoId, dados);
+            console.log("💾 Salvando alterações do serviço:", servicoId);
+            await base44.entities.ArtsNotificacoes.update(servicoId, dados);
+            console.log("✅ Serviço atualizado com sucesso");
             navigate(createPageUrl('GerenciamentoARTs'));
         } catch (error) {
-            console.error("Erro ao atualizar serviço:", error);
-            alert("Erro ao salvar as alterações. Verifique suas permissões e tente novamente.");
+            console.error("❌ Erro ao atualizar serviço:", error);
+            alert("Erro ao salvar as alterações. Tente novamente.");
         }
+    };
+
+    const handleVoltar = () => {
+        navigate(createPageUrl('GerenciamentoARTs'));
     };
 
     if (isLoading) {
         return (
-            <div className="p-8 text-center">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                <p className="mt-4 text-green-600">Carregando...</p>
+            <div className="p-8 flex flex-col items-center justify-center min-h-screen">
+                <Loader2 className="w-12 h-12 text-emerald-600 animate-spin mb-4" />
+                <p className="text-gray-600 text-lg">Carregando serviço...</p>
+                <p className="text-gray-400 text-sm mt-2">ID: {servicoId}</p>
             </div>
         );
     }
     
-    if (!servico) {
+    if (erro || !servico) {
         return (
-            <div className="p-8 text-center">
-                <p className="text-red-600">Serviço não encontrado ou não acessível.</p>
-                <Button 
-                    onClick={() => navigate(createPageUrl('GerenciamentoARTs'))} 
-                    className="mt-4"
-                >
-                    Voltar para Gerenciamento
-                </Button>
+            <div className="p-8 max-w-2xl mx-auto">
+                <Alert className="mb-6 border-red-200 bg-red-50">
+                    <AlertCircle className="h-5 w-5 text-red-600" />
+                    <AlertDescription className="text-red-800">
+                        <p className="font-semibold mb-2">Não foi possível carregar o serviço</p>
+                        <p className="text-sm">{erro || "Serviço não encontrado"}</p>
+                        {servicoId && (
+                            <p className="text-xs mt-2 text-red-600">ID buscado: {servicoId}</p>
+                        )}
+                    </AlertDescription>
+                </Alert>
+                <div className="flex gap-3">
+                    <Button onClick={handleVoltar} variant="outline">
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Voltar
+                    </Button>
+                    <Button onClick={carregarServico} className="bg-emerald-600 hover:bg-emerald-700">
+                        Tentar Novamente
+                    </Button>
+                </div>
             </div>
         );
     }
@@ -100,7 +127,7 @@ export default function EditarServicoART() {
                     <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => navigate(createPageUrl("GerenciamentoARTs"))}
+                        onClick={handleVoltar}
                         className="border-green-300 text-green-700 hover:bg-green-50"
                     >
                         <ArrowLeft className="w-4 h-4" />

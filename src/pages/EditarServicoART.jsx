@@ -16,27 +16,41 @@ export default function EditarServicoART() {
     const servicoId = urlParams.get('id');
 
     useEffect(() => {
+        console.log("🔍 EditarServicoART - servicoId:", servicoId);
+        
         if (!servicoId) {
+            console.warn("⚠️ Nenhum servicoId fornecido, redirecionando...");
             navigate(createPageUrl('GerenciamentoARTs'));
             return;
         }
+        
         async function fetchServico() {
             try {
+                console.log("📡 Buscando serviço com ID:", servicoId);
+                
                 // Buscar apenas serviços da mesma organização (as regras RLS cuidam disso automaticamente)
                 const data = await ArtsNotificacoes.filter({ id: servicoId });
-                if (data.length > 0) {
+                
+                console.log("📊 Resultado da busca:", data);
+                console.log("📊 Quantidade de registros:", data?.length || 0);
+                
+                if (data && data.length > 0) {
+                    console.log("✅ Serviço encontrado:", data[0]);
                     setServico(data[0]);
                 } else {
-                    console.error("Serviço não encontrado ou não acessível.");
+                    console.error("❌ Serviço não encontrado ou não acessível. Data:", data);
                     alert("Serviço não encontrado ou você não tem permissão para acessá-lo.");
                     navigate(createPageUrl('GerenciamentoARTs'));
                 }
             } catch (error) {
-                console.error("Erro ao carregar serviço:", error);
+                console.error("❌ ERRO ao carregar serviço:", error);
+                console.error("Stack:", error?.stack);
                 alert("Erro ao carregar serviço. Tente novamente.");
                 navigate(createPageUrl('GerenciamentoARTs'));
+            } finally {
+                console.log("🏁 Finalizando carregamento, setIsLoading(false)");
+                setIsLoading(false);
             }
-            setIsLoading(false);
         }
         fetchServico();
     }, [servicoId, navigate]);

@@ -17,22 +17,13 @@ export default function EditarServicoART() {
     const [isLoading, setIsLoading] = useState(true);
     const [erro, setErro] = useState(null);
 
-    useEffect(() => {
-        console.log("🔍 URL completa:", window.location.href);
-        console.log("🔍 Search params:", window.location.search);
-        console.log("🔍 ID do serviço:", servicoId);
-        
+    const carregarServico = async () => {
         if (!servicoId) {
-            console.error("❌ Nenhum ID fornecido na URL");
-            setErro("Nenhum ID de serviço fornecido na URL");
+            console.error("❌ Nenhum ID fornecido");
+            setErro("Nenhum ID de serviço fornecido");
             setIsLoading(false);
             return;
         }
-        
-        carregarServico();
-    }, []);
-
-    const carregarServico = async () => {
         try {
             setIsLoading(true);
             setErro(null);
@@ -83,6 +74,14 @@ export default function EditarServicoART() {
             setIsLoading(false);
         }
     };
+
+    useEffect(() => {
+        console.log("🔍 URL completa:", window.location.href);
+        console.log("🔍 Search params:", window.location.search);
+        console.log("🔍 ID do serviço:", servicoId);
+        
+        carregarServico();
+    }, [servicoId]);
 
     const handleSubmit = async (dados) => {
         try {

@@ -37,34 +37,49 @@ export default function EditarServicoART() {
             setIsLoading(true);
             setErro(null);
             
-            console.log("📡 Buscando serviço ID:", servicoId);
+            console.log("========================================");
+            console.log("📡 INICIANDO BUSCA DO SERVIÇO");
+            console.log("🆔 ID buscado:", servicoId);
+            console.log("🔗 URL completa:", window.location.href);
+            console.log("========================================");
             
-            // Buscar TODOS os serviços e encontrar o específico
             const todosServicos = await base44.entities.ArtsNotificacoes.list("-created_date", 500);
             
-            console.log("📊 Total de serviços:", todosServicos?.length || 0);
+            console.log("📊 Total de serviços carregados:", todosServicos?.length || 0);
             
             if (!todosServicos || todosServicos.length === 0) {
+                console.error("❌ Nenhum serviço no sistema");
                 setErro("Nenhum serviço encontrado no sistema");
-                setIsLoading(false);
                 return;
             }
+            
+            // Log dos primeiros IDs para comparação
+            console.log("🔍 Primeiros 5 IDs no sistema:");
+            todosServicos.slice(0, 5).forEach((s, idx) => {
+                console.log(`  ${idx + 1}. ${s.id} - ${s.numero_notificacao}`);
+            });
             
             const servicoEncontrado = todosServicos.find(s => s.id === servicoId);
             
             if (servicoEncontrado) {
-                console.log("✅ Serviço encontrado:", servicoEncontrado.numero_notificacao);
+                console.log("✅ SERVIÇO ENCONTRADO!");
+                console.log("📋 Notificação:", servicoEncontrado.numero_notificacao);
+                console.log("👤 Cliente:", servicoEncontrado.cliente_nome);
                 setServico(servicoEncontrado);
             } else {
-                console.error("❌ Serviço não encontrado com ID:", servicoId);
-                console.log("IDs disponíveis (primeiros 10):", todosServicos.slice(0, 10).map(s => s.id));
+                console.error("❌ SERVIÇO NÃO ENCONTRADO");
+                console.error("🆔 ID buscado:", servicoId);
+                console.error("📝 Tipo do ID:", typeof servicoId);
+                console.error("📏 Tamanho do ID:", servicoId?.length);
                 setErro("Serviço não encontrado");
             }
         } catch (error) {
-            console.error("❌ Erro ao carregar serviço:", error);
-            console.error("Stack:", error?.stack);
+            console.error("❌ ERRO AO CARREGAR:", error);
+            console.error("📝 Mensagem:", error?.message);
+            console.error("📚 Stack:", error?.stack);
             setErro(`Erro ao carregar: ${error?.message || 'Erro desconhecido'}`);
         } finally {
+            console.log("🏁 Finalizando carregamento");
             setIsLoading(false);
         }
     };
@@ -95,7 +110,7 @@ export default function EditarServicoART() {
         );
     }
     
-    if (erro || !servico) {
+    if (erro || (!servico && !isLoading)) {
         return (
             <div className="p-8 max-w-2xl mx-auto">
                 <Alert className="mb-6 border-red-200 bg-red-50">
@@ -104,8 +119,14 @@ export default function EditarServicoART() {
                         <p className="font-semibold mb-2">Não foi possível carregar o serviço</p>
                         <p className="text-sm">{erro || "Serviço não encontrado"}</p>
                         {servicoId && (
-                            <p className="text-xs mt-2 text-red-600">ID buscado: {servicoId}</p>
+                            <>
+                                <p className="text-xs mt-2 text-red-600">ID buscado: {servicoId}</p>
+                                <p className="text-xs text-red-500">Tamanho: {servicoId?.length} caracteres</p>
+                            </>
                         )}
+                        <p className="text-xs mt-2 text-gray-500">
+                            Abra o console do navegador (F12) para ver os logs detalhados
+                        </p>
                     </AlertDescription>
                 </Alert>
                 <div className="flex gap-3">

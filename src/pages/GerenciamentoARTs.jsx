@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, Filter, ClipboardCheck, UserCheck, Paperclip, Trash2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,6 +32,8 @@ const statusStyles = {
 };
 
 const TabelaServicos = ({ servicos, isLoading, currentUser, onDelete }) => {
+  const navigate = useNavigate();
+  
   if (isLoading) {
     return (
       <div className="bg-white rounded-xl border border-gray-100 p-8">
@@ -126,10 +128,8 @@ const TabelaServicos = ({ servicos, isLoading, currentUser, onDelete }) => {
                         variant="ghost" 
                         size="sm" 
                         onClick={() => {
-                          const url = createPageUrl('EditarServicoART') + '?id=' + servico.id;
-                          console.log('🔗 Navegando para:', url);
-                          console.log('📋 ID do serviço:', servico.id);
-                          window.location.href = url;
+                          console.log('🔗 Navegando para serviço:', servico.id);
+                          navigate('/EditarServicoART?id=' + servico.id);
                         }}
                         className="h-8 px-3 text-xs text-gray-600 hover:text-emerald-700 hover:bg-emerald-50"
                       >
@@ -167,6 +167,7 @@ const TabelaServicos = ({ servicos, isLoading, currentUser, onDelete }) => {
 };
 
 const KanbanServicos = ({ servicos, isLoading, currentUser, onDelete }) => {
+  const navigate = useNavigate();
   const statusColunas = ["aberto", "aguardando_cliente", "aguardando_orgao", "concluido", "cancelado"];
 
   const podeExcluir = (servico) => {
@@ -322,10 +323,8 @@ const KanbanServicos = ({ servicos, isLoading, currentUser, onDelete }) => {
                             variant="link" 
                             size="sm" 
                             onClick={() => {
-                              const url = createPageUrl('EditarServicoART') + '?id=' + servico.id;
-                              console.log('🔗 Navegando para:', url);
-                              console.log('📋 ID do serviço:', servico.id);
-                              window.location.href = url;
+                              console.log('🔗 Navegando para serviço:', servico.id);
+                              navigate('/EditarServicoART?id=' + servico.id);
                             }}
                             className="h-auto p-0 text-xs"
                           >

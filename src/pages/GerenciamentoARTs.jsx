@@ -122,15 +122,19 @@ const TabelaServicos = ({ servicos, isLoading, currentUser, onDelete }) => {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      <Link to={createPageUrl(`EditarServicoART`) + `?id=${servico.id}`}>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 px-3 text-xs text-gray-600 hover:text-emerald-700 hover:bg-emerald-50"
-                        >
-                          Ver / Editar
-                        </Button>
-                      </Link>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                          const url = createPageUrl('EditarServicoART') + '?id=' + servico.id;
+                          console.log('🔗 Navegando para:', url);
+                          console.log('📋 ID do serviço:', servico.id);
+                          window.location.href = url;
+                        }}
+                        className="h-8 px-3 text-xs text-gray-600 hover:text-emerald-700 hover:bg-emerald-50"
+                      >
+                        Ver / Editar
+                      </Button>
                       {permiteExclusao && (
                         <TooltipProvider>
                           <Tooltip>
@@ -314,9 +318,19 @@ const KanbanServicos = ({ servicos, isLoading, currentUser, onDelete }) => {
                         )}
                         <p className="text-xs text-gray-500">Prazo: {servico.prazo ? new Date(servico.prazo + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</p>
                         <div className="flex justify-between items-center mt-2">
-                          <Link to={createPageUrl(`EditarServicoART`) + `?id=${servico.id}`}>
-                            <Button variant="link" size="sm" className="h-auto p-0 text-xs">Detalhes</Button>
-                          </Link>
+                          <Button 
+                            variant="link" 
+                            size="sm" 
+                            onClick={() => {
+                              const url = createPageUrl('EditarServicoART') + '?id=' + servico.id;
+                              console.log('🔗 Navegando para:', url);
+                              console.log('📋 ID do serviço:', servico.id);
+                              window.location.href = url;
+                            }}
+                            className="h-auto p-0 text-xs"
+                          >
+                            Detalhes
+                          </Button>
                           {permiteExclusao && (
                             <Tooltip>
                               <TooltipTrigger asChild>

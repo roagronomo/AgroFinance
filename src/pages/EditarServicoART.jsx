@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import FormularioServico from '../components/arts/FormularioServico';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,15 +10,16 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function EditarServicoART() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const servicoId = searchParams.get('id');
+    
     const [servico, setServico] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [erro, setErro] = useState(null);
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const servicoId = urlParams.get('id');
-
     useEffect(() => {
-        console.log("🔍 URL Params:", window.location.search);
+        console.log("🔍 URL completa:", window.location.href);
+        console.log("🔍 Search params:", window.location.search);
         console.log("🔍 ID do serviço:", servicoId);
         
         if (!servicoId) {
@@ -29,7 +30,7 @@ export default function EditarServicoART() {
         }
         
         carregarServico();
-    }, [servicoId]);
+    }, []);
 
     const carregarServico = async () => {
         try {

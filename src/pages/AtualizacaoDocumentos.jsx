@@ -154,21 +154,27 @@ export default function AtualizacaoDocumentos() {
     try {
       setProcessandoCNDCpf(true);
       setResultadoCNDCpf(null);
+      
+      console.log('🚀 Invocando função gerarCndCpf...', { cpf, dataNascimento });
 
       const resultado = await base44.functions.invoke('gerarCndCpf', {
         cpf: cpf.trim(),
         dataNascimento: dataNascimento.trim()
       });
+      
+      console.log('📥 Resultado recebido:', resultado);
 
-      if (resultado.data.success) {
+      if (resultado?.data?.success) {
         setResultadoCNDCpf(resultado.data);
         toast.success("CND de CPF gerada com sucesso!");
       } else {
-        toast.error(resultado.data.error || "Erro ao gerar CND de CPF");
+        console.error('❌ Erro na resposta:', resultado);
+        toast.error(resultado?.data?.error || "Erro ao gerar CND de CPF. Verifique o console para detalhes.");
       }
     } catch (error) {
-      console.error("Erro ao gerar CND de CPF:", error);
-      toast.error("Erro ao gerar CND de CPF");
+      console.error("❌ Erro ao gerar CND de CPF:", error);
+      console.error("Stack:", error?.stack);
+      toast.error(`Erro: ${error.message || 'Erro desconhecido'}`);
     } finally {
       setProcessandoCNDCpf(false);
     }
@@ -183,20 +189,26 @@ export default function AtualizacaoDocumentos() {
     try {
       setProcessandoCNDCnpj(true);
       setResultadoCNDCnpj(null);
+      
+      console.log('🚀 Invocando função gerarCndCnpj...', { cnpj });
 
       const resultado = await base44.functions.invoke('gerarCndCnpj', {
         cnpj: cnpj.trim()
       });
+      
+      console.log('📥 Resultado recebido:', resultado);
 
-      if (resultado.data.success) {
+      if (resultado?.data?.success) {
         setResultadoCNDCnpj(resultado.data);
         toast.success("CND de CNPJ gerada com sucesso!");
       } else {
-        toast.error(resultado.data.error || "Erro ao gerar CND de CNPJ");
+        console.error('❌ Erro na resposta:', resultado);
+        toast.error(resultado?.data?.error || "Erro ao gerar CND de CNPJ. Verifique o console para detalhes.");
       }
     } catch (error) {
-      console.error("Erro ao gerar CND de CNPJ:", error);
-      toast.error("Erro ao gerar CND de CNPJ");
+      console.error("❌ Erro ao gerar CND de CNPJ:", error);
+      console.error("Stack:", error?.stack);
+      toast.error(`Erro: ${error.message || 'Erro desconhecido'}`);
     } finally {
       setProcessandoCNDCnpj(false);
     }

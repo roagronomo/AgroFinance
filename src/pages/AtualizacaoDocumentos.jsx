@@ -145,134 +145,56 @@ export default function AtualizacaoDocumentos() {
     }
   };
 
-  const handleGerarCNDCpf = async () => {
+  const handleGerarCNDCpf = () => {
     if (!cpf || !dataNascimento) {
       toast.error("Preencha CPF e data de nascimento");
       return;
     }
 
-    try {
-      setProcessandoCNDCpf(true);
-      setResultadoCNDCpf(null);
-      
-      console.log('🚀 Invocando função gerarCndCpf...', { cpf, dataNascimento });
-
-      const resultado = await base44.functions.invoke('gerarCndCpf', {
-        cpf: cpf.trim(),
-        dataNascimento: dataNascimento.trim()
-      });
-      
-      console.log('📥 Resultado recebido:', resultado);
-
-      if (resultado?.data?.success) {
-        setResultadoCNDCpf(resultado.data);
-        toast.success("CND de CPF gerada com sucesso!");
-      } else {
-        console.error('❌ Erro na resposta:', resultado);
-        toast.error(resultado?.data?.error || "Erro ao gerar CND de CPF. Verifique o console para detalhes.");
-      }
-    } catch (error) {
-      console.error("❌ Erro ao gerar CND de CPF:", error);
-      console.error("Stack:", error?.stack);
-      toast.error(`Erro: ${error.message || 'Erro desconhecido'}`);
-    } finally {
-      setProcessandoCNDCpf(false);
-    }
+    // Abrir o site da Receita Federal em nova aba
+    const url = 'https://servicos.receitafederal.gov.br/servico/certidoes/#/home/cpf';
+    window.open(url, '_blank');
+    
+    toast.info("Abrindo site da Receita Federal. Preencha os dados e gere a certidão.");
   };
 
-  const handleGerarCNDCnpj = async () => {
+  const handleGerarCNDCnpj = () => {
     if (!cnpj || !cnpj.trim()) {
       toast.error("Digite o CNPJ");
       return;
     }
 
-    try {
-      setProcessandoCNDCnpj(true);
-      setResultadoCNDCnpj(null);
-      
-      console.log('🚀 Invocando função gerarCndCnpj...', { cnpj });
-
-      const resultado = await base44.functions.invoke('gerarCndCnpj', {
-        cnpj: cnpj.trim()
-      });
-      
-      console.log('📥 Resultado recebido:', resultado);
-
-      if (resultado?.data?.success) {
-        setResultadoCNDCnpj(resultado.data);
-        toast.success("CND de CNPJ gerada com sucesso!");
-      } else {
-        console.error('❌ Erro na resposta:', resultado);
-        toast.error(resultado?.data?.error || "Erro ao gerar CND de CNPJ. Verifique o console para detalhes.");
-      }
-    } catch (error) {
-      console.error("❌ Erro ao gerar CND de CNPJ:", error);
-      console.error("Stack:", error?.stack);
-      toast.error(`Erro: ${error.message || 'Erro desconhecido'}`);
-    } finally {
-      setProcessandoCNDCnpj(false);
-    }
+    // Abrir o site da Receita Federal em nova aba
+    const url = 'https://servicos.receitafederal.gov.br/servico/certidoes/#/home/cnpj';
+    window.open(url, '_blank');
+    
+    toast.info("Abrindo site da Receita Federal. Preencha os dados e gere a certidão.");
   };
 
-  const handleGerarCND = async () => {
+  const handleGerarCND = () => {
     if (!cib || !cib.trim()) {
       toast.error("Digite o número do CIB");
       return;
     }
 
-    try {
-      setProcessandoCND(true);
-      setResultadoCND(null);
-
-      const resultado = await base44.functions.invoke('gerarCndItr', {
-        cib: cib.trim()
-      });
-
-      if (resultado.data.success) {
-        setResultadoCND(resultado.data);
-        toast.success("CND do ITR gerada com sucesso!");
-      } else {
-        toast.error(resultado.data.error || "Erro ao gerar CND");
-      }
-    } catch (error) {
-      console.error("Erro ao gerar CND:", error);
-      toast.error("Erro ao gerar CND do ITR");
-    } finally {
-      setProcessandoCND(false);
-    }
+    // Abrir o site da Receita Federal em nova aba
+    const url = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PF/Emitir';
+    window.open(url, '_blank');
+    
+    toast.info("Abrindo site da Receita Federal. Preencha o CIB e gere a certidão.");
   };
 
-  const handleGerarCCIR = async () => {
+  const handleGerarCCIR = () => {
     if (!codigoImovel || !ufSede || !municipioSede || !cpfCnpj) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
 
-    try {
-      setProcessandoCCIR(true);
-      setResultadoCCIR(null);
-
-      const resultado = await base44.functions.invoke('gerarCcirIncra', {
-        codigoImovel: codigoImovel.trim(),
-        ufSede,
-        municipioSede: municipioSede.trim(),
-        tipoPessoa,
-        cpfCnpj: cpfCnpj.replace(/\D/g, ''),
-        naturezaJuridica: tipoPessoa === 'juridica' ? naturezaJuridica : null
-      });
-
-      if (resultado.data.success) {
-        setResultadoCCIR(resultado.data);
-        toast.success("CCIR gerado com sucesso!");
-      } else {
-        toast.error(resultado.data.error || "Erro ao gerar CCIR");
-      }
-    } catch (error) {
-      console.error("Erro ao gerar CCIR:", error);
-      toast.error("Erro ao gerar CCIR do INCRA");
-    } finally {
-      setProcessandoCCIR(false);
-    }
+    // Abrir o site do INCRA em nova aba
+    const url = 'https://certificacao.incra.gov.br/csv_shp/export';
+    window.open(url, '_blank');
+    
+    toast.info("Abrindo site do INCRA. Preencha os dados e gere o CCIR.");
   };
 
   const handleBaixarDocumento = (url, filename) => {
@@ -372,40 +294,20 @@ export default function AtualizacaoDocumentos() {
 
             <Button
               onClick={handleGerarCNDCpf}
-              disabled={processandoCNDCpf || !cpf || !dataNascimento}
+              disabled={!cpf || !dataNascimento}
               className="w-full bg-slate-700 hover:bg-slate-800"
             >
-              {processandoCNDCpf ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Gerando CND...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4 mr-2" />
-                  Gerar CND de CPF
-                </>
-              )}
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Abrir Site da Receita Federal
             </Button>
 
-            {resultadoCNDCpf && (
-              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-3">
-                <div className="flex items-center gap-2 text-emerald-800 font-semibold text-sm">
-                  <CheckCircle className="w-4 h-4" />
-                  Documento gerado com sucesso
-                </div>
-                {resultadoCNDCpf.pdfUrl && (
-                  <Button
-                    onClick={() => handleBaixarDocumento(resultadoCNDCpf.pdfUrl, `CND_CPF_${cpf}.pdf`)}
-                    size="sm"
-                    className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Baixar PDF
-                  </Button>
-                )}
-              </div>
-            )}
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs text-blue-800">
+                <strong>Dados para preencher:</strong><br/>
+                CPF: {cpf || "—"}<br/>
+                Data de Nascimento: {dataNascimento || "—"}
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -433,40 +335,19 @@ export default function AtualizacaoDocumentos() {
 
             <Button
               onClick={handleGerarCNDCnpj}
-              disabled={processandoCNDCnpj || !cnpj}
+              disabled={!cnpj}
               className="w-full bg-slate-700 hover:bg-slate-800"
             >
-              {processandoCNDCnpj ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Gerando CND...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4 mr-2" />
-                  Gerar CND de CNPJ
-                </>
-              )}
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Abrir Site da Receita Federal
             </Button>
 
-            {resultadoCNDCnpj && (
-              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-3">
-                <div className="flex items-center gap-2 text-emerald-800 font-semibold text-sm">
-                  <CheckCircle className="w-4 h-4" />
-                  Documento gerado com sucesso
-                </div>
-                {resultadoCNDCnpj.pdfUrl && (
-                  <Button
-                    onClick={() => handleBaixarDocumento(resultadoCNDCnpj.pdfUrl, `CND_CNPJ_${cnpj}.pdf`)}
-                    size="sm"
-                    className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Baixar PDF
-                  </Button>
-                )}
-              </div>
-            )}
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs text-blue-800">
+                <strong>Dados para preencher:</strong><br/>
+                CNPJ: {cnpj || "—"}
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -497,47 +378,17 @@ export default function AtualizacaoDocumentos() {
 
             <Button
               onClick={handleGerarCND}
-              disabled={processandoCND || !cib}
+              disabled={!cib}
               className="w-full bg-slate-700 hover:bg-slate-800"
             >
-              {processandoCND ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Gerando CND...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4 mr-2" />
-                  Gerar CND do ITR
-                </>
-              )}
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Abrir Site da Receita Federal
             </Button>
 
-            {resultadoCND && (
-              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-3">
-                <div className="flex items-center gap-2 text-emerald-800 font-semibold text-sm">
-                  <CheckCircle className="w-4 h-4" />
-                  Documento gerado com sucesso
-                </div>
-                {resultadoCND.pdfUrl && (
-                  <Button
-                    onClick={() => handleBaixarDocumento(resultadoCND.pdfUrl, `CND_ITR_${cib}.pdf`)}
-                    size="sm"
-                    className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Baixar PDF
-                  </Button>
-                )}
-              </div>
-            )}
-
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-xs text-blue-800 flex items-start gap-2">
-                <ExternalLink className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                <span>
-                  Este serviço acessa automaticamente o site da Receita Federal para gerar a certidão
-                </span>
+              <p className="text-xs text-blue-800">
+                <strong>Dados para preencher:</strong><br/>
+                CIB/NIRF: {cib || "—"}
               </p>
             </div>
           </CardContent>
@@ -646,47 +497,20 @@ export default function AtualizacaoDocumentos() {
 
             <Button
               onClick={handleGerarCCIR}
-              disabled={processandoCCIR || !codigoImovel || !ufSede || !municipioSede || !cpfCnpj}
+              disabled={!codigoImovel || !ufSede || !municipioSede || !cpfCnpj}
               className="w-full bg-slate-700 hover:bg-slate-800"
             >
-              {processandoCCIR ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Gerando CCIR...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4 mr-2" />
-                  Gerar CCIR do INCRA
-                </>
-              )}
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Abrir Site do INCRA
             </Button>
 
-            {resultadoCCIR && (
-              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-3">
-                <div className="flex items-center gap-2 text-emerald-800 font-semibold text-sm">
-                  <CheckCircle className="w-4 h-4" />
-                  Documento gerado com sucesso
-                </div>
-                {resultadoCCIR.pdfUrl && (
-                  <Button
-                    onClick={() => handleBaixarDocumento(resultadoCCIR.pdfUrl, `CCIR_${codigoImovel}.pdf`)}
-                    size="sm"
-                    className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Baixar PDF
-                  </Button>
-                )}
-              </div>
-            )}
-
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <p className="text-xs text-amber-800 flex items-start gap-2">
-                <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                <span>
-                  Este serviço tenta resolver automaticamente o CAPTCHA. Se falhar, será necessário acessar manualmente o site do INCRA.
-                </span>
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs text-blue-800">
+                <strong>Dados para preencher:</strong><br/>
+                Código do Imóvel: {codigoImovel || "—"}<br/>
+                UF: {ufSede || "—"} | Município: {municipioSede || "—"}<br/>
+                {tipoPessoa === "fisica" ? "CPF" : "CNPJ"}: {cpfCnpj || "—"}
+                {tipoPessoa === "juridica" && <><br/>Natureza Jurídica: {naturezaJuridica}</>}
               </p>
             </div>
           </CardContent>

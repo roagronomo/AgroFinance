@@ -300,14 +300,6 @@ export default function AtualizacaoDocumentos() {
               <ExternalLink className="w-4 h-4 mr-2" />
               Abrir Site da Receita Federal
             </Button>
-
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-xs text-blue-800">
-                <strong>Dados para preencher:</strong><br/>
-                CPF: {cpf || "—"}<br/>
-                Data de Nascimento: {dataNascimento || "—"}
-              </p>
-            </div>
           </CardContent>
         </Card>
 
@@ -341,13 +333,6 @@ export default function AtualizacaoDocumentos() {
               <ExternalLink className="w-4 h-4 mr-2" />
               Abrir Site da Receita Federal
             </Button>
-
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-xs text-blue-800">
-                <strong>Dados para preencher:</strong><br/>
-                CNPJ: {cnpj || "—"}
-              </p>
-            </div>
           </CardContent>
         </Card>
 
@@ -384,13 +369,6 @@ export default function AtualizacaoDocumentos() {
               <ExternalLink className="w-4 h-4 mr-2" />
               Abrir Site da Receita Federal
             </Button>
-
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-xs text-blue-800">
-                <strong>Dados para preencher:</strong><br/>
-                CIB/NIRF: {cib || "—"}
-              </p>
-            </div>
           </CardContent>
         </Card>
 
@@ -503,16 +481,6 @@ export default function AtualizacaoDocumentos() {
               <ExternalLink className="w-4 h-4 mr-2" />
               Abrir Site do INCRA
             </Button>
-
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-xs text-blue-800">
-                <strong>Dados para preencher:</strong><br/>
-                Código do Imóvel: {codigoImovel || "—"}<br/>
-                UF: {ufSede || "—"} | Município: {municipioSede || "—"}<br/>
-                {tipoPessoa === "fisica" ? "CPF" : "CNPJ"}: {cpfCnpj || "—"}
-                {tipoPessoa === "juridica" && <><br/>Natureza Jurídica: {naturezaJuridica}</>}
-              </p>
-            </div>
           </CardContent>
         </Card>
       </div>

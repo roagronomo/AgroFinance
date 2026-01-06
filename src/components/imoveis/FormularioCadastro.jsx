@@ -237,7 +237,11 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
         area_outros: imovel.area_outros !== null ? imovel.area_outros : "",
         financiamentos: imovel.financiamentos || [],
         avaliacao_mercado: imovel.avaliacao_mercado !== null ? imovel.avaliacao_mercado : "",
-        // Campos de coordenadas removidos
+        // Garantir que arrays de arquivos sejam carregados corretamente
+        mapa_area_total_urls: imovel.mapa_area_total_urls || [],
+        mapa_area_agricultavel_urls: imovel.mapa_area_agricultavel_urls || [],
+        contrato_arrendamento_urls: imovel.contrato_arrendamento_urls || [],
+        carta_anuencia_urls: imovel.carta_anuencia_urls || []
       });
       // Formatar valores de área para exibição
       setAreaTotalDisplay(formatAreaBR4(imovel.area_total)); // Changed to formatAreaBR4
@@ -1084,11 +1088,12 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
       })),
       avaliacao_mercado: formData.avaliacao_mercado !== "" ? parseFloat(formData.avaliacao_mercado) : null,
       dados_avaliacao: formData.dados_avaliacao?.trim() || "",
-      mapa_area_total_urls: formData.mapa_area_total_urls || [],
-      mapa_area_agricultavel_urls: formData.mapa_area_agricultavel_urls || [],
-      contrato_arrendamento_urls: formData.contrato_arrendamento_urls || [],
+      // Garantir que todos os arrays de arquivos sejam salvos
+      mapa_area_total_urls: Array.isArray(formData.mapa_area_total_urls) ? formData.mapa_area_total_urls : [],
+      mapa_area_agricultavel_urls: Array.isArray(formData.mapa_area_agricultavel_urls) ? formData.mapa_area_agricultavel_urls : [],
+      contrato_arrendamento_urls: Array.isArray(formData.contrato_arrendamento_urls) ? formData.contrato_arrendamento_urls : [],
       contrato_arrendamento_vencimento: formData.contrato_arrendamento_vencimento || "",
-      carta_anuencia_urls: formData.carta_anuencia_urls || [],
+      carta_anuencia_urls: Array.isArray(formData.carta_anuencia_urls) ? formData.carta_anuencia_urls : [],
       carta_anuencia_vencimento: formData.carta_anuencia_vencimento || "",
       // Incluir dados da certidão se disponíveis
       dados_analise_certidao: formData.dados_analise_certidao || ""

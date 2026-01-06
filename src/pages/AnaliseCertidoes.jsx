@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { base44 } from "@/api/base44Client";
 import { FileText, Upload, Loader2, CheckCircle, AlertCircle, Download, Copy, Save, Search, Eye, FolderOpen, Trash2, RefreshCw, X, ChevronDown, ChevronUp, Users, AlertTriangle } from "lucide-react";
-import DocumentosComplementares from "../components/analise/DocumentosComplementares";
+
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -25,6 +25,19 @@ export default function AnaliseCertidoes() {
   const [imovelVisualizandoId, setImovelVisualizandoId] = useState(null); // Mudou para ID
   const [excluindo, setExcluindo] = useState(false);
   const [matriculaEditavel, setMatriculaEditavel] = useState("");
+  
+  // Estados para documentos complementares
+  const [arquivosComplementares, setArquivosComplementares] = useState({
+    cnd: null,
+    ccir: null,
+    car: null
+  });
+  const [processandoComplementares, setProcessandoComplementares] = useState(false);
+  const [dadosComplementares, setDadosComplementares] = useState({
+    nirf_cib: "",
+    numero_incra: "",
+    car_numero: ""
+  });
 
   useEffect(() => {
     carregarImoveisSalvos();
@@ -377,6 +390,126 @@ OUTRAS INFORMAÇÕES:
     }
   };
 
+  const handleFileComplementar = (tipo, file) => {
+    if (!file) return;
+    
+    const maxSize = 10 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("Arquivo muito grande", {
+        description: `O arquivo deve ter no máximo 10MB. Tamanho atual: ${(file.size / 1024 / 1024).toFixed(1)}MB`,
+        duration: 4000
+      });
+      return;
+    }
+    
+    setArquivosComplementares(prev => ({ ...prev, [tipo]: file }));
+  };
+
+  const analisarDocumentosComplementares = async () => {
+    const arquivosParaProcessar = Object.entries(arquivosComplementares).filter(([_, file]) => file !== null);
+    
+    if (arquivosParaProcessar.length === 0) {
+      toast.error("Selecione pelo menos um documento complementar");
+      return;
+    }
+
+    try {
+      setProcessandoComplementares(true);
+      const resultados = {
+        nirf_cib: "",
+        numero_incra: "",
+        car_numero: ""
+      };
+
+      for (const [tipo, file] of arquivosParaProcessar) {
+        toast.info(`Analisando ${tipo.toUpperCase()}...`, { duration: 2000 });
+        
+        const uploadResult = await base44.integrations.Core.UploadFile({ file });
+        if (!uploadResult?.file_url) continue;
+
+        let prompt = "";
+        let campo = "";
+
+        if (tipo === "cnd") {
+          campo = "nirf_cib";
+          prompt = `Analise este documento CND (Certidão Negativa de Débitos) do Imóvel Rural.
+
+TAREFA: Extrair o valor do CIB (Cadastro de Imóvel Rural).
+
+Procure por:
+- "CIB:" ou "CIB N°" ou "Código CIB" 
+- O número geralmente está no formato: 1.944.692-6 (ou sem pontuação)
+
+REGRAS:
+- Manter pontos e hífen se houver
+- Remover espaços extras
+- Se não encontrar, retornar null
+
+Responda APENAS com o número do CIB ou null.`;
+        } else if (tipo === "ccir") {
+          campo = "numero_incra";
+          prompt = `Analise este documento CCIR (Certificado de Cadastro de Imóvel Rural).
+
+TAREFA: Extrair o "Código do Imóvel Rural" emitido pelo INCRA.
+
+Procure por:
+- "CÓDIGO DO IMÓVEL RURAL" ou "Código do Imóvel" ou "NIRF"
+- O número geralmente está no formato: 936.103.000.787-0 (13 dígitos)
+
+REGRAS:
+- Manter pontos e hífen se houver
+- Remover espaços extras
+- Se não encontrar, retornar null
+
+Responda APENAS com o código do INCRA ou null.`;
+        } else if (tipo === "car") {
+          campo = "car_numero";
+          prompt = `Analise este Recibo de Inscrição no CAR (Cadastro Ambiental Rural).
+
+TAREFA: Extrair o número de registro no CAR.
+
+Procure por:
+- "Registro no CAR:" ou "Código CAR" ou "Número CAR"
+- O registro é uma string longa com letras, números e hífens
+
+REGRAS:
+- Capturar a linha completa do registro
+- Manter formato original
+- Se não encontrar, retornar null
+
+Responda APENAS com o código CAR ou null.`;
+        }
+
+        try {
+          const resultadoLLM = await base44.integrations.Core.InvokeLLM({
+            prompt,
+            file_urls: [uploadResult.file_url]
+          });
+
+          if (resultadoLLM && resultadoLLM !== "null" && resultadoLLM.trim() !== "") {
+            resultados[campo] = resultadoLLM.trim();
+          }
+        } catch (error) {
+          console.error(`Erro ao processar ${tipo}:`, error);
+        }
+      }
+
+      setDadosComplementares(resultados);
+      toast.success("Análise de documentos complementares concluída", {
+        description: "Os dados foram extraídos e serão salvos automaticamente",
+        duration: 3000
+      });
+    } catch (error) {
+      console.error("Erro ao analisar documentos:", error);
+      toast.error("Erro ao analisar documentos complementares", {
+        description: error.message,
+        duration: 4000
+      });
+    } finally {
+      setProcessandoComplementares(false);
+    }
+  };
+
   const handleSalvarImovel = async () => {
     if (!resultado) return;
 
@@ -412,7 +545,7 @@ OUTRAS INFORMAÇÕES:
         .replace(/\./g, '')
         .replace(',', '.');
       
-      // ✅ Dados completos para salvar/atualizar
+      // ✅ Dados completos para salvar/atualizar - incluindo dados complementares
       const dadosParaSalvar = {
         nome_imovel: resultado.nome_imovel,
         matricula_numero: matriculaParaSalvar,
@@ -421,7 +554,11 @@ OUTRAS INFORMAÇÕES:
         area_total: parseFloat(areaStr) || 0,
         observacoes: formatarObservacoes(resultado.observacoes || ""),
         // ✅ CRÍTICO: Salvar JSON completo com TODOS os dados
-        dados_analise_certidao: JSON.stringify(dadosCompletosAnalise)
+        dados_analise_certidao: JSON.stringify(dadosCompletosAnalise),
+        // Adicionar dados complementares extraídos
+        ...(dadosComplementares.nirf_cib && { receita_federal: dadosComplementares.nirf_cib }),
+        ...(dadosComplementares.numero_incra && { numero_incra: dadosComplementares.numero_incra }),
+        ...(dadosComplementares.car_numero && { car_numero: dadosComplementares.car_numero })
       };
 
       if (imoveisExistentes && imoveisExistentes.length > 0) {
@@ -1194,11 +1331,7 @@ OUTRAS INFORMAÇÕES:
             </div>
           )}
 
-          {/* Documentos Complementares */}
-          <DocumentosComplementares 
-            imovel={imovel} 
-            onAtualizar={carregarImoveisSalvos}
-          />
+
 
           {/* Ações */}
           <div className="flex justify-end gap-2 pt-3 border-t border-gray-200">
@@ -1600,6 +1733,136 @@ OUTRAS INFORMAÇÕES:
                         readOnly
                         className="min-h-48 border-0 bg-transparent resize-none whitespace-pre-wrap font-mono text-sm"
                       />
+                    </div>
+                  </div>
+
+                  {/* Documentos Complementares */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">
+                      📎 Documentos Complementares
+                    </h3>
+                    <div className="p-4 bg-purple-50 rounded-lg border border-purple-200 space-y-4">
+                      <p className="text-sm text-purple-800 mb-3">
+                        Faça upload dos documentos oficiais para extrair automaticamente os números do CIB, INCRA e CAR
+                      </p>
+
+                      {/* Upload de Arquivos */}
+                      <div className="space-y-3">
+                        {/* CND */}
+                        <div className="p-3 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <Label className="text-sm font-medium text-gray-700">CND do Imóvel Rural (CIB)</Label>
+                            <Badge variant="outline" className={arquivosComplementares.cnd ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}>
+                              {arquivosComplementares.cnd ? "Enviado" : "Não enviado"}
+                            </Badge>
+                          </div>
+                          <label className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-100 transition-colors">
+                            <Upload className="w-4 h-4 text-gray-500" />
+                            <span className="text-sm text-gray-600">
+                              {arquivosComplementares.cnd ? arquivosComplementares.cnd.name : "Selecionar PDF"}
+                            </span>
+                            <input
+                              type="file"
+                              accept=".pdf"
+                              onChange={(e) => handleFileComplementar('cnd', e.target.files[0])}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+
+                        {/* CCIR */}
+                        <div className="p-3 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <Label className="text-sm font-medium text-gray-700">CCIR (Certificado INCRA)</Label>
+                            <Badge variant="outline" className={arquivosComplementares.ccir ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}>
+                              {arquivosComplementares.ccir ? "Enviado" : "Não enviado"}
+                            </Badge>
+                          </div>
+                          <label className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-100 transition-colors">
+                            <Upload className="w-4 h-4 text-gray-500" />
+                            <span className="text-sm text-gray-600">
+                              {arquivosComplementares.ccir ? arquivosComplementares.ccir.name : "Selecionar PDF"}
+                            </span>
+                            <input
+                              type="file"
+                              accept=".pdf"
+                              onChange={(e) => handleFileComplementar('ccir', e.target.files[0])}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+
+                        {/* CAR */}
+                        <div className="p-3 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <Label className="text-sm font-medium text-gray-700">Recibo do CAR</Label>
+                            <Badge variant="outline" className={arquivosComplementares.car ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}>
+                              {arquivosComplementares.car ? "Enviado" : "Não enviado"}
+                            </Badge>
+                          </div>
+                          <label className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-100 transition-colors">
+                            <Upload className="w-4 h-4 text-gray-500" />
+                            <span className="text-sm text-gray-600">
+                              {arquivosComplementares.car ? arquivosComplementares.car.name : "Selecionar PDF"}
+                            </span>
+                            <input
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              onChange={(e) => handleFileComplementar('car', e.target.files[0])}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Botão Analisar */}
+                      <Button
+                        onClick={analisarDocumentosComplementares}
+                        disabled={processandoComplementares || Object.values(arquivosComplementares).every(f => f === null)}
+                        className="w-full bg-purple-600 hover:bg-purple-700"
+                      >
+                        {processandoComplementares ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Analisando documentos...
+                          </>
+                        ) : (
+                          <>
+                            <FileText className="w-4 h-4 mr-2" />
+                            Analisar Documentos Complementares
+                          </>
+                        )}
+                      </Button>
+
+                      {/* Dados Extraídos */}
+                      {(dadosComplementares.nirf_cib || dadosComplementares.numero_incra || dadosComplementares.car_numero) && (
+                        <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-300">
+                          <p className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4" />
+                            Dados Extraídos (serão salvos automaticamente)
+                          </p>
+                          <div className="space-y-2 text-sm">
+                            {dadosComplementares.nirf_cib && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-600">CIB/NIRF:</span>
+                                <span className="font-bold text-blue-700">{dadosComplementares.nirf_cib}</span>
+                              </div>
+                            )}
+                            {dadosComplementares.numero_incra && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-600">Número INCRA:</span>
+                                <span className="font-bold text-blue-700">{dadosComplementares.numero_incra}</span>
+                              </div>
+                            )}
+                            {dadosComplementares.car_numero && (
+                              <div className="flex items-start gap-2">
+                                <span className="text-gray-600 whitespace-nowrap">CAR Nº:</span>
+                                <span className="font-bold text-blue-700 break-all">{dadosComplementares.car_numero}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>

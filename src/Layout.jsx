@@ -87,6 +87,11 @@ const navigationSections = [
         icon: FileSearch,
       },
       {
+        title: "Atualização de Documentos",
+        url: createPageUrl("AtualizacaoDocumentos"),
+        icon: RefreshCw,
+      },
+      {
         title: "Correção de Vínculos",
         url: createPageUrl("CorrecaoVinculos"),
         icon: RefreshCw,

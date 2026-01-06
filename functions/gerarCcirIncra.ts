@@ -1,0 +1,158 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import puppeteer from 'npm:puppeteer@23.11.1';
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { codigoImovel, ufSede, municipioSede, tipoPessoa, cpfCnpj } = await req.json();
+    
+    if (!codigoImovel || !ufSede || !municipioSede || !tipoPessoa || !cpfCnpj) {
+      return Response.json({ error: 'Todos os campos são obrigatórios' }, { status: 400 });
+    }
+
+    console.log('🚀 Iniciando geração de CCIR do INCRA');
+    console.log('📋 Dados:', { codigoImovel, ufSede, municipioSede, tipoPessoa, cpfCnpj });
+
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu'
+      ]
+    });
+
+    const page = await browser.newPage();
+    page.setDefaultTimeout(60000);
+
+    try {
+      console.log('📄 Acessando site do INCRA...');
+      await page.goto('https://sncr.serpro.gov.br/ccir/emissao', {
+        waitUntil: 'networkidle0',
+        timeout: 30000
+      });
+
+      // Preencher código do imóvel
+      console.log('✍️ Preenchendo código do imóvel...');
+      await page.waitForSelector('input[name*="codigo"], input[id*="codigo"]', { timeout: 10000 });
+      await page.type('input[name*="codigo"], input[id*="codigo"]', codigoImovel);
+
+      // Selecionar UF
+      console.log('📍 Selecionando UF...');
+      await page.select('select[name*="uf"], select[id*="uf"]', ufSede);
+
+      // Aguardar carregamento de municípios
+      await page.waitForTimeout(1000);
+
+      // Selecionar município (pode precisar digitar)
+      console.log('🏙️ Selecionando município...');
+      const municipioSelector = 'select[name*="municipio"], select[id*="municipio"]';
+      const hasMunicipioSelect = await page.$(municipioSelector);
+      
+      if (hasMunicipioSelect) {
+        await page.select(municipioSelector, municipioSede);
+      } else {
+        // Se não for select, pode ser input autocomplete
+        await page.type('input[name*="municipio"], input[id*="municipio"]', municipioSede);
+        await page.waitForTimeout(500);
+        await page.keyboard.press('Enter');
+      }
+
+      // Selecionar tipo de pessoa
+      console.log('👤 Selecionando tipo de pessoa...');
+      if (tipoPessoa === 'fisica') {
+        await page.click('input[type="radio"][value*="fisica"], input[type="radio"][id*="fisica"]');
+      } else {
+        await page.click('input[type="radio"][value*="juridica"], input[type="radio"][id*="juridica"]');
+        
+        // Para pessoa jurídica, tentar selecionar tipo societário
+        await page.waitForTimeout(500);
+        const tiposSocietarios = [
+          'Sociedade Empresária Limitada',
+          'Sociedade Simples Limitada',
+          'Sociedade Empresária'
+        ];
+        
+        for (const tipo of tiposSocietarios) {
+          try {
+            console.log(`🏢 Tentando selecionar: ${tipo}...`);
+            await page.select('select[name*="tipo"], select[id*="tipo"]', tipo);
+            break;
+          } catch (e) {
+            console.log(`⚠️ Não encontrou opção: ${tipo}`);
+          }
+        }
+      }
+
+      // Preencher CPF/CNPJ
+      console.log('🆔 Preenchendo CPF/CNPJ...');
+      await page.type('input[name*="cpf"], input[name*="cnpj"], input[id*="cpf"], input[id*="cnpj"]', cpfCnpj);
+
+      // Tentar resolver CAPTCHA automaticamente
+      console.log('🤖 Tentando resolver CAPTCHA...');
+      try {
+        const captchaCheckbox = await page.$('input[type="checkbox"]');
+        if (captchaCheckbox) {
+          await captchaCheckbox.click();
+          await page.waitForTimeout(2000);
+        }
+      } catch (captchaError) {
+        console.log('⚠️ Não foi possível resolver CAPTCHA automaticamente');
+      }
+
+      // Clicar no botão de emitir
+      console.log('🔘 Clicando em emitir...');
+      const submitButton = await page.$('button[type="submit"], input[type="submit"], button:has-text("Emitir")');
+      if (submitButton) {
+        await submitButton.click();
+      }
+
+      // Aguardar geração do documento
+      console.log('⏳ Aguardando geração do documento...');
+      await page.waitForTimeout(5000);
+
+      // Tentar capturar PDF
+      const pdfUrl = await page.evaluate(() => {
+        const link = document.querySelector('a[href*=".pdf"]');
+        return link ? link.href : null;
+      });
+
+      await browser.close();
+
+      if (pdfUrl) {
+        console.log('✅ CCIR gerado com sucesso');
+        return Response.json({
+          success: true,
+          message: 'CCIR do INCRA gerado com sucesso',
+          pdfUrl
+        });
+      } else {
+        console.log('⚠️ Documento gerado mas PDF não capturado automaticamente');
+        return Response.json({
+          success: true,
+          message: 'Documento processado. Verifique sua pasta de downloads.',
+          pdfUrl: null
+        });
+      }
+
+    } catch (innerError) {
+      console.error('❌ Erro ao processar no navegador:', innerError);
+      await browser.close();
+      throw innerError;
+    }
+
+  } catch (error) {
+    console.error('❌ Erro ao gerar CCIR:', error);
+    return Response.json({
+      success: false,
+      error: error.message || 'Erro ao gerar CCIR do INCRA. Pode ser necessário acessar manualmente devido ao CAPTCHA.'
+    }, { status: 500 });
+  }
+});

@@ -1466,6 +1466,139 @@ Responda APENAS com o código CAR ou null.`;
               </CardContent>
             </Card>
 
+            {/* Documentos Complementares - Disponível sempre */}
+            <Card className="border-purple-200 bg-purple-50/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-purple-800">
+                  <Upload className="w-5 h-5" />
+                  Documentos Complementares (Opcional)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-purple-800">
+                  Faça upload dos documentos oficiais para extrair automaticamente os números do CIB, INCRA e CAR
+                </p>
+
+                {/* Upload de Arquivos */}
+                <div className="space-y-3">
+                  {/* CND */}
+                  <div className="p-3 bg-white rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm font-medium text-gray-700">CND do ITR (CIB)</Label>
+                      <Badge variant="outline" className={arquivosComplementares.cnd ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}>
+                        {arquivosComplementares.cnd ? "Enviado" : "Não enviado"}
+                      </Badge>
+                    </div>
+                    <label className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-100 transition-colors">
+                      <Upload className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">
+                        {arquivosComplementares.cnd ? arquivosComplementares.cnd.name : "Selecionar PDF"}
+                      </span>
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        onChange={(e) => handleFileComplementar('cnd', e.target.files[0])}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {/* CCIR */}
+                  <div className="p-3 bg-white rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm font-medium text-gray-700">CCIR (Certificado INCRA)</Label>
+                      <Badge variant="outline" className={arquivosComplementares.ccir ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}>
+                        {arquivosComplementares.ccir ? "Enviado" : "Não enviado"}
+                      </Badge>
+                    </div>
+                    <label className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-100 transition-colors">
+                      <Upload className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">
+                        {arquivosComplementares.ccir ? arquivosComplementares.ccir.name : "Selecionar PDF"}
+                      </span>
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        onChange={(e) => handleFileComplementar('ccir', e.target.files[0])}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {/* CAR */}
+                  <div className="p-3 bg-white rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm font-medium text-gray-700">Recibo do CAR</Label>
+                      <Badge variant="outline" className={arquivosComplementares.car ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}>
+                        {arquivosComplementares.car ? "Enviado" : "Não enviado"}
+                      </Badge>
+                    </div>
+                    <label className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-100 transition-colors">
+                      <Upload className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">
+                        {arquivosComplementares.car ? arquivosComplementares.car.name : "Selecionar PDF/Imagem"}
+                      </span>
+                      <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => handleFileComplementar('car', e.target.files[0])}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Botão Analisar */}
+                <Button
+                  onClick={analisarDocumentosComplementares}
+                  disabled={processandoComplementares || Object.values(arquivosComplementares).every(f => f === null)}
+                  className="w-full bg-purple-600 hover:bg-purple-700"
+                >
+                  {processandoComplementares ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Analisando documentos...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Extrair Códigos dos Documentos
+                    </>
+                  )}
+                </Button>
+
+                {/* Dados Extraídos */}
+                {(dadosComplementares.nirf_cib || dadosComplementares.numero_incra || dadosComplementares.car_numero) && (
+                  <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-300">
+                    <p className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" />
+                      Códigos Extraídos (serão salvos automaticamente com o imóvel)
+                    </p>
+                    <div className="space-y-2 text-sm">
+                      {dadosComplementares.nirf_cib && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-600">CIB/NIRF:</span>
+                          <span className="font-bold text-blue-700">{dadosComplementares.nirf_cib}</span>
+                        </div>
+                      )}
+                      {dadosComplementares.numero_incra && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-600">Código INCRA:</span>
+                          <span className="font-bold text-blue-700">{dadosComplementares.numero_incra}</span>
+                        </div>
+                      )}
+                      {dadosComplementares.car_numero && (
+                        <div className="flex items-start gap-2">
+                          <span className="text-gray-600 whitespace-nowrap">CAR Nº:</span>
+                          <span className="font-bold text-blue-700 break-all">{dadosComplementares.car_numero}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {erro && (
               <Card className="border-red-200 bg-red-50">
                 <CardContent className="p-4">
@@ -1733,136 +1866,6 @@ Responda APENAS com o código CAR ou null.`;
                         readOnly
                         className="min-h-48 border-0 bg-transparent resize-none whitespace-pre-wrap font-mono text-sm"
                       />
-                    </div>
-                  </div>
-
-                  {/* Documentos Complementares */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">
-                      📎 Documentos Complementares
-                    </h3>
-                    <div className="p-4 bg-purple-50 rounded-lg border border-purple-200 space-y-4">
-                      <p className="text-sm text-purple-800 mb-3">
-                        Faça upload dos documentos oficiais para extrair automaticamente os números do CIB, INCRA e CAR
-                      </p>
-
-                      {/* Upload de Arquivos */}
-                      <div className="space-y-3">
-                        {/* CND */}
-                        <div className="p-3 bg-white rounded-lg border border-gray-200">
-                          <div className="flex items-center justify-between mb-2">
-                            <Label className="text-sm font-medium text-gray-700">CND do Imóvel Rural (CIB)</Label>
-                            <Badge variant="outline" className={arquivosComplementares.cnd ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}>
-                              {arquivosComplementares.cnd ? "Enviado" : "Não enviado"}
-                            </Badge>
-                          </div>
-                          <label className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-100 transition-colors">
-                            <Upload className="w-4 h-4 text-gray-500" />
-                            <span className="text-sm text-gray-600">
-                              {arquivosComplementares.cnd ? arquivosComplementares.cnd.name : "Selecionar PDF"}
-                            </span>
-                            <input
-                              type="file"
-                              accept=".pdf"
-                              onChange={(e) => handleFileComplementar('cnd', e.target.files[0])}
-                              className="hidden"
-                            />
-                          </label>
-                        </div>
-
-                        {/* CCIR */}
-                        <div className="p-3 bg-white rounded-lg border border-gray-200">
-                          <div className="flex items-center justify-between mb-2">
-                            <Label className="text-sm font-medium text-gray-700">CCIR (Certificado INCRA)</Label>
-                            <Badge variant="outline" className={arquivosComplementares.ccir ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}>
-                              {arquivosComplementares.ccir ? "Enviado" : "Não enviado"}
-                            </Badge>
-                          </div>
-                          <label className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-100 transition-colors">
-                            <Upload className="w-4 h-4 text-gray-500" />
-                            <span className="text-sm text-gray-600">
-                              {arquivosComplementares.ccir ? arquivosComplementares.ccir.name : "Selecionar PDF"}
-                            </span>
-                            <input
-                              type="file"
-                              accept=".pdf"
-                              onChange={(e) => handleFileComplementar('ccir', e.target.files[0])}
-                              className="hidden"
-                            />
-                          </label>
-                        </div>
-
-                        {/* CAR */}
-                        <div className="p-3 bg-white rounded-lg border border-gray-200">
-                          <div className="flex items-center justify-between mb-2">
-                            <Label className="text-sm font-medium text-gray-700">Recibo do CAR</Label>
-                            <Badge variant="outline" className={arquivosComplementares.car ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}>
-                              {arquivosComplementares.car ? "Enviado" : "Não enviado"}
-                            </Badge>
-                          </div>
-                          <label className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-100 transition-colors">
-                            <Upload className="w-4 h-4 text-gray-500" />
-                            <span className="text-sm text-gray-600">
-                              {arquivosComplementares.car ? arquivosComplementares.car.name : "Selecionar PDF"}
-                            </span>
-                            <input
-                              type="file"
-                              accept=".pdf,.jpg,.jpeg,.png"
-                              onChange={(e) => handleFileComplementar('car', e.target.files[0])}
-                              className="hidden"
-                            />
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* Botão Analisar */}
-                      <Button
-                        onClick={analisarDocumentosComplementares}
-                        disabled={processandoComplementares || Object.values(arquivosComplementares).every(f => f === null)}
-                        className="w-full bg-purple-600 hover:bg-purple-700"
-                      >
-                        {processandoComplementares ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Analisando documentos...
-                          </>
-                        ) : (
-                          <>
-                            <FileText className="w-4 h-4 mr-2" />
-                            Analisar Documentos Complementares
-                          </>
-                        )}
-                      </Button>
-
-                      {/* Dados Extraídos */}
-                      {(dadosComplementares.nirf_cib || dadosComplementares.numero_incra || dadosComplementares.car_numero) && (
-                        <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-300">
-                          <p className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4" />
-                            Dados Extraídos (serão salvos automaticamente)
-                          </p>
-                          <div className="space-y-2 text-sm">
-                            {dadosComplementares.nirf_cib && (
-                              <div className="flex items-center gap-2">
-                                <span className="text-gray-600">CIB/NIRF:</span>
-                                <span className="font-bold text-blue-700">{dadosComplementares.nirf_cib}</span>
-                              </div>
-                            )}
-                            {dadosComplementares.numero_incra && (
-                              <div className="flex items-center gap-2">
-                                <span className="text-gray-600">Número INCRA:</span>
-                                <span className="font-bold text-blue-700">{dadosComplementares.numero_incra}</span>
-                              </div>
-                            )}
-                            {dadosComplementares.car_numero && (
-                              <div className="flex items-start gap-2">
-                                <span className="text-gray-600 whitespace-nowrap">CAR Nº:</span>
-                                <span className="font-bold text-blue-700 break-all">{dadosComplementares.car_numero}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </CardContent>

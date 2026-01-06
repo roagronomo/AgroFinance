@@ -115,12 +115,22 @@ export default function AnaliseCertidoes() {
     return new Intl.NumberFormat('pt-BR').format(parseInt(numbers, 10));
   };
 
-  const formatarCPF = (cpf) => {
-    if (!cpf) return "";
-    const cleaned = cpf.replace(/\D/g, '');
-    if (cleaned.length !== 11) return cpf;
-    return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  const formatarCPFouCNPJ = (documento) => {
+    if (!documento) return "";
+    const cleaned = documento.replace(/\D/g, '');
+    
+    if (cleaned.length === 11) {
+      // CPF: 000.000.000-00
+      return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    } else if (cleaned.length === 14) {
+      // CNPJ: 00.000.000/0000-00
+      return cleaned.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    }
+    
+    return documento;
   };
+  
+  const formatarCPF = formatarCPFouCNPJ; // Manter compatibilidade
 
   const formatarArea = (area) => {
     if (!area) return "";
@@ -203,7 +213,7 @@ export default function AnaliseCertidoes() {
               type: "object",
               properties: {
                 nome: { type: "string", description: "Nome completo do proprietário TITULAR (não incluir cônjuge aqui)" },
-                cpf: { type: "string", description: "CPF com apenas números (11 dígitos)" },
+                cpf: { type: "string", description: "CPF (11 dígitos) ou CNPJ (14 dígitos) - apenas números, sem formatação" },
                 area_ha: { type: "string", description: "Área do proprietário em hectares com vírgula (ex: 560,3244 ha). OBRIGATÓRIO - se área total e há apenas 1 proprietário = área total; se múltiplos, dividir igualmente" },
                 percentual: { type: "string", description: "Percentual de propriedade (ex: 100% ou 50%). OBRIGATÓRIO - se 1 proprietário = 100%; se múltiplos, dividir igualmente" },
                 conjuge: {
@@ -673,7 +683,7 @@ Responda APENAS com o código CAR ou null.`;
     texto += "👤 PROPRIETÁRIO(S):\n";
     resultado.proprietarios?.forEach((prop, idx) => {
       texto += "\n   " + (idx + 1) + ". " + prop.nome + "\n";
-      texto += "      CPF: " + formatarCPF(prop.cpf) + "\n";
+      texto += "      CPF/CNPJ: " + formatarCPFouCNPJ(prop.cpf) + "\n";
       if (prop.area_ha && prop.area_ha !== "N/C") texto += "      Área: " + formatarArea(prop.area_ha) + "\n";
       if (prop.percentual && prop.percentual !== "N/C") texto += "      Percentual: " + prop.percentual + "\n";
       
@@ -691,7 +701,7 @@ Responda APENAS com o código CAR ou null.`;
       texto += "\n⚠️ USUFRUTUÁRIO(S) VIGENTE(S):\n";
       resultado.usufrutuarios.forEach((usu, idx) => {
         texto += "\n   " + (idx + 1) + ". " + usu.nome + "\n";
-        if (usu.cpf) texto += "      CPF: " + formatarCPF(usu.cpf) + "\n";
+        if (usu.cpf) texto += "      CPF/CNPJ: " + formatarCPFouCNPJ(usu.cpf) + "\n";
         texto += "      Tipo: " + usu.tipo_usufruto + "\n";
         if (usu.area_ha) texto += "      Área: " + formatarArea(usu.area_ha) + "\n";
         if (usu.percentual) texto += "      Percentual: " + usu.percentual + "\n";
@@ -1018,7 +1028,7 @@ Responda APENAS com o código CAR ou null.`;
           </div>
           ${prop.conjuge?.nome ? `
             <div class="conjuge-info">
-              <strong>Cônjuge:</strong> ${prop.conjuge.nome}${prop.conjuge.cpf ? ` - CPF: ${formatarCPF(prop.conjuge.cpf)}` : ''}
+              <strong>Cônjuge:</strong> ${prop.conjuge.nome}${prop.conjuge.cpf ? ` - CPF: ${formatarCPFouCNPJ(prop.conjuge.cpf)}` : ''}
             </div>
           ` : ''}
         </div>
@@ -1033,10 +1043,10 @@ Responda APENAS com o código CAR ou null.`;
         <strong>⚠️ ATENÇÃO:</strong> Este imóvel possui usufruto vigente, o que pode restringir a capacidade de uso e disposição do bem.
       </div>
       ${resultado.usufrutuarios.map((usu, idx) => `
-        <div class="usufrutuario-card">
-          <div class="usufrutuario-header">Usufrutuário ${idx + 1}: ${usu.nome}</div>
-          <div class="proprietario-info">
-            ${usu.cpf ? `<div><strong>CPF:</strong> ${formatarCPF(usu.cpf)}</div>` : ''}
+      <div class="usufrutuario-card">
+        <div class="usufrutuario-header">Usufrutuário ${idx + 1}: ${usu.nome}</div>
+        <div class="proprietario-info">
+          ${usu.cpf ? `<div><strong>CPF/CNPJ:</strong> ${formatarCPFouCNPJ(usu.cpf)}</div>` : ''}
             ${usu.tipo_usufruto ? `<div><strong>Tipo:</strong> ${usu.tipo_usufruto}</div>` : ''}
             ${usu.area_ha ? `<div><strong>Área:</strong> ${formatarArea(usu.area_ha)}</div>` : ''}
             ${usu.percentual ? `<div><strong>Percentual:</strong> ${usu.percentual}</div>` : ''}
@@ -1218,8 +1228,8 @@ Responda APENAS com o código CAR ou null.`;
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-xs">
                       <div>
-                        <span className="text-gray-500">CPF: </span>
-                        <span className="font-medium text-gray-900">{formatarCPF(prop.cpf)}</span>
+                        <span className="text-gray-500">CPF/CNPJ: </span>
+                        <span className="font-medium text-gray-900">{formatarCPFouCNPJ(prop.cpf)}</span>
                       </div>
                       {prop.area_ha && prop.area_ha !== "N/C" && (
                         <div>
@@ -1243,7 +1253,7 @@ Responda APENAS com o código CAR ou null.`;
                             <span className="font-medium text-gray-900">{prop.conjuge.nome}</span>
                             {prop.conjuge.cpf && (
                               <span className="text-gray-500 ml-1">
-                                (CPF: {formatarCPF(prop.conjuge.cpf)})
+                                (CPF: {formatarCPFouCNPJ(prop.conjuge.cpf)})
                               </span>
                             )}
                           </div>
@@ -1278,8 +1288,8 @@ Responda APENAS com o código CAR ou null.`;
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-xs">
                       {usu.cpf && (
                         <div>
-                          <span className="text-gray-500">CPF: </span>
-                          <span className="font-medium">{formatarCPF(usu.cpf)}</span>
+                          <span className="text-gray-500">CPF/CNPJ: </span>
+                          <span className="font-medium">{formatarCPFouCNPJ(usu.cpf)}</span>
                         </div>
                       )}
                       {usu.tipo_usufruto && (
@@ -1729,8 +1739,8 @@ Responda APENAS com o código CAR ou null.`;
                               
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                                 <div>
-                                  <span className="text-gray-600">CPF: </span>
-                                  <span className="font-medium text-gray-900">{formatarCPF(prop.cpf)}</span>
+                                  <span className="text-gray-600">CPF/CNPJ: </span>
+                                  <span className="font-medium text-gray-900">{formatarCPFouCNPJ(prop.cpf)}</span>
                                 </div>
                                 {prop.area_ha && prop.area_ha !== "N/C" && (
                                   <div>
@@ -1754,7 +1764,7 @@ Responda APENAS com o código CAR ou null.`;
                                       <span className="font-medium">{prop.conjuge.nome}</span>
                                       {prop.conjuge.cpf && (
                                         <span className="text-gray-500 ml-2">
-                                          (CPF: <span className="font-medium text-gray-700">{formatarCPF(prop.conjuge.cpf)}</span>)
+                                          (CPF: <span className="font-medium text-gray-700">{formatarCPFouCNPJ(prop.conjuge.cpf)}</span>)
                                         </span>
                                       )}
                                     </div>
@@ -1791,8 +1801,8 @@ Responda APENAS com o código CAR ou null.`;
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                                   {usu.cpf && (
                                     <div>
-                                      <span className="text-gray-600">CPF: </span>
-                                      <span className="font-medium text-gray-900">{formatarCPF(usu.cpf)}</span>
+                                      <span className="text-gray-600">CPF/CNPJ: </span>
+                                      <span className="font-medium text-gray-900">{formatarCPFouCNPJ(usu.cpf)}</span>
                                     </div>
                                   )}
                                   {usu.tipo_usufruto && (

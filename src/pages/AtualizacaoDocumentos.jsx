@@ -227,7 +227,7 @@ export default function AtualizacaoDocumentos() {
     }, 'CND_ITR');
 
     // Abrir o site da Receita Federal em nova aba
-    const url = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PF/Emitir';
+    const url = 'https://servicos.receitafederal.gov.br/servico/certidoes/#/home/cib';
     window.open(url, '_blank');
   };
 
@@ -248,7 +248,7 @@ export default function AtualizacaoDocumentos() {
     }, 'CCIR_INCRA');
 
     // Abrir o site do INCRA em nova aba
-    const url = 'https://certificacao.incra.gov.br/csv_shp/export';
+    const url = 'https://sncr.serpro.gov.br/ccir/emissao';
     window.open(url, '_blank');
   };
 

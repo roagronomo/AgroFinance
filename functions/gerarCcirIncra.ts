@@ -10,14 +10,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { codigoImovel, ufSede, municipioSede, tipoPessoa, cpfCnpj } = await req.json();
+    const { codigoImovel, ufSede, municipioSede, tipoPessoa, cpfCnpj, naturezaJuridica } = await req.json();
     
     if (!codigoImovel || !ufSede || !municipioSede || !tipoPessoa || !cpfCnpj) {
       return Response.json({ error: 'Todos os campos são obrigatórios' }, { status: 400 });
     }
 
+    if (tipoPessoa === 'juridica' && !naturezaJuridica) {
+      return Response.json({ error: 'Natureza jurídica é obrigatória para pessoa jurídica' }, { status: 400 });
+    }
+
     console.log('🚀 Iniciando geração de CCIR do INCRA');
-    console.log('📋 Dados:', { codigoImovel, ufSede, municipioSede, tipoPessoa, cpfCnpj });
+    console.log('📋 Dados:', { codigoImovel, ufSede, municipioSede, tipoPessoa, cpfCnpj, naturezaJuridica });
 
     const browser = await puppeteer.launch({
       headless: true,
@@ -72,22 +76,28 @@ Deno.serve(async (req) => {
       } else {
         await page.click('input[type="radio"][value*="juridica"], input[type="radio"][id*="juridica"]');
         
-        // Para pessoa jurídica, tentar selecionar tipo societário
+        // Para pessoa jurídica, selecionar natureza jurídica informada
         await page.waitForTimeout(500);
-        const tiposSocietarios = [
-          'Sociedade Empresária Limitada',
-          'Sociedade Simples Limitada',
-          'Sociedade Empresária'
-        ];
+        console.log(`🏢 Selecionando natureza jurídica: ${naturezaJuridica}...`);
         
-        for (const tipo of tiposSocietarios) {
-          try {
-            console.log(`🏢 Tentando selecionar: ${tipo}...`);
-            await page.select('select[name*="tipo"], select[id*="tipo"]', tipo);
-            break;
-          } catch (e) {
-            console.log(`⚠️ Não encontrou opção: ${tipo}`);
-          }
+        try {
+          // Tentar por value exato
+          await page.select('select[name*="natureza"], select[id*="natureza"], select[name*="tipo"], select[id*="tipo"]', naturezaJuridica);
+          console.log('✅ Natureza jurídica selecionada com sucesso');
+        } catch (e) {
+          console.log('⚠️ Tentando selecionar por texto visível...');
+          // Tentar encontrar opção que contém o texto
+          await page.evaluate((texto) => {
+            const select = document.querySelector('select[name*="natureza"], select[id*="natureza"], select[name*="tipo"], select[id*="tipo"]');
+            if (select) {
+              const options = Array.from(select.options);
+              const option = options.find(opt => opt.text.includes(texto) || opt.value.includes(texto));
+              if (option) {
+                select.value = option.value;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+            }
+          }, naturezaJuridica);
         }
       }
 

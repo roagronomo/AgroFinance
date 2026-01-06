@@ -20,6 +20,7 @@ export default function AtualizacaoDocumentos() {
   const [municipioSede, setMunicipioSede] = useState("");
   const [tipoPessoa, setTipoPessoa] = useState("fisica");
   const [cpfCnpj, setCpfCnpj] = useState("");
+  const [naturezaJuridica, setNaturezaJuridica] = useState("Sociedade Empresária Limitada");
   const [processandoCCIR, setProcessandoCCIR] = useState(false);
   const [resultadoCCIR, setResultadoCCIR] = useState(null);
 
@@ -72,7 +73,8 @@ export default function AtualizacaoDocumentos() {
         ufSede,
         municipioSede: municipioSede.trim(),
         tipoPessoa,
-        cpfCnpj: cpfCnpj.replace(/\D/g, '')
+        cpfCnpj: cpfCnpj.replace(/\D/g, ''),
+        naturezaJuridica: tipoPessoa === 'juridica' ? naturezaJuridica : null
       });
 
       if (resultado.data.success) {
@@ -263,6 +265,24 @@ export default function AtualizacaoDocumentos() {
                 className="text-sm"
               />
             </div>
+
+            {tipoPessoa === "juridica" && (
+              <div>
+                <Label className="text-sm font-medium text-gray-700 mb-1.5 block">
+                  Natureza Jurídica
+                </Label>
+                <Select value={naturezaJuridica} onValueChange={setNaturezaJuridica} disabled={processandoCCIR}>
+                  <SelectTrigger className="text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Sociedade Empresária Limitada">Sociedade Empresária Limitada</SelectItem>
+                    <SelectItem value="Sociedade Simples Limitada">Sociedade Simples Limitada</SelectItem>
+                    <SelectItem value="Sociedade Empresária">Sociedade Empresária</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <Button
               onClick={handleGerarCCIR}

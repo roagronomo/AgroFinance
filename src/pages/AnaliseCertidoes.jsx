@@ -1373,34 +1373,34 @@ Responda APENAS com o código CAR ou null.`;
           </TabsList>
 
           <TabsContent value="analise" className="space-y-4">
-            <Card className="border-blue-200 bg-blue-50/50">
+            <Card className="border-slate-200 bg-slate-50/30">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
-                  <FileText className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <div className="space-y-2 text-sm text-blue-800">
-                    <p className="font-semibold">📋 Como funciona:</p>
-                    <ul className="list-disc list-inside space-y-1 ml-2">
-                      <li>Faça upload de uma certidão de imóvel em PDF (atualizada, com menos de 1 ano)</li>
-                      <li>O sistema tentará <strong>automaticamente</strong> diferentes métodos de análise</li>
-                      <li>A IA irá extrair todas as informações relevantes do documento</li>
-                      <li>Revise os dados extraídos e utilize-os conforme necessário</li>
-                      <li><strong>Tamanho máximo:</strong> 10MB | <strong>Tempo de análise:</strong> 30-60 segundos</li>
+                  <FileText className="w-5 h-5 text-slate-600 mt-0.5 flex-shrink-0" />
+                  <div className="space-y-2 text-sm text-slate-700">
+                    <p className="font-semibold">Como funciona:</p>
+                    <ul className="list-disc list-inside space-y-1 ml-2 text-xs">
+                      <li>Faça upload da certidão de imóvel em PDF (atualizada, com menos de 1 ano)</li>
+                      <li>O sistema irá extrair automaticamente as informações relevantes</li>
+                      <li>Opcionalmente, faça upload dos documentos complementares (CND, CCIR, CAR)</li>
+                      <li>Revise os dados e salve o imóvel</li>
+                      <li className="text-slate-500"><strong>Tamanho máximo:</strong> 10MB | <strong>Tempo:</strong> 30-60s</li>
                     </ul>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className=" border-gray-200">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-green-800">
-                  <Upload className="w-5 h-5" />
-                  Upload da Certidão
+            <Card className="border-slate-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-slate-800 text-base">
+                  <Upload className="w-4 h-4" />
+                  1. Upload da Certidão
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 <div>
-                  <Label className="text-sm text-gray-500 mb-1 block">
+                  <Label className="text-xs text-slate-600 mb-1.5 block">
                     Selecione a Certidão do Imóvel (PDF)
                   </Label>
                   <input
@@ -1409,13 +1409,13 @@ Responda APENAS com o código CAR ou null.`;
                     accept=".pdf"
                     onChange={handleFileChange}
                     disabled={processando}
-                    className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-l-lg file:border-0 file:text-sm file:font-semibold file:bg-green-600 file:text-white hover:file:bg-green-700 disabled:opacity-50"
+                    className="block w-full text-sm text-slate-900 border border-slate-300 rounded-lg cursor-pointer bg-white focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-l-lg file:border-0 file:text-sm file:font-medium file:bg-slate-700 file:text-white hover:file:bg-slate-800 disabled:opacity-50"
                   />
                   {arquivo && (
-                    <div className="mt-3 flex items-center gap-2 text-sm text-green-600">
-                      <CheckCircle className="w-4 h-4" />
-                      <span>Arquivo selecionado: <strong>{arquivo.name}</strong></span>
-                      <Badge variant="outline" className="ml-2">
+                    <div className="mt-2 flex items-center gap-2 text-sm text-slate-700">
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-xs">Arquivo: <strong>{arquivo.name}</strong></span>
+                      <Badge variant="outline" className="ml-auto text-xs">
                         {(arquivo.size / 1024 / 1024).toFixed(2)} MB
                       </Badge>
                     </div>
@@ -1423,31 +1423,28 @@ Responda APENAS com o código CAR ou null.`;
                 </div>
 
                 {statusProcessamento && (
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-center gap-2 text-sm text-blue-800">
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                  <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+                    <div className="flex items-center gap-2 text-xs text-slate-700">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       <span className="font-medium">{statusProcessamento}</span>
                     </div>
-                    <p className="text-xs text-blue-600 mt-1">
-                      O sistema está tentando diferentes métodos para garantir a melhor extração de dados...
-                    </p>
                   </div>
                 )}
 
-                <div className="flex gap-3">
+                <div className="flex gap-2 pt-1">
                   <Button
                     onClick={handleAnalisar}
                     disabled={!arquivo || processando}
-                    className="bg-green-600 hover:bg-green-700 flex-1"
+                    className="bg-slate-700 hover:bg-slate-800 flex-1 h-9 text-sm"
                   >
                     {processando ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
                         Analisando...
                       </>
                     ) : (
                       <>
-                        <FileText className="w-4 h-4 mr-2" />
+                        <FileText className="w-3.5 h-3.5 mr-2" />
                         Analisar Certidão
                       </>
                     )}
@@ -1457,7 +1454,7 @@ Responda APENAS com o código CAR ou null.`;
                     <Button
                       onClick={handleNovo}
                       variant="outline"
-                      className="border-gray-300"
+                      className="border-slate-300 h-9 text-sm"
                     >
                       Nova Análise
                     </Button>
@@ -1466,33 +1463,32 @@ Responda APENAS com o código CAR ou null.`;
               </CardContent>
             </Card>
 
-            {/* Documentos Complementares - Disponível sempre */}
-            <Card className="border-purple-200 bg-purple-50/30">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-purple-800">
-                  <Upload className="w-5 h-5" />
-                  Documentos Complementares (Opcional)
+            {/* Documentos Complementares */}
+            <Card className="border-slate-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-slate-800 text-base">
+                  <FileText className="w-4 h-4" />
+                  2. Documentos Complementares (Opcional)
                 </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-purple-800">
-                  Faça upload dos documentos oficiais para extrair automaticamente os números do CIB, INCRA e CAR
+                <p className="text-xs text-slate-500 mt-1">
+                  Extraia automaticamente os códigos oficiais (CIB, INCRA, CAR)
                 </p>
-
+              </CardHeader>
+              <CardContent className="space-y-3">
                 {/* Upload de Arquivos */}
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {/* CND */}
-                  <div className="p-3 bg-white rounded-lg border border-gray-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <Label className="text-sm font-medium text-gray-700">CND do ITR (CIB)</Label>
-                      <Badge variant="outline" className={arquivosComplementares.cnd ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}>
-                        {arquivosComplementares.cnd ? "Enviado" : "Não enviado"}
-                      </Badge>
+                  <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <Label className="text-xs font-medium text-slate-700">CND do ITR</Label>
+                      {arquivosComplementares.cnd && (
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                      )}
                     </div>
-                    <label className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-100 transition-colors">
-                      <Upload className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">
-                        {arquivosComplementares.cnd ? arquivosComplementares.cnd.name : "Selecionar PDF"}
+                    <label className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50 transition-colors">
+                      <Upload className="w-3 h-3 text-slate-500" />
+                      <span className="text-xs text-slate-600 truncate">
+                        {arquivosComplementares.cnd ? arquivosComplementares.cnd.name : "Selecionar"}
                       </span>
                       <input
                         type="file"
@@ -1504,17 +1500,17 @@ Responda APENAS com o código CAR ou null.`;
                   </div>
 
                   {/* CCIR */}
-                  <div className="p-3 bg-white rounded-lg border border-gray-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <Label className="text-sm font-medium text-gray-700">CCIR (Certificado INCRA)</Label>
-                      <Badge variant="outline" className={arquivosComplementares.ccir ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}>
-                        {arquivosComplementares.ccir ? "Enviado" : "Não enviado"}
-                      </Badge>
+                  <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <Label className="text-xs font-medium text-slate-700">CCIR/INCRA</Label>
+                      {arquivosComplementares.ccir && (
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                      )}
                     </div>
-                    <label className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-100 transition-colors">
-                      <Upload className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">
-                        {arquivosComplementares.ccir ? arquivosComplementares.ccir.name : "Selecionar PDF"}
+                    <label className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50 transition-colors">
+                      <Upload className="w-3 h-3 text-slate-500" />
+                      <span className="text-xs text-slate-600 truncate">
+                        {arquivosComplementares.ccir ? arquivosComplementares.ccir.name : "Selecionar"}
                       </span>
                       <input
                         type="file"
@@ -1526,17 +1522,17 @@ Responda APENAS com o código CAR ou null.`;
                   </div>
 
                   {/* CAR */}
-                  <div className="p-3 bg-white rounded-lg border border-gray-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <Label className="text-sm font-medium text-gray-700">Recibo do CAR</Label>
-                      <Badge variant="outline" className={arquivosComplementares.car ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}>
-                        {arquivosComplementares.car ? "Enviado" : "Não enviado"}
-                      </Badge>
+                  <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <Label className="text-xs font-medium text-slate-700">CAR</Label>
+                      {arquivosComplementares.car && (
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                      )}
                     </div>
-                    <label className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-100 transition-colors">
-                      <Upload className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm text-gray-600">
-                        {arquivosComplementares.car ? arquivosComplementares.car.name : "Selecionar PDF/Imagem"}
+                    <label className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50 transition-colors">
+                      <Upload className="w-3 h-3 text-slate-500" />
+                      <span className="text-xs text-slate-600 truncate">
+                        {arquivosComplementares.car ? arquivosComplementares.car.name : "Selecionar"}
                       </span>
                       <input
                         type="file"
@@ -1552,45 +1548,45 @@ Responda APENAS com o código CAR ou null.`;
                 <Button
                   onClick={analisarDocumentosComplementares}
                   disabled={processandoComplementares || Object.values(arquivosComplementares).every(f => f === null)}
-                  className="w-full bg-purple-600 hover:bg-purple-700"
+                  className="w-full bg-slate-700 hover:bg-slate-800 h-9 text-sm"
                 >
                   {processandoComplementares ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Analisando documentos...
+                      <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+                      Extraindo códigos...
                     </>
                   ) : (
                     <>
-                      <FileText className="w-4 h-4 mr-2" />
-                      Extrair Códigos dos Documentos
+                      <FileText className="w-3.5 h-3.5 mr-2" />
+                      Extrair Códigos
                     </>
                   )}
                 </Button>
 
                 {/* Dados Extraídos */}
                 {(dadosComplementares.nirf_cib || dadosComplementares.numero_incra || dadosComplementares.car_numero) && (
-                  <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-300">
-                    <p className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4" />
-                      Códigos Extraídos (serão salvos automaticamente com o imóvel)
+                  <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <p className="text-xs font-semibold text-emerald-900 mb-2 flex items-center gap-1.5">
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      Códigos extraídos com sucesso
                     </p>
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-1.5 text-xs">
                       {dadosComplementares.nirf_cib && (
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-600">CIB/NIRF:</span>
-                          <span className="font-bold text-blue-700">{dadosComplementares.nirf_cib}</span>
+                          <span className="text-slate-600 w-20">CIB/NIRF:</span>
+                          <span className="font-semibold text-slate-900">{dadosComplementares.nirf_cib}</span>
                         </div>
                       )}
                       {dadosComplementares.numero_incra && (
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-600">Código INCRA:</span>
-                          <span className="font-bold text-blue-700">{dadosComplementares.numero_incra}</span>
+                          <span className="text-slate-600 w-20">INCRA:</span>
+                          <span className="font-semibold text-slate-900">{dadosComplementares.numero_incra}</span>
                         </div>
                       )}
                       {dadosComplementares.car_numero && (
                         <div className="flex items-start gap-2">
-                          <span className="text-gray-600 whitespace-nowrap">CAR Nº:</span>
-                          <span className="font-bold text-blue-700 break-all">{dadosComplementares.car_numero}</span>
+                          <span className="text-slate-600 w-20 flex-shrink-0">CAR:</span>
+                          <span className="font-semibold text-slate-900 break-all">{dadosComplementares.car_numero}</span>
                         </div>
                       )}
                     </div>
@@ -1626,28 +1622,28 @@ Responda APENAS com o código CAR ou null.`;
             )}
 
             {resultado && (
-              <Card className=" border-gray-200">
-                <CardHeader>
+              <Card className="border-slate-200">
+                <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2 text-green-800">
-                      <CheckCircle className="w-5 h-5" />
-                      Resultado da Análise
+                    <CardTitle className="flex items-center gap-2 text-slate-800 text-base">
+                      <CheckCircle className="w-4 h-4" />
+                      3. Resultado da Análise
                     </CardTitle>
                     <div className="flex gap-2">
                       <Button
                         onClick={handleSalvarImovel}
                         disabled={salvando}
                         size="sm"
-                        className="bg-blue-600 hover:bg-blue-700"
+                        className="bg-slate-700 hover:bg-slate-800 h-8 text-xs"
                       >
                         {salvando ? (
                           <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
                             Salvando...
                           </>
                         ) : (
                           <>
-                            <Save className="w-4 h-4 mr-2" />
+                            <Save className="w-3.5 h-3.5 mr-1.5" />
                             Salvar Imóvel
                           </>
                         )}
@@ -1656,18 +1652,18 @@ Responda APENAS com o código CAR ou null.`;
                         onClick={handleCopiarTexto}
                         variant="outline"
                         size="sm"
-                        className="border-gray-300 text-green-600"
+                        className="border-slate-300 h-8 text-xs"
                       >
-                        <Copy className="w-4 h-4 mr-2" />
+                        <Copy className="w-3.5 h-3.5 mr-1.5" />
                         Copiar
                       </Button>
                       <Button
                         onClick={handleBaixarRelatorio}
                         variant="outline"
                         size="sm"
-                        className="border-gray-300 text-green-600"
+                        className="border-slate-300 h-8 text-xs"
                       >
-                        <Download className="w-4 h-4 mr-2" />
+                        <Download className="w-3.5 h-3.5 mr-1.5" />
                         Baixar
                       </Button>
                     </div>

@@ -14,6 +14,27 @@ export default function AtualizacaoDocumentos() {
   const [buscandoImovel, setBuscandoImovel] = useState(false);
   const [imovelNaoEncontrado, setImovelNaoEncontrado] = useState(false);
 
+  // Função auxiliar para copiar dados para extensão Chrome
+  const copiarDadosParaExtensao = async (dados, tipoDocumento) => {
+    try {
+      const dadosFormatados = {
+        tipo: tipoDocumento,
+        timestamp: new Date().toISOString(),
+        ...dados
+      };
+      await navigator.clipboard.writeText(JSON.stringify(dadosFormatados));
+      toast.success("Dados copiados! A extensão irá preencher automaticamente.", {
+        description: "Abra o site e clique em 'Preencher' na extensão",
+        duration: 4000
+      });
+      return true;
+    } catch (error) {
+      console.error("Erro ao copiar dados:", error);
+      toast.error("Erro ao copiar dados");
+      return false;
+    }
+  };
+
   // Estados CND do ITR
   const [cib, setCib] = useState("");
   const [processandoCND, setProcessandoCND] = useState(false);
@@ -161,56 +182,74 @@ export default function AtualizacaoDocumentos() {
     }
   };
 
-  const handleGerarCNDCpf = () => {
+  const handleGerarCNDCpf = async () => {
     if (!cpf || !dataNascimento) {
       toast.error("Preencha CPF e data de nascimento");
       return;
     }
 
+    // Copiar dados para extensão
+    await copiarDadosParaExtensao({
+      cpf: cpf,
+      dataNascimento: dataNascimento
+    }, 'CND_CPF');
+
     // Abrir o site da Receita Federal em nova aba
     const url = 'https://servicos.receitafederal.gov.br/servico/certidoes/#/home/cpf';
     window.open(url, '_blank');
-    
-    toast.info("Abrindo site da Receita Federal. Preencha os dados e gere a certidão.");
   };
 
-  const handleGerarCNDCnpj = () => {
+  const handleGerarCNDCnpj = async () => {
     if (!cnpj || !cnpj.trim()) {
       toast.error("Digite o CNPJ");
       return;
     }
 
+    // Copiar dados para extensão
+    await copiarDadosParaExtensao({
+      cnpj: cnpj
+    }, 'CND_CNPJ');
+
     // Abrir o site da Receita Federal em nova aba
     const url = 'https://servicos.receitafederal.gov.br/servico/certidoes/#/home/cnpj';
     window.open(url, '_blank');
-    
-    toast.info("Abrindo site da Receita Federal. Preencha os dados e gere a certidão.");
   };
 
-  const handleGerarCND = () => {
+  const handleGerarCND = async () => {
     if (!cib || !cib.trim()) {
       toast.error("Digite o número do CIB");
       return;
     }
 
+    // Copiar dados para extensão
+    await copiarDadosParaExtensao({
+      cib: cib
+    }, 'CND_ITR');
+
     // Abrir o site da Receita Federal em nova aba
     const url = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PF/Emitir';
     window.open(url, '_blank');
-    
-    toast.info("Abrindo site da Receita Federal. Preencha o CIB e gere a certidão.");
   };
 
-  const handleGerarCCIR = () => {
+  const handleGerarCCIR = async () => {
     if (!codigoImovel || !ufSede || !municipioSede || !cpfCnpj) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
 
+    // Copiar dados para extensão
+    await copiarDadosParaExtensao({
+      codigoImovel: codigoImovel,
+      ufSede: ufSede,
+      municipioSede: municipioSede,
+      tipoPessoa: tipoPessoa,
+      cpfCnpj: cpfCnpj,
+      naturezaJuridica: tipoPessoa === 'juridica' ? naturezaJuridica : undefined
+    }, 'CCIR_INCRA');
+
     // Abrir o site do INCRA em nova aba
     const url = 'https://certificacao.incra.gov.br/csv_shp/export';
     window.open(url, '_blank');
-    
-    toast.info("Abrindo site do INCRA. Preencha os dados e gere o CCIR.");
   };
 
   const handleBaixarDocumento = (url, filename) => {

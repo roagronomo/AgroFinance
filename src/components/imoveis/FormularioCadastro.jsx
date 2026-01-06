@@ -153,11 +153,11 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
     avaliacao_mercado: "",
     dados_avaliacao: "",
     // Campos de coordenadas removidos
-    mapa_area_total_url: "",
-    mapa_area_agricultavel_url: "",
-    contrato_arrendamento_url: "",
+    mapa_area_total_urls: [],
+    mapa_area_agricultavel_urls: [],
+    contrato_arrendamento_urls: [],
     contrato_arrendamento_vencimento: "",
-    carta_anuencia_url: "",
+    carta_anuencia_urls: [],
     carta_anuencia_vencimento: ""
   });
   
@@ -277,11 +277,11 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
         avaliacao_mercado: "",
         dados_avaliacao: "",
         // Campos de coordenadas removidos
-        mapa_area_total_url: "",
-        mapa_area_agricultavel_url: "",
-        contrato_arrendamento_url: "",
+        mapa_area_total_urls: [],
+        mapa_area_agricultavel_urls: [],
+        contrato_arrendamento_urls: [],
         contrato_arrendamento_vencimento: "",
-        carta_anuencia_url: "",
+        carta_anuencia_urls: [],
         carta_anuencia_vencimento: ""
       });
       setAreaTotalDisplay("");
@@ -847,7 +847,10 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
       const result = await base44.integrations.Core.UploadFile({ file });
       
       if (result && result.file_url) {
-        handleChange(field, result.file_url);
+        // Para campos múltiplos (arrays), adicionar à lista
+        const currentArray = formData[field] || [];
+        handleChange(field, [...currentArray, result.file_url]);
+        
         toast.success("Arquivo anexado com sucesso", {
           description: file.name,
           duration: 3000
@@ -867,6 +870,13 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
     } finally {
       setIsUploading(prev => ({ ...prev, [field]: false }));
     }
+  };
+
+  const handleRemoveFile = (field, index) => {
+    const currentArray = formData[field] || [];
+    const newArray = currentArray.filter((_, i) => i !== index);
+    handleChange(field, newArray);
+    toast.info("Arquivo removido");
   };
 
   const renderAreaFields = () => {
@@ -1074,11 +1084,11 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
       })),
       avaliacao_mercado: formData.avaliacao_mercado !== "" ? parseFloat(formData.avaliacao_mercado) : null,
       dados_avaliacao: formData.dados_avaliacao?.trim() || "",
-      mapa_area_total_url: formData.mapa_area_total_url || "",
-      mapa_area_agricultavel_url: formData.mapa_area_agricultavel_url || "",
-      contrato_arrendamento_url: formData.contrato_arrendamento_url || "",
+      mapa_area_total_urls: formData.mapa_area_total_urls || [],
+      mapa_area_agricultavel_urls: formData.mapa_area_agricultavel_urls || [],
+      contrato_arrendamento_urls: formData.contrato_arrendamento_urls || [],
       contrato_arrendamento_vencimento: formData.contrato_arrendamento_vencimento || "",
-      carta_anuencia_url: formData.carta_anuencia_url || "",
+      carta_anuencia_urls: formData.carta_anuencia_urls || [],
       carta_anuencia_vencimento: formData.carta_anuencia_vencimento || "",
       // Incluir dados da certidão se disponíveis
       dados_analise_certidao: formData.dados_analise_certidao || ""
@@ -2238,60 +2248,167 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
           {/* Mapas KML */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <div className="flex items-center justify-between mb-2">
-                <Label className="text-slate-700 text-xs font-medium">Mapa Área Total (KML)</Label>
-                {formData.mapa_area_total_url && (
-                  <a href={formData.mapa_area_total_url} target="_blank" rel="noopener noreferrer" 
-                     className="flex items-center gap-1 text-green-600 hover:text-green-700">
-                    <Map className="w-3.5 h-3.5" />
-                  </a>
-                )}
-              </div>
-              {formData.mapa_area_total_url && (
-                <p className="text-xs text-green-700 font-medium mb-2 truncate">
-                  ✓ {getCleanFileName(formData.mapa_area_total_url)}
-                </p>
+              <Label className="text-slate-700 text-xs font-medium mb-2 block">Mapa Área Total (KML)</Label>
+              
+              {formData.mapa_area_total_urls && formData.mapa_area_total_urls.length > 0 && (
+                <div className="space-y-1.5 mb-3">
+                  {formData.mapa_area_total_urls.map((url, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 bg-white rounded border border-green-200">
+                      <a href={url} target="_blank" rel="noopener noreferrer" 
+                         className="flex items-center gap-1.5 text-green-600 hover:text-green-700 flex-1 truncate">
+                        <Map className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="text-xs truncate">{getCleanFileName(url)}</span>
+                      </a>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveFile('mapa_area_total_urls', idx)}
+                        className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               )}
+              
               <label className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50 transition-colors">
                 <Upload className="w-3.5 h-3.5 text-slate-400" />
                 <span className="text-xs text-slate-500">
-                  {isUploading.mapa_area_total_url ? 'Enviando...' : formData.mapa_area_total_url ? 'Substituir arquivo' : 'Selecionar arquivo'}
+                  {isUploading.mapa_area_total_urls ? 'Enviando...' : 'Adicionar arquivo'}
                 </span>
                 <input
                   type="file"
                   accept=".kml"
-                  onChange={(e) => handleFileUpload('mapa_area_total_url', e.target.files[0])}
-                  disabled={isUploading.mapa_area_total_url}
+                  onChange={(e) => handleFileUpload('mapa_area_total_urls', e.target.files[0])}
+                  disabled={isUploading.mapa_area_total_urls}
                   className="hidden"
                 />
               </label>
             </div>
 
             <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <div className="flex items-center justify-between mb-2">
-                <Label className="text-slate-700 text-xs font-medium">Mapa Área Agricultável (KML)</Label>
-                {formData.mapa_area_agricultavel_url && (
-                  <a href={formData.mapa_area_agricultavel_url} target="_blank" rel="noopener noreferrer" 
-                     className="flex items-center gap-1 text-green-600 hover:text-green-700">
-                    <Map className="w-3.5 h-3.5" />
-                  </a>
-                )}
-              </div>
-              {formData.mapa_area_agricultavel_url && (
-                <p className="text-xs text-green-700 font-medium mb-2 truncate">
-                  ✓ {getCleanFileName(formData.mapa_area_agricultavel_url)}
-                </p>
+              <Label className="text-slate-700 text-xs font-medium mb-2 block">Mapa Área Agricultável (KML)</Label>
+              
+              {formData.mapa_area_agricultavel_urls && formData.mapa_area_agricultavel_urls.length > 0 && (
+                <div className="space-y-1.5 mb-3">
+                  {formData.mapa_area_agricultavel_urls.map((url, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 bg-white rounded border border-green-200">
+                      <a href={url} target="_blank" rel="noopener noreferrer" 
+                         className="flex items-center gap-1.5 text-green-600 hover:text-green-700 flex-1 truncate">
+                        <Map className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="text-xs truncate">{getCleanFileName(url)}</span>
+                      </a>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveFile('mapa_area_agricultavel_urls', idx)}
+                        className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               )}
+              
               <label className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50 transition-colors">
                 <Upload className="w-3.5 h-3.5 text-slate-400" />
                 <span className="text-xs text-slate-500">
-                  {isUploading.mapa_area_agricultavel_url ? 'Enviando...' : formData.mapa_area_agricultavel_url ? 'Substituir arquivo' : 'Selecionar arquivo'}
+                  {isUploading.mapa_area_agricultavel_urls ? 'Enviando...' : 'Adicionar arquivo'}
                 </span>
                 <input
                   type="file"
                   accept=".kml"
-                  onChange={(e) => handleFileUpload('mapa_area_agricultavel_url', e.target.files[0])}
-                  disabled={isUploading.mapa_area_agricultavel_url}
+                  onChange={(e) => handleFileUpload('mapa_area_agricultavel_urls', e.target.files[0])}
+                  disabled={isUploading.mapa_area_agricultavel_urls}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Mapas KML */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <Label className="text-slate-700 text-xs font-medium mb-2 block">Mapa Área Total (KML)</Label>
+              
+              {formData.mapa_area_total_urls && formData.mapa_area_total_urls.length > 0 && (
+                <div className="space-y-1.5 mb-3">
+                  {formData.mapa_area_total_urls.map((url, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 bg-white rounded border border-green-200">
+                      <a href={url} target="_blank" rel="noopener noreferrer" 
+                         className="flex items-center gap-1.5 text-green-600 hover:text-green-700 flex-1 truncate">
+                        <Map className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="text-xs truncate">{getCleanFileName(url)}</span>
+                      </a>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveFile('mapa_area_total_urls', idx)}
+                        className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <label className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50 transition-colors">
+                <Upload className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-xs text-slate-500">
+                  {isUploading.mapa_area_total_urls ? 'Enviando...' : 'Adicionar arquivo'}
+                </span>
+                <input
+                  type="file"
+                  accept=".kml"
+                  onChange={(e) => handleFileUpload('mapa_area_total_urls', e.target.files[0])}
+                  disabled={isUploading.mapa_area_total_urls}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <Label className="text-slate-700 text-xs font-medium mb-2 block">Mapa Área Agricultável (KML)</Label>
+              
+              {formData.mapa_area_agricultavel_urls && formData.mapa_area_agricultavel_urls.length > 0 && (
+                <div className="space-y-1.5 mb-3">
+                  {formData.mapa_area_agricultavel_urls.map((url, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 bg-white rounded border border-green-200">
+                      <a href={url} target="_blank" rel="noopener noreferrer" 
+                         className="flex items-center gap-1.5 text-green-600 hover:text-green-700 flex-1 truncate">
+                        <Map className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="text-xs truncate">{getCleanFileName(url)}</span>
+                      </a>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveFile('mapa_area_agricultavel_urls', idx)}
+                        className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <label className="flex items-center justify-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50 transition-colors">
+                <Upload className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-xs text-slate-500">
+                  {isUploading.mapa_area_agricultavel_urls ? 'Enviando...' : 'Adicionar arquivo'}
+                </span>
+                <input
+                  type="file"
+                  accept=".kml"
+                  onChange={(e) => handleFileUpload('mapa_area_agricultavel_urls', e.target.files[0])}
+                  disabled={isUploading.mapa_area_agricultavel_urls}
                   className="hidden"
                 />
               </label>
@@ -2301,31 +2418,42 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
           {/* Contratos */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <div className="flex items-center justify-between mb-2">
-                <Label className="text-slate-700 text-xs font-medium">Contrato de Arrendamento</Label>
-                {formData.contrato_arrendamento_url && (
-                  <a href={formData.contrato_arrendamento_url} target="_blank" rel="noopener noreferrer" 
-                     className="flex items-center gap-1 text-red-500 hover:text-red-600">
-                    <FileIcon className="w-3.5 h-3.5" />
-                  </a>
-                )}
-              </div>
-              {formData.contrato_arrendamento_url && (
-                <p className="text-xs text-green-700 font-medium mb-2 truncate">
-                  ✓ {getCleanFileName(formData.contrato_arrendamento_url)}
-                </p>
+              <Label className="text-slate-700 text-xs font-medium mb-2 block">Contrato de Arrendamento</Label>
+              
+              {formData.contrato_arrendamento_urls && formData.contrato_arrendamento_urls.length > 0 && (
+                <div className="space-y-1.5 mb-3">
+                  {formData.contrato_arrendamento_urls.map((url, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 bg-white rounded border border-blue-200">
+                      <a href={url} target="_blank" rel="noopener noreferrer" 
+                         className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 flex-1 truncate">
+                        <FileIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="text-xs truncate">{getCleanFileName(url)}</span>
+                      </a>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveFile('contrato_arrendamento_urls', idx)}
+                        className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               )}
+              
               <div className="flex gap-2">
                 <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50 transition-colors">
                   <Upload className="w-3.5 h-3.5 text-slate-400" />
                   <span className="text-xs text-slate-500">
-                    {isUploading.contrato_arrendamento_url ? 'Enviando...' : formData.contrato_arrendamento_url ? 'Substituir' : 'Anexar'}
+                    {isUploading.contrato_arrendamento_urls ? 'Enviando...' : 'Adicionar'}
                   </span>
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx"
-                    onChange={(e) => handleFileUpload('contrato_arrendamento_url', e.target.files[0])}
-                    disabled={isUploading.contrato_arrendamento_url}
+                    onChange={(e) => handleFileUpload('contrato_arrendamento_urls', e.target.files[0])}
+                    disabled={isUploading.contrato_arrendamento_urls}
                     className="hidden"
                   />
                 </label>
@@ -2402,31 +2530,42 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
             </div>
 
             <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-              <div className="flex items-center justify-between mb-2">
-                <Label className="text-slate-700 text-xs font-medium">Carta de Anuência</Label>
-                {formData.carta_anuencia_url && (
-                  <a href={formData.carta_anuencia_url} target="_blank" rel="noopener noreferrer" 
-                     className="flex items-center gap-1 text-red-500 hover:text-red-600">
-                    <FileIcon className="w-3.5 h-3.5" />
-                  </a>
-                )}
-              </div>
-              {formData.carta_anuencia_url && (
-                <p className="text-xs text-green-700 font-medium mb-2 truncate">
-                  ✓ {getCleanFileName(formData.carta_anuencia_url)}
-                </p>
+              <Label className="text-slate-700 text-xs font-medium mb-2 block">Carta de Anuência</Label>
+              
+              {formData.carta_anuencia_urls && formData.carta_anuencia_urls.length > 0 && (
+                <div className="space-y-1.5 mb-3">
+                  {formData.carta_anuencia_urls.map((url, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 bg-white rounded border border-blue-200">
+                      <a href={url} target="_blank" rel="noopener noreferrer" 
+                         className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 flex-1 truncate">
+                        <FileIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="text-xs truncate">{getCleanFileName(url)}</span>
+                      </a>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveFile('carta_anuencia_urls', idx)}
+                        className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               )}
+              
               <div className="flex gap-2">
                 <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50 transition-colors">
                   <Upload className="w-3.5 h-3.5 text-slate-400" />
                   <span className="text-xs text-slate-500">
-                    {isUploading.carta_anuencia_url ? 'Enviando...' : formData.carta_anuencia_url ? 'Substituir' : 'Anexar'}
+                    {isUploading.carta_anuencia_urls ? 'Enviando...' : 'Adicionar'}
                   </span>
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx"
-                    onChange={(e) => handleFileUpload('carta_anuencia_url', e.target.files[0])}
-                    disabled={isUploading.carta_anuencia_url}
+                    onChange={(e) => handleFileUpload('carta_anuencia_urls', e.target.files[0])}
+                    disabled={isUploading.carta_anuencia_urls}
                     className="hidden"
                   />
                 </label>

@@ -4,11 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Download, Loader2, CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
+import { FileText, Download, Loader2, CheckCircle, AlertCircle, ExternalLink, Search } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
 export default function AtualizacaoDocumentos() {
+  // Estado de busca por matrícula
+  const [matriculaBusca, setMatriculaBusca] = useState("");
+  const [buscandoImovel, setBuscandoImovel] = useState(false);
+
   // Estados CND do ITR
   const [cib, setCib] = useState("");
   const [processandoCND, setProcessandoCND] = useState(false);
@@ -40,6 +44,106 @@ export default function AtualizacaoDocumentos() {
     "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN",
     "RS", "RO", "RR", "SC", "SP", "SE", "TO"
   ];
+
+  const formatarMatricula = (valor) => {
+    if (!valor) return "";
+    const numbers = String(valor).replace(/\D/g, '');
+    if (!numbers) return "";
+    return new Intl.NumberFormat('pt-BR').format(parseInt(numbers, 10));
+  };
+
+  const buscarImovelPorMatricula = async () => {
+    if (!matriculaBusca.trim()) {
+      toast.error("Digite o número da matrícula");
+      return;
+    }
+
+    try {
+      setBuscandoImovel(true);
+      
+      // Normalizar matrícula para busca (remover formatação)
+      const matriculaNormalizada = matriculaBusca.replace(/\D/g, '');
+      
+      // Buscar todos os imóveis
+      const todosImoveis = await base44.entities.Imovel.list("-created_date", 500);
+      
+      // Encontrar imóvel com matrícula correspondente
+      const imovelEncontrado = todosImoveis.find(imovel => {
+        const matriculaImovel = String(imovel.matricula_numero || "").replace(/\D/g, '');
+        return matriculaImovel === matriculaNormalizada;
+      });
+
+      if (!imovelEncontrado) {
+        toast.error("Imóvel não encontrado com esta matrícula");
+        return;
+      }
+
+      toast.success("Imóvel encontrado! Preenchendo dados...");
+
+      // Preencher CIB (Receita Federal)
+      if (imovelEncontrado.receita_federal) {
+        setCib(imovelEncontrado.receita_federal);
+      }
+
+      // Preencher dados do CCIR
+      if (imovelEncontrado.numero_incra) {
+        setCodigoImovel(imovelEncontrado.numero_incra);
+      }
+
+      // Extrair UF e município
+      if (imovelEncontrado.municipio) {
+        const partes = imovelEncontrado.municipio.split('/');
+        if (partes.length === 2) {
+          setMunicipioSede(partes[0].trim());
+          setUfSede(partes[1].trim());
+        }
+      }
+
+      // Buscar dados do proprietário nos dados da análise
+      let proprietarioPrincipal = null;
+      
+      if (imovelEncontrado.dados_analise_certidao) {
+        try {
+          const dadosAnalise = JSON.parse(imovelEncontrado.dados_analise_certidao);
+          if (dadosAnalise.proprietarios && dadosAnalise.proprietarios.length > 0) {
+            proprietarioPrincipal = dadosAnalise.proprietarios[0];
+          }
+        } catch (e) {
+          console.error("Erro ao parsear dados da análise:", e);
+        }
+      }
+
+      if (proprietarioPrincipal) {
+        const cpfCnpjLimpo = proprietarioPrincipal.cpf?.replace(/\D/g, '') || "";
+        
+        // Determinar se é pessoa física (11 dígitos) ou jurídica (14 dígitos)
+        if (cpfCnpjLimpo.length === 11) {
+          // Pessoa Física
+          setTipoPessoa("fisica");
+          setCpfCnpj(cpfCnpjLimpo);
+          setCpf(cpfCnpjLimpo);
+          setCnpj(""); // Limpar CNPJ
+          toast.info("Proprietário: Pessoa Física");
+        } else if (cpfCnpjLimpo.length === 14) {
+          // Pessoa Jurídica
+          setTipoPessoa("juridica");
+          setCpfCnpj(cpfCnpjLimpo);
+          setCnpj(cpfCnpjLimpo);
+          setCpf(""); // Limpar CPF
+          setNaturezaJuridica("Sociedade Empresária Limitada"); // Padrão
+          toast.info("Proprietário: Pessoa Jurídica");
+        }
+      } else {
+        toast.warning("Dados do proprietário não encontrados. Preencha manualmente.");
+      }
+
+    } catch (error) {
+      console.error("Erro ao buscar imóvel:", error);
+      toast.error("Erro ao buscar imóvel. Tente novamente.");
+    } finally {
+      setBuscandoImovel(false);
+    }
+  };
 
   const handleGerarCNDCpf = async () => {
     if (!cpf || !dataNascimento) {
@@ -173,9 +277,50 @@ export default function AtualizacaoDocumentos() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Atualização de Documentos</h1>
         <p className="text-sm text-gray-600">
-          Gere automaticamente CND do ITR e CCIR do INCRA preenchendo os dados abaixo
+          Gere automaticamente documentos oficiais preenchendo os dados abaixo
         </p>
       </div>
+
+      {/* Campo de busca por matrícula */}
+      <Card className="border-blue-200 bg-blue-50/30 mb-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base text-blue-900">
+            <Search className="w-4 h-4" />
+            Busca Rápida por Matrícula
+          </CardTitle>
+          <p className="text-xs text-blue-700 mt-1">
+            Digite a matrícula do imóvel para preencher automaticamente todos os campos
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex gap-2">
+            <Input
+              value={matriculaBusca}
+              onChange={(e) => setMatriculaBusca(formatarMatricula(e.target.value))}
+              placeholder="Ex: 7.969"
+              disabled={buscandoImovel}
+              className="flex-1 text-sm border-blue-300 focus:border-blue-500"
+            />
+            <Button
+              onClick={buscarImovelPorMatricula}
+              disabled={buscandoImovel || !matriculaBusca}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {buscandoImovel ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Buscando...
+                </>
+              ) : (
+                <>
+                  <Search className="w-4 h-4 mr-2" />
+                  Buscar
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* CND de CPF (Pessoa Física) */}

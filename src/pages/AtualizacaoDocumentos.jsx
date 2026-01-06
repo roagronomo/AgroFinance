@@ -12,6 +12,7 @@ export default function AtualizacaoDocumentos() {
   // Estado de busca por matrícula
   const [matriculaBusca, setMatriculaBusca] = useState("");
   const [buscandoImovel, setBuscandoImovel] = useState(false);
+  const [imovelNaoEncontrado, setImovelNaoEncontrado] = useState(false);
 
   // Estados CND do ITR
   const [cib, setCib] = useState("");
@@ -60,6 +61,19 @@ export default function AtualizacaoDocumentos() {
 
     try {
       setBuscandoImovel(true);
+      setImovelNaoEncontrado(false);
+      
+      // Limpar todos os campos antes de buscar
+      setCib("");
+      setCpf("");
+      setDataNascimento("");
+      setCnpj("");
+      setCodigoImovel("");
+      setUfSede("");
+      setMunicipioSede("");
+      setTipoPessoa("fisica");
+      setCpfCnpj("");
+      setNaturezaJuridica("Sociedade Empresária Limitada");
       
       // Normalizar matrícula para busca (remover formatação)
       const matriculaNormalizada = matriculaBusca.replace(/\D/g, '');
@@ -74,10 +88,12 @@ export default function AtualizacaoDocumentos() {
       });
 
       if (!imovelEncontrado) {
+        setImovelNaoEncontrado(true);
         toast.error("Imóvel não encontrado com esta matrícula");
         return;
       }
 
+      setImovelNaoEncontrado(false);
       toast.success("Imóvel encontrado! Preenchendo dados...");
 
       // Preencher CIB (Receita Federal)
@@ -230,7 +246,10 @@ export default function AtualizacaoDocumentos() {
           <div className="flex gap-2">
             <Input
               value={matriculaBusca}
-              onChange={(e) => setMatriculaBusca(formatarMatricula(e.target.value))}
+              onChange={(e) => {
+                setMatriculaBusca(formatarMatricula(e.target.value));
+                setImovelNaoEncontrado(false);
+              }}
               placeholder="Ex: 7.969"
               disabled={buscandoImovel}
               className="flex-1 text-sm border-blue-300 focus:border-blue-500"
@@ -253,6 +272,14 @@ export default function AtualizacaoDocumentos() {
               )}
             </Button>
           </div>
+          {imovelNaoEncontrado && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-800 font-medium flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                Imóvel não cadastrado. Cadastre o imóvel primeiro na seção "Cadastro de Imóveis".
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 

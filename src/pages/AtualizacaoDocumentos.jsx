@@ -14,6 +14,17 @@ export default function AtualizacaoDocumentos() {
   const [processandoCND, setProcessandoCND] = useState(false);
   const [resultadoCND, setResultadoCND] = useState(null);
 
+  // Estados CND de CPF
+  const [cpf, setCpf] = useState("");
+  const [dataNascimento, setDataNascimento] = useState("");
+  const [processandoCNDCpf, setProcessandoCNDCpf] = useState(false);
+  const [resultadoCNDCpf, setResultadoCNDCpf] = useState(null);
+
+  // Estados CND de CNPJ
+  const [cnpj, setCnpj] = useState("");
+  const [processandoCNDCnpj, setProcessandoCNDCnpj] = useState(false);
+  const [resultadoCNDCnpj, setResultadoCNDCnpj] = useState(null);
+
   // Estados CCIR do INCRA
   const [codigoImovel, setCodigoImovel] = useState("");
   const [ufSede, setUfSede] = useState("");
@@ -29,6 +40,63 @@ export default function AtualizacaoDocumentos() {
     "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN",
     "RS", "RO", "RR", "SC", "SP", "SE", "TO"
   ];
+
+  const handleGerarCNDCpf = async () => {
+    if (!cpf || !dataNascimento) {
+      toast.error("Preencha CPF e data de nascimento");
+      return;
+    }
+
+    try {
+      setProcessandoCNDCpf(true);
+      setResultadoCNDCpf(null);
+
+      const resultado = await base44.functions.invoke('gerarCndCpf', {
+        cpf: cpf.trim(),
+        dataNascimento: dataNascimento.trim()
+      });
+
+      if (resultado.data.success) {
+        setResultadoCNDCpf(resultado.data);
+        toast.success("CND de CPF gerada com sucesso!");
+      } else {
+        toast.error(resultado.data.error || "Erro ao gerar CND de CPF");
+      }
+    } catch (error) {
+      console.error("Erro ao gerar CND de CPF:", error);
+      toast.error("Erro ao gerar CND de CPF");
+    } finally {
+      setProcessandoCNDCpf(false);
+    }
+  };
+
+  const handleGerarCNDCnpj = async () => {
+    if (!cnpj || !cnpj.trim()) {
+      toast.error("Digite o CNPJ");
+      return;
+    }
+
+    try {
+      setProcessandoCNDCnpj(true);
+      setResultadoCNDCnpj(null);
+
+      const resultado = await base44.functions.invoke('gerarCndCnpj', {
+        cnpj: cnpj.trim()
+      });
+
+      if (resultado.data.success) {
+        setResultadoCNDCnpj(resultado.data);
+        toast.success("CND de CNPJ gerada com sucesso!");
+      } else {
+        toast.error(resultado.data.error || "Erro ao gerar CND de CNPJ");
+      }
+    } catch (error) {
+      console.error("Erro ao gerar CND de CNPJ:", error);
+      toast.error("Erro ao gerar CND de CNPJ");
+    } finally {
+      setProcessandoCNDCnpj(false);
+    }
+  };
 
   const handleGerarCND = async () => {
     if (!cib || !cib.trim()) {
@@ -110,6 +178,141 @@ export default function AtualizacaoDocumentos() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* CND de CPF (Pessoa Física) */}
+        <Card className="border-slate-200">
+          <CardHeader className="bg-slate-50 border-b">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <FileText className="w-5 h-5 text-slate-700" />
+              CND de CPF (Pessoa Física)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            <div>
+              <Label className="text-sm font-medium text-gray-700 mb-1.5 block">
+                CPF
+              </Label>
+              <Input
+                value={cpf}
+                onChange={(e) => setCpf(e.target.value)}
+                placeholder="000.000.000-00"
+                disabled={processandoCNDCpf}
+                className="text-sm"
+              />
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium text-gray-700 mb-1.5 block">
+                Data de Nascimento
+              </Label>
+              <Input
+                value={dataNascimento}
+                onChange={(e) => setDataNascimento(e.target.value)}
+                placeholder="DD/MM/AAAA"
+                disabled={processandoCNDCpf}
+                className="text-sm"
+              />
+            </div>
+
+            <Button
+              onClick={handleGerarCNDCpf}
+              disabled={processandoCNDCpf || !cpf || !dataNascimento}
+              className="w-full bg-slate-700 hover:bg-slate-800"
+            >
+              {processandoCNDCpf ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Gerando CND...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Gerar CND de CPF
+                </>
+              )}
+            </Button>
+
+            {resultadoCNDCpf && (
+              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-3">
+                <div className="flex items-center gap-2 text-emerald-800 font-semibold text-sm">
+                  <CheckCircle className="w-4 h-4" />
+                  Documento gerado com sucesso
+                </div>
+                {resultadoCNDCpf.pdfUrl && (
+                  <Button
+                    onClick={() => handleBaixarDocumento(resultadoCNDCpf.pdfUrl, `CND_CPF_${cpf}.pdf`)}
+                    size="sm"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Baixar PDF
+                  </Button>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* CND de CNPJ (Pessoa Jurídica) */}
+        <Card className="border-slate-200">
+          <CardHeader className="bg-slate-50 border-b">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <FileText className="w-5 h-5 text-slate-700" />
+              CND de CNPJ (Pessoa Jurídica)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            <div>
+              <Label className="text-sm font-medium text-gray-700 mb-1.5 block">
+                CNPJ
+              </Label>
+              <Input
+                value={cnpj}
+                onChange={(e) => setCnpj(e.target.value)}
+                placeholder="00.000.000/0000-00"
+                disabled={processandoCNDCnpj}
+                className="text-sm"
+              />
+            </div>
+
+            <Button
+              onClick={handleGerarCNDCnpj}
+              disabled={processandoCNDCnpj || !cnpj}
+              className="w-full bg-slate-700 hover:bg-slate-800"
+            >
+              {processandoCNDCnpj ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Gerando CND...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Gerar CND de CNPJ
+                </>
+              )}
+            </Button>
+
+            {resultadoCNDCnpj && (
+              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg space-y-3">
+                <div className="flex items-center gap-2 text-emerald-800 font-semibold text-sm">
+                  <CheckCircle className="w-4 h-4" />
+                  Documento gerado com sucesso
+                </div>
+                {resultadoCNDCnpj.pdfUrl && (
+                  <Button
+                    onClick={() => handleBaixarDocumento(resultadoCNDCnpj.pdfUrl, `CND_CNPJ_${cnpj}.pdf`)}
+                    size="sm"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Baixar PDF
+                  </Button>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* CND do ITR */}
         <Card className="border-slate-200">
           <CardHeader className="bg-slate-50 border-b">

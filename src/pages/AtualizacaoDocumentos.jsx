@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Download, Loader2, CheckCircle, AlertCircle, ExternalLink, Search } from "lucide-react";
+import { FileText, Download, Loader2, CheckCircle, AlertCircle, ExternalLink, Search, Copy } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
@@ -222,6 +222,11 @@ export default function AtualizacaoDocumentos() {
     document.body.removeChild(link);
   };
 
+  const copiarParaClipboard = (texto, label) => {
+    navigator.clipboard.writeText(texto);
+    toast.success(`${label} copiado!`);
+  };
+
   return (
     <div className="p-4 md:p-8 space-y-6 max-w-6xl mx-auto">
       <div className="mb-6">
@@ -297,26 +302,48 @@ export default function AtualizacaoDocumentos() {
               <Label className="text-sm font-medium text-gray-700 mb-1.5 block">
                 CPF
               </Label>
-              <Input
-                value={cpf}
-                onChange={(e) => setCpf(e.target.value)}
-                placeholder="000.000.000-00"
-                disabled={processandoCNDCpf}
-                className="text-sm"
-              />
+              <div className="flex gap-2">
+                <Input
+                  value={cpf}
+                  onChange={(e) => setCpf(e.target.value)}
+                  placeholder="000.000.000-00"
+                  disabled={processandoCNDCpf}
+                  className="text-sm flex-1"
+                />
+                <Button
+                  onClick={() => copiarParaClipboard(cpf, "CPF")}
+                  disabled={!cpf}
+                  size="icon"
+                  variant="outline"
+                  className="h-10 w-10 flex-shrink-0"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
             <div>
               <Label className="text-sm font-medium text-gray-700 mb-1.5 block">
                 Data de Nascimento
               </Label>
-              <Input
-                value={dataNascimento}
-                onChange={(e) => setDataNascimento(e.target.value)}
-                placeholder="DD/MM/AAAA"
-                disabled={processandoCNDCpf}
-                className="text-sm"
-              />
+              <div className="flex gap-2">
+                <Input
+                  value={dataNascimento}
+                  onChange={(e) => setDataNascimento(e.target.value)}
+                  placeholder="DD/MM/AAAA"
+                  disabled={processandoCNDCpf}
+                  className="text-sm flex-1"
+                />
+                <Button
+                  onClick={() => copiarParaClipboard(dataNascimento, "Data")}
+                  disabled={!dataNascimento}
+                  size="icon"
+                  variant="outline"
+                  className="h-10 w-10 flex-shrink-0"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
             <Button
@@ -343,13 +370,24 @@ export default function AtualizacaoDocumentos() {
               <Label className="text-sm font-medium text-gray-700 mb-1.5 block">
                 CNPJ
               </Label>
-              <Input
-                value={cnpj}
-                onChange={(e) => setCnpj(e.target.value)}
-                placeholder="00.000.000/0000-00"
-                disabled={processandoCNDCnpj}
-                className="text-sm"
-              />
+              <div className="flex gap-2">
+                <Input
+                  value={cnpj}
+                  onChange={(e) => setCnpj(e.target.value)}
+                  placeholder="00.000.000/0000-00"
+                  disabled={processandoCNDCnpj}
+                  className="text-sm flex-1"
+                />
+                <Button
+                  onClick={() => copiarParaClipboard(cnpj, "CNPJ")}
+                  disabled={!cnpj}
+                  size="icon"
+                  variant="outline"
+                  className="h-10 w-10 flex-shrink-0"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
             <Button
@@ -376,13 +414,24 @@ export default function AtualizacaoDocumentos() {
               <Label className="text-sm font-medium text-gray-700 mb-1.5 block">
                 Número do CIB/NIRF
               </Label>
-              <Input
-                value={cib}
-                onChange={(e) => setCib(e.target.value)}
-                placeholder="Ex: 1.944.692-6"
-                disabled={processandoCND}
-                className="text-sm"
-              />
+              <div className="flex gap-2">
+                <Input
+                  value={cib}
+                  onChange={(e) => setCib(e.target.value)}
+                  placeholder="Ex: 1.944.692-6"
+                  disabled={processandoCND}
+                  className="text-sm flex-1"
+                />
+                <Button
+                  onClick={() => copiarParaClipboard(cib, "CIB")}
+                  disabled={!cib}
+                  size="icon"
+                  variant="outline"
+                  className="h-10 w-10 flex-shrink-0"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
               <p className="text-xs text-gray-500 mt-1">
                 Digite o código do imóvel rural (CIB ou NIRF)
               </p>
@@ -412,13 +461,24 @@ export default function AtualizacaoDocumentos() {
               <Label className="text-sm font-medium text-gray-700 mb-1.5 block">
                 Código do Imóvel Rural
               </Label>
-              <Input
-                value={codigoImovel}
-                onChange={(e) => setCodigoImovel(e.target.value)}
-                placeholder="Ex: 936.103.000.787-0"
-                disabled={processandoCCIR}
-                className="text-sm"
-              />
+              <div className="flex gap-2">
+                <Input
+                  value={codigoImovel}
+                  onChange={(e) => setCodigoImovel(e.target.value)}
+                  placeholder="Ex: 936.103.000.787-0"
+                  disabled={processandoCCIR}
+                  className="text-sm flex-1"
+                />
+                <Button
+                  onClick={() => copiarParaClipboard(codigoImovel, "Código")}
+                  disabled={!codigoImovel}
+                  size="icon"
+                  variant="outline"
+                  className="h-10 w-10 flex-shrink-0"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -444,13 +504,24 @@ export default function AtualizacaoDocumentos() {
                 <Label className="text-sm font-medium text-gray-700 mb-1.5 block">
                   Município Sede
                 </Label>
-                <Input
-                  value={municipioSede}
-                  onChange={(e) => setMunicipioSede(e.target.value)}
-                  placeholder="Ex: Goiatuba"
-                  disabled={processandoCCIR}
-                  className="text-sm"
-                />
+                <div className="flex gap-2">
+                  <Input
+                    value={municipioSede}
+                    onChange={(e) => setMunicipioSede(e.target.value)}
+                    placeholder="Ex: Goiatuba"
+                    disabled={processandoCCIR}
+                    className="text-sm flex-1"
+                  />
+                  <Button
+                    onClick={() => copiarParaClipboard(municipioSede, "Município")}
+                    disabled={!municipioSede}
+                    size="icon"
+                    variant="outline"
+                    className="h-10 w-10 flex-shrink-0"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </div>
 
@@ -473,13 +544,24 @@ export default function AtualizacaoDocumentos() {
               <Label className="text-sm font-medium text-gray-700 mb-1.5 block">
                 {tipoPessoa === "fisica" ? "CPF" : "CNPJ"} do Titular
               </Label>
-              <Input
-                value={cpfCnpj}
-                onChange={(e) => setCpfCnpj(e.target.value)}
-                placeholder={tipoPessoa === "fisica" ? "000.000.000-00" : "00.000.000/0000-00"}
-                disabled={processandoCCIR}
-                className="text-sm"
-              />
+              <div className="flex gap-2">
+                <Input
+                  value={cpfCnpj}
+                  onChange={(e) => setCpfCnpj(e.target.value)}
+                  placeholder={tipoPessoa === "fisica" ? "000.000.000-00" : "00.000.000/0000-00"}
+                  disabled={processandoCCIR}
+                  className="text-sm flex-1"
+                />
+                <Button
+                  onClick={() => copiarParaClipboard(cpfCnpj, tipoPessoa === "fisica" ? "CPF" : "CNPJ")}
+                  disabled={!cpfCnpj}
+                  size="icon"
+                  variant="outline"
+                  className="h-10 w-10 flex-shrink-0"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
             {tipoPessoa === "juridica" && (

@@ -76,18 +76,31 @@ export default function AreasFinanciaveis() {
     setMunicipioFiltro("todos");
   };
 
-  // Calcular área financiável
+  // Calcular área financiável (excluindo pastagens)
   const calcularAreaFinanciavel = (imovel) => {
     const tipo = imovel.tipo_propriedade || "proprio";
     
+    // Descontar área de pastagens da área agricultável
+    const areaAgricultavel = parseFloat(imovel.area_agricultavel) || 0;
+    const areaPastagens = parseFloat(imovel.area_pastagens) || 0;
+    const areaFinanciavelReal = Math.max(0, areaAgricultavel - areaPastagens);
+    
     if (tipo === "terceiros") {
-      return parseFloat(imovel.area_cedida) || 0;
+      const areaCedida = parseFloat(imovel.area_cedida) || 0;
+      // Aplicar a mesma proporção de desconto de pastagens na área cedida
+      const proporcaoPastagens = areaAgricultavel > 0 ? areaPastagens / areaAgricultavel : 0;
+      return Math.max(0, areaCedida * (1 - proporcaoPastagens));
     } else if (tipo === "proprio_condominio") {
-      // Se for condomínio, usar área cedida se houver, senão usar agricultável
-      return parseFloat(imovel.area_cedida) || parseFloat(imovel.area_agricultavel) || 0;
+      // Se for condomínio, usar área cedida se houver, senão usar agricultável (ambos descontando pastagens)
+      const areaCedida = parseFloat(imovel.area_cedida) || 0;
+      if (areaCedida > 0) {
+        const proporcaoPastagens = areaAgricultavel > 0 ? areaPastagens / areaAgricultavel : 0;
+        return Math.max(0, areaCedida * (1 - proporcaoPastagens));
+      }
+      return areaFinanciavelReal;
     } else {
       // Próprio
-      return parseFloat(imovel.area_agricultavel) || 0;
+      return areaFinanciavelReal;
     }
   };
 

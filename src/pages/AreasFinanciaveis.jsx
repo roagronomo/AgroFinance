@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import SeletorCliente from "../components/clientes/SeletorCliente";
-import { FileDown, MapPin, Building2, TrendingUp, AlertTriangle, ExternalLink, ChevronDown, ChevronRight } from "lucide-react";
+import { FileDown, MapPin, Building2, TrendingUp, AlertTriangle, ExternalLink, ChevronDown, ChevronRight, Info } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import jsPDF from "jspdf";
@@ -768,6 +768,17 @@ export default function AreasFinanciaveis() {
                                   )}
                                   {imovel.temExcesso && (
                                     <AlertTriangle className="w-4 h-4 text-red-500" title="Financiamento acima da área financiável" />
+                                  )}
+                                  {(parseFloat(imovel.area_pastagens) || 0) > 0 && (
+                                    <div className="group relative">
+                                      <Info className="w-3.5 h-3.5 text-blue-400" />
+                                      <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block z-10 w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg">
+                                        <div className="font-semibold mb-1">Área de Pastagens</div>
+                                        <div className="text-gray-300">
+                                          {formatArea(imovel.area_pastagens)} ha de pastagens foram descontados da área financiável
+                                        </div>
+                                      </div>
+                                    </div>
                                   )}
                                 </div>
                               </td>

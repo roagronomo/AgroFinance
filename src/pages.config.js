@@ -15,6 +15,7 @@ import NovoProjeto from './pages/NovoProjeto';
 import ProducaoAgricola from './pages/ProducaoAgricola';
 import TodosProjetos from './pages/TodosProjetos';
 import Vencimentos from './pages/Vencimentos';
+import OutrosServicos from './pages/OutrosServicos';
 import __Layout from './Layout.jsx';
 
 
@@ -36,6 +37,7 @@ export const PAGES = {
     "ProducaoAgricola": ProducaoAgricola,
     "TodosProjetos": TodosProjetos,
     "Vencimentos": Vencimentos,
+    "OutrosServicos": OutrosServicos,
 }
 
 export const pagesConfig = {

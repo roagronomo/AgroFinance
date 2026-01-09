@@ -132,6 +132,11 @@ const navigationSections = [
         url: createPageUrl("ElaboracaoARTs"),
         icon: FileSignature,
       },
+      {
+        title: "Outros Serviços",
+        url: createPageUrl("OutrosServicos"),
+        icon: FileText,
+      },
     ]
   }
 ];

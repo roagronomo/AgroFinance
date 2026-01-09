@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { ProjetoFinanciamento } from "@/entities/ProjetoFinanciamento";
+import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -30,8 +31,11 @@ export default function Dashboard() {
   const [anoSelecionado, setAnoSelecionado] = useState(new Date().getFullYear().toString());
   const [filtroModal, setFiltroModal] = useState(null);
 
+  const [outrosServicos, setOutrosServicos] = useState([]);
+
   useEffect(() => {
     carregarTodosProjetos();
+    carregarOutrosServicos();
   }, []);
 
   useEffect(() => {
@@ -57,6 +61,15 @@ export default function Dashboard() {
       console.error("Erro ao carregar projetos:", error);
     }
     setIsLoading(false);
+  };
+
+  const carregarOutrosServicos = async () => {
+    try {
+      const data = await base44.entities.OutroServico.list("-data_protocolo");
+      setOutrosServicos(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar outros serviços:", error);
+    }
   };
 
   const anosDisponiveis = useMemo(() => {
@@ -86,6 +99,23 @@ export default function Dashboard() {
       ? (projetosComTaxa.reduce((sum, p) => sum + p.taxa_juros, 0) / projetosComTaxa.length) 
       : 0;
 
+    // Filtrar outros serviços pelo ano selecionado
+    const servicosFiltrados = anoSelecionado === "todos" 
+      ? outrosServicos 
+      : outrosServicos.filter(s => 
+          s.data_protocolo && !isNaN(new Date(s.data_protocolo)) &&
+          new Date(s.data_protocolo).getFullYear().toString() === anoSelecionado
+        );
+
+    // Calcular valores dos outros serviços
+    const valorReceberServicos = servicosFiltrados.reduce((sum, s) => sum + (s.valor_receber || 0), 0);
+    const valorAReceberServicos = servicosFiltrados
+      .filter(s => s.status === 'em_analise')
+      .reduce((sum, s) => sum + (s.valor_receber || 0), 0);
+    const valorRecebidoServicos = servicosFiltrados
+      .filter(s => s.status === 'concluido')
+      .reduce((sum, s) => sum + (s.valor_receber || 0), 0);
+
     return {
       total: projetos.length,
       emAnalise: projetos.filter(p => p.status === "em_analise").length,
@@ -94,13 +124,13 @@ export default function Dashboard() {
       valorTotalFinanciado: projetos
         .filter(p => p.status !== 'cancelado')
         .reduce((sum, p) => sum + (p.valor_financiado || 0), 0),
-      valorTotalReceber: projetos.reduce((sum, p) => sum + (p.valor_receber || 0), 0),
+      valorTotalReceber: projetos.reduce((sum, p) => sum + (p.valor_receber || 0), 0) + valorReceberServicos,
       valorAReceber: projetos
         .filter(p => p.status === 'em_analise')
-        .reduce((sum, p) => sum + (p.valor_receber || 0), 0),
+        .reduce((sum, p) => sum + (p.valor_receber || 0), 0) + valorAReceberServicos,
       valorRecebido: projetos
         .filter(p => p.status === 'concluido')
-        .reduce((sum, p) => sum + (p.valor_receber || 0), 0),
+        .reduce((sum, p) => sum + (p.valor_receber || 0), 0) + valorRecebidoServicos,
       taxaJurosMedia: taxaMedia,
     };
   };
@@ -112,19 +142,36 @@ export default function Dashboard() {
   };
 
   const projetosFiltradosModal = useMemo(() => {
-    if (!filtroModal) return [];
+    if (!filtroModal) return { projetos: [], servicos: [] };
+    
+    // Filtrar outros serviços pelo ano selecionado
+    const servicosFiltrados = anoSelecionado === "todos" 
+      ? outrosServicos 
+      : outrosServicos.filter(s => 
+          s.data_protocolo && !isNaN(new Date(s.data_protocolo)) &&
+          new Date(s.data_protocolo).getFullYear().toString() === anoSelecionado
+        );
     
     switch (filtroModal) {
       case 'em_analise':
-        return projetos.filter(p => p.status === 'em_analise');
+        return {
+          projetos: projetos.filter(p => p.status === 'em_analise'),
+          servicos: servicosFiltrados.filter(s => s.status === 'em_analise')
+        };
       case 'concluido':
-        return projetos.filter(p => p.status === 'concluido');
+        return {
+          projetos: projetos.filter(p => p.status === 'concluido'),
+          servicos: servicosFiltrados.filter(s => s.status === 'concluido')
+        };
       case 'todos':
-        return projetos;
+        return {
+          projetos: projetos,
+          servicos: servicosFiltrados
+        };
       default:
-        return [];
+        return { projetos: [], servicos: [] };
     }
-  }, [filtroModal, projetos]);
+  }, [filtroModal, projetos, outrosServicos, anoSelecionado]);
 
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen">
@@ -214,7 +261,7 @@ export default function Dashboard() {
                     {filtroModal === 'todos' && 'Todos os Projetos'}
                   </h2>
                   <p className="text-green-100">
-                    {projetosFiltradosModal.length} projeto(s) encontrado(s)
+                    {projetosFiltradosModal.projetos.length} projeto(s) e {projetosFiltradosModal.servicos.length} outro(s) serviço(s)
                   </p>
                 </div>
                 <Button
@@ -229,14 +276,14 @@ export default function Dashboard() {
             </div>
 
             <div className="p-6 overflow-y-auto max-h-[calc(85vh-120px)]">
-              {projetosFiltradosModal.length === 0 ? (
+              {projetosFiltradosModal.projetos.length === 0 && projetosFiltradosModal.servicos.length === 0 ? (
                 <div className="text-center py-12">
                   <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 text-lg">Nenhum projeto encontrado</p>
+                  <p className="text-gray-500 text-lg">Nenhum projeto ou serviço encontrado</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {projetosFiltradosModal.map((projeto) => (
+                  {projetosFiltradosModal.projetos.map((projeto) => (
                     <Card key={projeto.id} className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
                       <CardContent className="p-5">
                         <div className="flex flex-col lg:flex-row justify-between gap-4">
@@ -298,6 +345,63 @@ export default function Dashboard() {
                                 variant="outline" 
                                 size="sm" 
                                 className="w-full border-green-300 text-green-700 hover:bg-green-50"
+                              >
+                                Ver Detalhes
+                              </Button>
+                            </Link>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  
+                  {projetosFiltradosModal.servicos.map((servico) => (
+                    <Card key={`servico-${servico.id}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
+                      <CardContent className="p-5">
+                        <div className="flex flex-col lg:flex-row justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="text-lg font-bold text-blue-900">
+                                {servico.cliente_nome}
+                              </h3>
+                              <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                                Outro Serviço
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                              <div className="md:col-span-2">
+                                <span className="text-gray-600">Descrição: </span>
+                                <span className="font-medium text-gray-800">{servico.descricao_servico}</span>
+                              </div>
+                              {servico.banco && (
+                                <div>
+                                  <span className="text-gray-600">Banco: </span>
+                                  <span className="font-medium text-gray-800">{servico.banco}</span>
+                                </div>
+                              )}
+                              <div>
+                                <span className="text-gray-600">A Receber: </span>
+                                <span className="font-bold text-yellow-600">
+                                  R$ {(servico.valor_receber || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </span>
+                              </div>
+                              {servico.data_protocolo && (
+                                <div>
+                                  <span className="text-gray-600">Protocolo: </span>
+                                  <span className="font-medium text-gray-800">
+                                    {format(new Date(servico.data_protocolo), 'dd/MM/yyyy', { locale: ptBR })}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="flex lg:flex-col gap-2">
+                            <Link to={createPageUrl("OutrosServicos")} className="flex-1 lg:flex-none">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="w-full border-blue-300 text-blue-700 hover:bg-blue-50"
                               >
                                 Ver Detalhes
                               </Button>

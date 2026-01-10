@@ -9,13 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Edit, Trash2, Search, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import SeletorCliente from "../components/clientes/SeletorCliente";
 
 export default function OutrosServicos() {
   const [servicos, setServicos] = useState([]);
+  const [clientes, setClientes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingServico, setEditingServico] = useState(null);
   const [busca, setBusca] = useState("");
+  const [clienteSelecionado, setClienteSelecionado] = useState(null);
   const [formData, setFormData] = useState({
     cliente_nome: "",
     data_protocolo: "",
@@ -27,7 +30,17 @@ export default function OutrosServicos() {
 
   useEffect(() => {
     carregarServicos();
+    carregarClientes();
   }, []);
+
+  const carregarClientes = async () => {
+    try {
+      const data = await base44.entities.Cliente.list("nome");
+      setClientes(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar clientes:", error);
+    }
+  };
 
   const carregarServicos = async () => {
     try {
@@ -45,9 +58,10 @@ export default function OutrosServicos() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const valorLimpo = formData.valor_receber.replace(/\./g, '').replace(',', '.');
       const dados = {
         ...formData,
-        valor_receber: parseFloat(formData.valor_receber) || 0
+        valor_receber: parseFloat(valorLimpo) || 0
       };
 
       if (editingServico) {
@@ -68,12 +82,14 @@ export default function OutrosServicos() {
 
   const handleEditar = (servico) => {
     setEditingServico(servico);
+    const clienteEncontrado = clientes.find(c => c.nome === servico.cliente_nome);
+    setClienteSelecionado(clienteEncontrado || null);
     setFormData({
       cliente_nome: servico.cliente_nome || "",
       data_protocolo: servico.data_protocolo || "",
       status: servico.status || "em_analise",
       banco: servico.banco || "",
-      valor_receber: servico.valor_receber?.toString() || "",
+      valor_receber: servico.valor_receber ? formatarMoeda(servico.valor_receber) : "",
       descricao_servico: servico.descricao_servico || ""
     });
     setShowForm(true);
@@ -95,6 +111,7 @@ export default function OutrosServicos() {
   const handleCancelar = () => {
     setShowForm(false);
     setEditingServico(null);
+    setClienteSelecionado(null);
     setFormData({
       cliente_nome: "",
       data_protocolo: "",
@@ -103,6 +120,22 @@ export default function OutrosServicos() {
       valor_receber: "",
       descricao_servico: ""
     });
+  };
+
+  const formatarMoeda = (valor) => {
+    if (!valor) return "";
+    const numero = typeof valor === 'number' ? valor : parseFloat(valor.toString().replace(/\D/g, '')) / 100;
+    return numero.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const handleValorChange = (e) => {
+    const valor = e.target.value.replace(/\D/g, '');
+    setFormData({...formData, valor_receber: formatarMoeda(parseFloat(valor) / 100)});
+  };
+
+  const handleClienteSelect = (cliente) => {
+    setClienteSelecionado(cliente);
+    setFormData({...formData, cliente_nome: cliente?.nome || ""});
   };
 
   const servicosFiltrados = servicos.filter(s => 
@@ -143,15 +176,18 @@ export default function OutrosServicos() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label>Cliente *</Label>
+                <SeletorCliente
+                  clientes={clientes}
+                  onSelect={handleClienteSelect}
+                  selectedClientId={clienteSelecionado?.id}
+                  isLoading={false}
+                  showClearButton={false}
+                />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Nome do Cliente *</Label>
-                  <Input
-                    value={formData.cliente_nome}
-                    onChange={(e) => setFormData({...formData, cliente_nome: e.target.value})}
-                    required
-                  />
-                </div>
 
                 <div>
                   <Label>Data do Protocolo *</Label>
@@ -180,20 +216,29 @@ export default function OutrosServicos() {
 
                 <div>
                   <Label>Banco</Label>
-                  <Input
-                    value={formData.banco}
-                    onChange={(e) => setFormData({...formData, banco: e.target.value})}
-                    placeholder="Opcional"
-                  />
+                  <Select value={formData.banco} onValueChange={(value) => setFormData({...formData, banco: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o banco" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={null}>Nenhum</SelectItem>
+                      <SelectItem value="banco_do_brasil">Banco do Brasil</SelectItem>
+                      <SelectItem value="caixa">Caixa Econômica</SelectItem>
+                      <SelectItem value="bradesco">Bradesco</SelectItem>
+                      <SelectItem value="sicoob">Sicoob</SelectItem>
+                      <SelectItem value="sicredi">Sicredi</SelectItem>
+                      <SelectItem value="santander">Santander</SelectItem>
+                      <SelectItem value="outros">Outros</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
-                  <Label>Valor a Receber *</Label>
+                  <Label>Valor a Receber (R$) *</Label>
                   <Input
-                    type="number"
-                    step="0.01"
                     value={formData.valor_receber}
-                    onChange={(e) => setFormData({...formData, valor_receber: e.target.value})}
+                    onChange={handleValorChange}
+                    placeholder="0,00"
                     required
                   />
                 </div>
@@ -280,7 +325,18 @@ export default function OutrosServicos() {
                     <p className="text-gray-600 text-sm mb-2">{servico.descricao_servico}</p>
                     <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                       <span>📅 {format(new Date(servico.data_protocolo + 'T00:00:00'), 'dd/MM/yyyy')}</span>
-                      {servico.banco && <span>🏦 {servico.banco}</span>}
+                      {servico.banco && (
+                        <span>🏦 {
+                          servico.banco === 'banco_do_brasil' ? 'Banco do Brasil' :
+                          servico.banco === 'caixa' ? 'Caixa Econômica' :
+                          servico.banco === 'bradesco' ? 'Bradesco' :
+                          servico.banco === 'sicoob' ? 'Sicoob' :
+                          servico.banco === 'sicredi' ? 'Sicredi' :
+                          servico.banco === 'santander' ? 'Santander' :
+                          servico.banco === 'outros' ? 'Outros' :
+                          servico.banco
+                        }</span>
+                      )}
                       <span className="font-semibold text-green-600">
                         💰 R$ {servico.valor_receber?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>

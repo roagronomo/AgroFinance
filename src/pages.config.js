@@ -12,10 +12,10 @@ import ElaboracaoARTs from './pages/ElaboracaoARTs';
 import GerenciamentoARTs from './pages/GerenciamentoARTs';
 import Home from './pages/Home';
 import NovoProjeto from './pages/NovoProjeto';
+import OutrosServicos from './pages/OutrosServicos';
 import ProducaoAgricola from './pages/ProducaoAgricola';
 import TodosProjetos from './pages/TodosProjetos';
 import Vencimentos from './pages/Vencimentos';
-import OutrosServicos from './pages/OutrosServicos';
 import __Layout from './Layout.jsx';
 
 
@@ -34,10 +34,10 @@ export const PAGES = {
     "GerenciamentoARTs": GerenciamentoARTs,
     "Home": Home,
     "NovoProjeto": NovoProjeto,
+    "OutrosServicos": OutrosServicos,
     "ProducaoAgricola": ProducaoAgricola,
     "TodosProjetos": TodosProjetos,
     "Vencimentos": Vencimentos,
-    "OutrosServicos": OutrosServicos,
 }
 
 export const pagesConfig = {

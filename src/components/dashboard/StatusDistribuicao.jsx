@@ -133,7 +133,7 @@ export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [
               <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-100">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex flex-col">
-                    <span className="text-2xl font-bold text-gray-800">{formatarMoeda(totalAnoAtual)}</span>
+                    <span className="text-base font-bold text-gray-800">{formatarMoeda(totalAnoAtual)}</span>
                     <span className="text-xs text-gray-400">em {anoAtual}</span>
                   </div>
                   {renderIndicador(diferencaAnual, percentualAnual)}
@@ -169,7 +169,7 @@ export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [
               <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-100">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex flex-col">
-                    <span className="text-2xl font-bold text-gray-800">{formatarMoeda(totalMesAnoAtual)}</span>
+                    <span className="text-base font-bold text-gray-800">{formatarMoeda(totalMesAnoAtual)}</span>
                     <span className="text-xs text-gray-500">em {mesNome}/{anoAtual}</span>
                   </div>
                   {renderIndicador(diferencaMensal, percentualMensal)}

@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Minus, BarChart3, Calendar } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [] }) {
+export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [], outrosServicos = [] }) {
   const agora = new Date();
   const anoAtual = agora.getFullYear();
   const mesAtual = agora.getMonth(); // 0-11
@@ -36,11 +36,41 @@ export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [
     return data.getFullYear() === anoAnterior && data.getMonth() === mesAtual;
   });
 
-  // Calcular totais em VALORES (R$) ao invés de quantidade - excluir cancelados
-  const totalAnoAtual = projetosAnoAtual.reduce((sum, p) => sum + (p.valor_financiado || 0), 0);
-  const totalAnoAnterior = projetosAnoAnterior.reduce((sum, p) => sum + (p.valor_financiado || 0), 0);
-  const totalMesAnoAtual = projetosMesAtualAnoAtual.reduce((sum, p) => sum + (p.valor_financiado || 0), 0);
-  const totalMesAnoAnterior = projetosMesAtualAnoAnterior.reduce((sum, p) => sum + (p.valor_financiado || 0), 0);
+  // Filtrar outros serviços por ano - excluir cancelados
+  const servicosAnoAtual = outrosServicos.filter(s => {
+    if (!s.data_protocolo || s.status === 'cancelado') return false;
+    const data = new Date(s.data_protocolo);
+    return data.getFullYear() === anoAtual;
+  });
+
+  const servicosAnoAnterior = outrosServicos.filter(s => {
+    if (!s.data_protocolo || s.status === 'cancelado') return false;
+    const data = new Date(s.data_protocolo);
+    return data.getFullYear() === anoAnterior;
+  });
+
+  // Filtrar outros serviços por mês - excluir cancelados
+  const servicosMesAtualAnoAtual = outrosServicos.filter(s => {
+    if (!s.data_protocolo || s.status === 'cancelado') return false;
+    const data = new Date(s.data_protocolo);
+    return data.getFullYear() === anoAtual && data.getMonth() === mesAtual;
+  });
+
+  const servicosMesAtualAnoAnterior = outrosServicos.filter(s => {
+    if (!s.data_protocolo || s.status === 'cancelado') return false;
+    const data = new Date(s.data_protocolo);
+    return data.getFullYear() === anoAnterior && data.getMonth() === mesAtual;
+  });
+
+  // Calcular totais em VALORES (R$) incluindo outros serviços - excluir cancelados
+  const totalAnoAtual = projetosAnoAtual.reduce((sum, p) => sum + (p.valor_financiado || 0), 0) +
+                        servicosAnoAtual.reduce((sum, s) => sum + (s.valor_receber || 0), 0);
+  const totalAnoAnterior = projetosAnoAnterior.reduce((sum, p) => sum + (p.valor_financiado || 0), 0) +
+                           servicosAnoAnterior.reduce((sum, s) => sum + (s.valor_receber || 0), 0);
+  const totalMesAnoAtual = projetosMesAtualAnoAtual.reduce((sum, p) => sum + (p.valor_financiado || 0), 0) +
+                           servicosMesAtualAnoAtual.reduce((sum, s) => sum + (s.valor_receber || 0), 0);
+  const totalMesAnoAnterior = projetosMesAtualAnoAnterior.reduce((sum, p) => sum + (p.valor_financiado || 0), 0) +
+                              servicosMesAtualAnoAnterior.reduce((sum, s) => sum + (s.valor_receber || 0), 0);
 
   // Calcular diferenças
   const diferencaAnual = totalAnoAtual - totalAnoAnterior;
@@ -198,7 +228,10 @@ export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [
               <div className="flex items-center justify-center gap-2">
                 <div className="text-center">
                   <p className="text-sm text-gray-600">
-                    {formatarMoeda(todosProjetos.filter(p => p.status !== 'cancelado').reduce((sum, p) => sum + (p.valor_financiado || 0), 0))}
+                    {formatarMoeda(
+                      todosProjetos.filter(p => p.status !== 'cancelado').reduce((sum, p) => sum + (p.valor_financiado || 0), 0) +
+                      outrosServicos.filter(s => s.status !== 'cancelado').reduce((sum, s) => sum + (s.valor_receber || 0), 0)
+                    )}
                   </p>
                   <p className="text-[10px] text-gray-400 uppercase tracking-wide">Total Geral</p>
                 </div>

@@ -120,7 +120,7 @@ export default function EstatisticasGerais({ stats, isLoading, onCardClick }) {
                 <p className="text-[10px] text-gray-400 -mt-0.5">{stat.subtitulo}</p>
               )}
               
-              <div className={`font-semibold text-gray-800 ${stat.isMonetary ? 'text-base' : 'text-2xl'}`}>
+              <div className="font-semibold text-gray-800 text-base">
                 {isLoading ? (
                   <Skeleton className="h-6 w-20" />
                 ) : (

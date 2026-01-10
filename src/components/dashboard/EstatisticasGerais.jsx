@@ -11,13 +11,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EstatisticasGerais({ stats, isLoading, onCardClick }) {
-  const formatarValorDiscreto = (valor) => {
-    if (valor >= 1000000) {
-      return `R$ ${(valor / 1000000).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mi`;
-    } else if (valor >= 1000) {
-      return `R$ ${(valor / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mil`;
-    }
-    return `R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+  const formatarValorCompleto = (valor) => {
+    return `R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   const estatisticas = [
@@ -124,7 +119,7 @@ export default function EstatisticasGerais({ stats, isLoading, onCardClick }) {
                 {isLoading ? (
                   <Skeleton className="h-6 w-20" />
                 ) : (
-                  stat.isMonetary ? formatarValorDiscreto(stat.valor) : stat.valor
+                  stat.isMonetary ? formatarValorCompleto(stat.valor) : stat.valor
                 )}
               </div>
               

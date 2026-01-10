@@ -238,7 +238,7 @@ export default function Dashboard() {
             />
           </div>
           <div>
-            <StatusDistribuicao stats={stats} isLoading={isLoading} todosProjetos={todosProjetos} />
+            <StatusDistribuicao stats={stats} isLoading={isLoading} todosProjetos={todosProjetos} outrosServicos={outrosServicos} />
           </div>
         </div>
       </div>

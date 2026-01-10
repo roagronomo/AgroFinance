@@ -10,33 +10,33 @@ export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [
 
   const anoAnterior = anoAtual - 1;
 
-  // Filtrar projetos por ano (baseado em data_protocolo)
+  // Filtrar projetos por ano (baseado em data_protocolo) - excluir cancelados
   const projetosAnoAtual = todosProjetos.filter(p => {
-    if (!p.data_protocolo) return false;
+    if (!p.data_protocolo || p.status === 'cancelado') return false;
     const data = new Date(p.data_protocolo);
     return data.getFullYear() === anoAtual;
   });
 
   const projetosAnoAnterior = todosProjetos.filter(p => {
-    if (!p.data_protocolo) return false;
+    if (!p.data_protocolo || p.status === 'cancelado') return false;
     const data = new Date(p.data_protocolo);
     return data.getFullYear() === anoAnterior;
   });
 
-  // Filtrar projetos por mês atual vs mesmo mês do ano anterior
+  // Filtrar projetos por mês atual vs mesmo mês do ano anterior - excluir cancelados
   const projetosMesAtualAnoAtual = todosProjetos.filter(p => {
-    if (!p.data_protocolo) return false;
+    if (!p.data_protocolo || p.status === 'cancelado') return false;
     const data = new Date(p.data_protocolo);
     return data.getFullYear() === anoAtual && data.getMonth() === mesAtual;
   });
 
   const projetosMesAtualAnoAnterior = todosProjetos.filter(p => {
-    if (!p.data_protocolo) return false;
+    if (!p.data_protocolo || p.status === 'cancelado') return false;
     const data = new Date(p.data_protocolo);
     return data.getFullYear() === anoAnterior && data.getMonth() === mesAtual;
   });
 
-  // Calcular totais em VALORES (R$) ao invés de quantidade
+  // Calcular totais em VALORES (R$) ao invés de quantidade - excluir cancelados
   const totalAnoAtual = projetosAnoAtual.reduce((sum, p) => sum + (p.valor_financiado || 0), 0);
   const totalAnoAnterior = projetosAnoAnterior.reduce((sum, p) => sum + (p.valor_financiado || 0), 0);
   const totalMesAnoAtual = projetosMesAtualAnoAtual.reduce((sum, p) => sum + (p.valor_financiado || 0), 0);
@@ -197,8 +197,8 @@ export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [
             <div className="pt-3 mt-2 border-t border-gray-100">
               <div className="flex items-center justify-center gap-2">
                 <div className="text-center">
-                  <p className="text-sm font-medium text-gray-500">
-                    {formatarMoeda(todosProjetos.reduce((sum, p) => sum + (p.valor_financiado || 0), 0))}
+                  <p className="text-sm text-gray-600">
+                    {formatarMoeda(todosProjetos.filter(p => p.status !== 'cancelado').reduce((sum, p) => sum + (p.valor_financiado || 0), 0))}
                   </p>
                   <p className="text-[10px] text-gray-400 uppercase tracking-wide">Total Geral</p>
                 </div>

@@ -124,6 +124,30 @@ const formatarCPF = (cpf) => {
   return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
 };
 
+const formatarCNPJ = (cnpj) => {
+  if (!cnpj) return "";
+  const cleaned = String(cnpj).replace(/\D/g, '');
+  if (cleaned.length !== 14) return cnpj;
+  return cleaned.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+};
+
+// Função inteligente que detecta e formata CPF ou CNPJ
+const formatarCPFouCNPJ = (doc) => {
+  if (!doc) return "";
+  const cleaned = String(doc).replace(/\D/g, '');
+  
+  if (cleaned.length === 11) {
+    // É CPF
+    return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  } else if (cleaned.length === 14) {
+    // É CNPJ
+    return cleaned.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  }
+  
+  // Retorna o valor original se não for CPF nem CNPJ válido
+  return doc;
+};
+
 export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmit, onCancel }) {
   const [formData, setFormData] = useState({
     nome_imovel: "",
@@ -1231,7 +1255,7 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
                               )}
                             </div>
                             <div className="flex gap-3 text-gray-600 mt-1">
-                              <span>CPF: {formatarCPF(prop.cpf)}</span>
+                              <span>{prop.cpf?.replace(/\D/g, '').length === 14 ? 'CNPJ' : 'CPF'}: {formatarCPFouCNPJ(prop.cpf)}</span>
                               <span>Parte: {prop.area_ha}</span>
                               <span>({prop.percentual})</span>
                             </div>
@@ -1653,9 +1677,11 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
                                 </div>
                                 
                                 <div className="col-span-12 md:col-span-3">
-                                  <Label className="text-xs text-gray-500 mb-1 block">CPF</Label>
+                                  <Label className="text-xs text-gray-500 mb-1 block">
+                                    {prop.cpf?.replace(/\D/g, '').length === 14 ? 'CNPJ' : 'CPF'}
+                                  </Label>
                                   <Input
-                                    value={formatarCPF(prop.cpf)}
+                                    value={formatarCPFouCNPJ(prop.cpf)}
                                     readOnly
                                     className="bg-white/60 border-gray-200 text-sm text-gray-900 h-9"
                                   />
@@ -1692,9 +1718,11 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
                                     
                                     {prop.conjuge.cpf && (
                                       <div className="col-span-12 md:col-span-3">
-                                        <Label className="text-xs text-purple-600 mb-1 block">CPF do Cônjuge</Label>
+                                        <Label className="text-xs text-purple-600 mb-1 block">
+                                          {prop.conjuge.cpf?.replace(/\D/g, '').length === 14 ? 'CNPJ' : 'CPF'} do Cônjuge
+                                        </Label>
                                         <Input
-                                          value={formatarCPF(prop.conjuge.cpf)}
+                                          value={formatarCPFouCNPJ(prop.conjuge.cpf)}
                                           readOnly
                                           className="bg-purple-50/50 border-purple-200 text-sm text-gray-900 h-9"
                                         />
@@ -1760,9 +1788,11 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
                             </div>
                             
                             <div className="col-span-12 md:col-span-3">
-                              <Label className="text-xs text-gray-500 mb-1 block">CPF</Label>
+                              <Label className="text-xs text-gray-500 mb-1 block">
+                                {prop.cpf?.replace(/\D/g, '').length === 14 ? 'CNPJ' : 'CPF'}
+                              </Label>
                               <Input
-                                value={formatarCPF(prop.cpf)}
+                                value={formatarCPFouCNPJ(prop.cpf)}
                                 readOnly
                                 className="bg-white/60 border-gray-200 text-sm text-gray-900 h-9"
                               />
@@ -1799,9 +1829,11 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
                                 
                                 {prop.conjuge.cpf && (
                                   <div className="col-span-12 md:col-span-3">
-                                    <Label className="text-xs text-purple-600 mb-1 block">CPF do Cônjuge</Label>
+                                    <Label className="text-xs text-purple-600 mb-1 block">
+                                      {prop.conjuge.cpf?.replace(/\D/g, '').length === 14 ? 'CNPJ' : 'CPF'} do Cônjuge
+                                    </Label>
                                     <Input
-                                      value={formatarCPF(prop.conjuge.cpf)}
+                                      value={formatarCPFouCNPJ(prop.conjuge.cpf)}
                                       readOnly
                                       className="bg-purple-50/50 border-purple-200 text-sm text-gray-900 h-9"
                                     />
@@ -1876,10 +1908,10 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
                                 {usu.cpf && (
                                   <div className="col-span-12 md:col-span-3">
                                     <Label className="text-xs font-semibold text-gray-600 mb-1 block">
-                                      CPF
+                                      {usu.cpf?.replace(/\D/g, '').length === 14 ? 'CNPJ' : 'CPF'}
                                     </Label>
                                     <Input
-                                      value={formatarCPF(usu.cpf)}
+                                      value={formatarCPFouCNPJ(usu.cpf)}
                                       readOnly
                                       className="bg-gray-50 border-orange-200 text-sm font-medium text-gray-900"
                                     />
@@ -1990,10 +2022,10 @@ export default function FormularioCadastro({ imovel, clienteSelecionado, onSubmi
                             {usu.cpf && (
                               <div className="col-span-12 md:col-span-3">
                                 <Label className="text-xs font-semibold text-gray-600 mb-1 block">
-                                  CPF
+                                  {usu.cpf?.replace(/\D/g, '').length === 14 ? 'CNPJ' : 'CPF'}
                                 </Label>
                                 <Input
-                                  value={formatarCPF(usu.cpf)}
+                                  value={formatarCPFouCNPJ(usu.cpf)}
                                   readOnly
                                   className="bg-gray-50 border-orange-200 text-sm font-medium text-gray-900"
                                 />

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash2, Search, FileText } from "lucide-react";
+import { Plus, Edit, Trash2, Search, FileText, Receipt } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import SeletorCliente from "../components/clientes/SeletorCliente";
@@ -25,7 +25,9 @@ export default function OutrosServicos() {
     status: "em_analise",
     banco: "",
     valor_receber: "",
-    descricao_servico: ""
+    descricao_servico: "",
+    boleto_emitido: false,
+    data_vencimento_boleto: ""
   });
 
   useEffect(() => {
@@ -90,7 +92,9 @@ export default function OutrosServicos() {
       status: servico.status || "em_analise",
       banco: servico.banco || "",
       valor_receber: servico.valor_receber ? formatarMoeda(servico.valor_receber) : "",
-      descricao_servico: servico.descricao_servico || ""
+      descricao_servico: servico.descricao_servico || "",
+      boleto_emitido: servico.boleto_emitido || false,
+      data_vencimento_boleto: servico.data_vencimento_boleto || ""
     });
     setShowForm(true);
   };
@@ -118,7 +122,9 @@ export default function OutrosServicos() {
       status: "em_analise",
       banco: "",
       valor_receber: "",
-      descricao_servico: ""
+      descricao_servico: "",
+      boleto_emitido: false,
+      data_vencimento_boleto: ""
     });
   };
 
@@ -254,6 +260,45 @@ export default function OutrosServicos() {
                 />
               </div>
 
+              {/* Seção de Boleto */}
+              <div className="border-t pt-4 mt-2">
+                <div className="flex items-center gap-2 mb-4">
+                  <Receipt className="w-5 h-5 text-blue-600" />
+                  <h3 className="text-sm font-semibold text-gray-700">Boleto</h3>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="boleto_emitido"
+                      checked={formData.boleto_emitido}
+                      onChange={(e) => setFormData({...formData, boleto_emitido: e.target.checked, lembrete_enviado: false})}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <Label htmlFor="boleto_emitido" className="text-sm font-medium cursor-pointer">
+                      Foi emitido boleto para este serviço
+                    </Label>
+                  </div>
+
+                  {formData.boleto_emitido && (
+                    <div>
+                      <Label>Data de Vencimento do Boleto *</Label>
+                      <Input
+                        type="date"
+                        value={formData.data_vencimento_boleto}
+                        onChange={(e) => setFormData({...formData, data_vencimento_boleto: e.target.value, lembrete_enviado: false})}
+                        required={formData.boleto_emitido}
+                        className="mt-1"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        🔔 Você receberá um lembrete automático por e-mail 3 dias antes e no dia do vencimento
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="flex gap-3">
                 <Button type="submit" className="bg-green-600 hover:bg-green-700">
                   {editingServico ? "Atualizar" : "Cadastrar"}
@@ -325,6 +370,11 @@ export default function OutrosServicos() {
                     <p className="text-gray-600 text-sm mb-2">{servico.descricao_servico}</p>
                     <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                       <span>📅 {format(new Date(servico.data_protocolo + 'T00:00:00'), 'dd/MM/yyyy')}</span>
+                      {servico.boleto_emitido && servico.data_vencimento_boleto && (
+                        <span className="text-orange-600 font-medium">
+                          🧾 Venc: {format(new Date(servico.data_vencimento_boleto + 'T00:00:00'), 'dd/MM/yyyy')}
+                        </span>
+                      )}
                       {servico.banco && (
                         <span>🏦 {
                           servico.banco === 'banco_do_brasil' ? 'Banco do Brasil' :

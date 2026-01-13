@@ -23,6 +23,7 @@ import { ptBR } from "date-fns/locale";
 import EstatisticasGerais from "../components/dashboard/EstatisticasGerais";
 import ProjetosRecentes from "../components/dashboard/ProjetosRecentes";
 import StatusDistribuicao from "../components/dashboard/StatusDistribuicao";
+import AlertasVencimentos from "../components/dashboard/AlertasVencimentos";
 
 export default function Dashboard() {
   const [todosProjetos, setTodosProjetos] = useState([]);
@@ -230,12 +231,13 @@ export default function Dashboard() {
         />
 
         <div className="grid lg:grid-cols-3 gap-6 mt-8">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
             <ProjetosRecentes 
               projetos={projetos.slice(0, 5)} 
               isLoading={isLoading} 
               onUpdate={carregarTodosProjetos}
             />
+            <AlertasVencimentos />
           </div>
           <div>
             <StatusDistribuicao stats={stats} isLoading={isLoading} todosProjetos={todosProjetos} outrosServicos={outrosServicos} />

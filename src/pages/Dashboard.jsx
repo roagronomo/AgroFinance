@@ -14,10 +14,11 @@ import {
   FileText,
   Plus,
   Building2,
-  Calendar
+  Calendar,
+  Bell
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import EstatisticasGerais from "../components/dashboard/EstatisticasGerais";
@@ -33,10 +34,12 @@ export default function Dashboard() {
   const [filtroModal, setFiltroModal] = useState(null);
 
   const [outrosServicos, setOutrosServicos] = useState([]);
+  const [contasPagar, setContasPagar] = useState([]);
 
   useEffect(() => {
     carregarTodosProjetos();
     carregarOutrosServicos();
+    carregarContasPagar();
   }, []);
 
   useEffect(() => {
@@ -70,6 +73,15 @@ export default function Dashboard() {
       setOutrosServicos(data || []);
     } catch (error) {
       console.error("Erro ao carregar outros serviços:", error);
+    }
+  };
+
+  const carregarContasPagar = async () => {
+    try {
+      const data = await base44.entities.ContaPagar.filter({ pago: false, ativo: true }, 'data_vencimento');
+      setContasPagar(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar contas a pagar:", error);
     }
   };
 
@@ -239,8 +251,70 @@ export default function Dashboard() {
             />
             <AlertasVencimentos />
           </div>
-          <div>
+          <div className="space-y-6">
             <StatusDistribuicao stats={stats} isLoading={isLoading} todosProjetos={todosProjetos} outrosServicos={outrosServicos} />
+            
+            {/* Card de Contas a Pagar */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Bell className="w-5 h-5 text-orange-600" />
+                  Contas a Pagar
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {contasPagar.length === 0 ? (
+                  <p className="text-center text-gray-500 py-4">Nenhuma conta a pagar</p>
+                ) : (
+                  <div className="space-y-2">
+                    {contasPagar.slice(0, 5).map((conta) => {
+                      const hoje = new Date();
+                      hoje.setHours(0, 0, 0, 0);
+                      const vencimento = new Date(conta.data_vencimento + 'T00:00:00');
+                      const diasRestantes = differenceInDays(vencimento, hoje);
+                      const isVencido = diasRestantes < 0;
+                      const isHoje = diasRestantes === 0;
+                      const isProximo = diasRestantes > 0 && diasRestantes <= 3;
+                      
+                      return (
+                        <div 
+                          key={conta.id} 
+                          className={`flex justify-between items-center p-3 rounded-lg ${
+                            isVencido ? 'bg-red-50 border border-red-200' :
+                            isHoje ? 'bg-orange-50 border border-orange-200' :
+                            isProximo ? 'bg-yellow-50 border border-yellow-200' :
+                            'bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex-1">
+                            <p className="font-medium text-sm text-gray-900">{conta.descricao}</p>
+                            <p className="text-xs text-gray-500">
+                              {format(vencimento, 'dd/MM/yyyy')} • {
+                                isVencido ? `Vencido há ${Math.abs(diasRestantes)} dia(s)` :
+                                isHoje ? 'Vence HOJE' :
+                                `${diasRestantes} dia(s)`
+                              }
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-sm text-red-600">
+                              R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {contasPagar.length > 5 && (
+                      <Link to={createPageUrl("DespesasLembretes")}>
+                        <Button variant="link" className="w-full text-xs">
+                          Ver todas as {contasPagar.length} contas →
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

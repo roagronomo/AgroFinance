@@ -46,21 +46,26 @@ Deno.serve(async (req) => {
         );
         
         if (deveLembrar) {
-          // Buscar dados do cliente para enviar e-mail
+          // Buscar dados do cliente para enviar e-mail e WhatsApp
           const clientes = await base44.asServiceRole.entities.Cliente.list("nome");
           const cliente = clientes.find(c => c.nome === servico.cliente_nome);
           
-          if (cliente && cliente.email) {
+          if (cliente) {
             const diasRestantes = Math.ceil((dataVencimento - hoje) / (1000 * 60 * 60 * 24));
             const mensagemVencimento = diasRestantes === 0 
               ? "HOJE" 
               : `em ${diasRestantes} dia(s)`;
             
-            // Enviar e-mail
-            await base44.asServiceRole.integrations.Core.SendEmail({
-              to: cliente.email,
-              subject: `🔔 Lembrete: Boleto vence ${mensagemVencimento}`,
-              body: `
+            let enviadoEmail = false;
+            let enviadoWhatsApp = false;
+            
+            // Enviar e-mail se tiver
+            if (cliente.email) {
+              try {
+                await base44.asServiceRole.integrations.Core.SendEmail({
+                  to: cliente.email,
+                  subject: `🔔 Lembrete: Boleto vence ${mensagemVencimento}`,
+                  body: `
 Olá ${cliente.nome},
 
 Este é um lembrete automático sobre o vencimento de um boleto:
@@ -76,18 +81,56 @@ Por favor, providencie o pagamento para evitar atrasos.
 
 Atenciosamente,
 Equipe AgroFinance
-              `.trim()
-            });
+                  `.trim()
+                });
+                enviadoEmail = true;
+                console.log(`✅ E-mail enviado para ${cliente.email}`);
+              } catch (error) {
+                console.error(`❌ Erro ao enviar e-mail:`, error);
+              }
+            }
             
-            // Marcar como enviado
-            await base44.asServiceRole.entities.OutroServico.update(servico.id, {
-              lembrete_enviado: true
-            });
+            // Enviar WhatsApp se tiver celular
+            if (cliente.celular) {
+              try {
+                const mensagemWhatsApp = `🔔 *Lembrete de Boleto*
+
+Olá ${cliente.nome}!
+
+Seu boleto vence *${mensagemVencimento}*:
+
+📋 *Serviço:* ${servico.descricao_servico}
+💰 *Valor:* R$ ${servico.valor_receber.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+📅 *Vencimento:* ${new Date(servico.data_vencimento_boleto).toLocaleDateString('pt-BR')}
+${servico.banco ? `🏦 *Banco:* ${servico.banco}` : ''}
+
+Por favor, providencie o pagamento para evitar atrasos.
+
+_Mensagem automática - AgroFinance_`;
+
+                await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
+                  numero: cliente.celular,
+                  mensagem: mensagemWhatsApp
+                });
+                enviadoWhatsApp = true;
+                console.log(`✅ WhatsApp enviado para ${cliente.celular}`);
+              } catch (error) {
+                console.error(`❌ Erro ao enviar WhatsApp:`, error);
+              }
+            }
             
-            lembreteEnviados++;
-            console.log(`✅ Lembrete enviado para ${cliente.email} - Serviço: ${servico.descricao_servico}`);
+            // Marcar como enviado se pelo menos um canal funcionou
+            if (enviadoEmail || enviadoWhatsApp) {
+              await base44.asServiceRole.entities.OutroServico.update(servico.id, {
+                lembrete_enviado: true
+              });
+              lembreteEnviados++;
+              console.log(`✅ Lembrete enviado para ${cliente.nome} - Email: ${enviadoEmail}, WhatsApp: ${enviadoWhatsApp}`);
+            } else {
+              console.warn(`⚠️ Cliente sem e-mail ou celular cadastrado: ${servico.cliente_nome}`);
+            }
           } else {
-            console.warn(`⚠️ Cliente sem e-mail cadastrado: ${servico.cliente_nome}`);
+            console.warn(`⚠️ Cliente não encontrado: ${servico.cliente_nome}`);
           }
         }
       } catch (error) {

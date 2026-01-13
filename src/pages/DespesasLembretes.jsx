@@ -10,6 +10,16 @@ import { Plus, Edit, Trash2, Bell, Calendar, DollarSign, FileText, Upload, Check
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 import AutocompleteInput from "../components/common/AutocompleteInput";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function DespesasLembretes() {
   const [contas, setContas] = useState([]);
@@ -28,6 +38,9 @@ export default function DespesasLembretes() {
     fornecedores: [],
     categorias: []
   });
+  const [dialogMarcarPago, setDialogMarcarPago] = useState(null);
+  const [dialogDesmarcarPago, setDialogDesmarcarPago] = useState(null);
+  const [dialogExcluir, setDialogExcluir] = useState(null);
 
   const [formDataConta, setFormDataConta] = useState({
     descricao: "",
@@ -275,11 +288,11 @@ ${valor}`
     }
   };
 
-  const handleMarcarPago = async (contaId) => {
-    if (!confirm("Tem certeza que deseja marcar esta conta como paga?")) return;
+  const handleMarcarPago = async () => {
+    if (!dialogMarcarPago) return;
     
     try {
-      await base44.entities.ContaPagar.update(contaId, {
+      await base44.entities.ContaPagar.update(dialogMarcarPago, {
         pago: true,
         data_pagamento: new Date().toISOString().split('T')[0]
       });
@@ -288,14 +301,16 @@ ${valor}`
     } catch (error) {
       console.error("Erro ao marcar como pago:", error);
       toast.error("Erro ao marcar como pago");
+    } finally {
+      setDialogMarcarPago(null);
     }
   };
 
-  const handleDesmarcarPago = async (contaId) => {
-    if (!confirm("Deseja retornar esta conta para 'Contas a Pagar'?")) return;
+  const handleDesmarcarPago = async () => {
+    if (!dialogDesmarcarPago) return;
     
     try {
-      await base44.entities.ContaPagar.update(contaId, {
+      await base44.entities.ContaPagar.update(dialogDesmarcarPago, {
         pago: false,
         data_pagamento: null
       });
@@ -304,6 +319,8 @@ ${valor}`
     } catch (error) {
       console.error("Erro ao desmarcar como pago:", error);
       toast.error("Erro ao processar");
+    } finally {
+      setDialogDesmarcarPago(null);
     }
   };
 
@@ -327,20 +344,22 @@ ${valor}`
     setShowForm(true);
   };
 
-  const handleExcluir = async (id, tipo) => {
-    if (!confirm(`Deseja realmente excluir este ${tipo === 'conta' ? 'conta' : 'lembrete'}?`)) return;
+  const handleExcluir = async () => {
+    if (!dialogExcluir) return;
     
     try {
-      if (tipo === 'conta') {
-        await base44.entities.ContaPagar.delete(id);
+      if (dialogExcluir.tipo === 'conta') {
+        await base44.entities.ContaPagar.delete(dialogExcluir.id);
       } else {
-        await base44.entities.Lembrete.delete(id);
+        await base44.entities.Lembrete.delete(dialogExcluir.id);
       }
       toast.success("Item excluído com sucesso!");
       await carregarDados();
     } catch (error) {
       console.error("Erro ao excluir:", error);
       toast.error("Erro ao excluir item");
+    } finally {
+      setDialogExcluir(null);
     }
   };
 
@@ -841,13 +860,13 @@ ${valor}`
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            onClick={() => handleMarcarPago(conta.id)}
+                            onClick={() => setDialogMarcarPago(conta.id)}
                             className="text-green-600 hover:text-green-700"
                             title="Marcar como pago"
                           >
                             <Check className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleExcluir(conta.id, 'conta')} className="text-red-600">
+                          <Button variant="ghost" size="icon" onClick={() => setDialogExcluir({ id: conta.id, tipo: 'conta' })} className="text-red-600">
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -898,7 +917,7 @@ ${valor}`
                           )}
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleExcluir(lembrete.id, 'lembrete')} className="text-red-600">
+                          <Button variant="ghost" size="icon" onClick={() => setDialogExcluir({ id: lembrete.id, tipo: 'lembrete' })} className="text-red-600">
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -942,13 +961,13 @@ ${valor}`
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          onClick={() => handleDesmarcarPago(conta.id)}
+                          onClick={() => setDialogDesmarcarPago(conta.id)}
                           className="text-orange-600 hover:text-orange-700"
                           title="Retornar para a pagar"
                         >
                           <Undo2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleExcluir(conta.id, 'conta')} className="text-red-600">
+                        <Button variant="ghost" size="icon" onClick={() => setDialogExcluir({ id: conta.id, tipo: 'conta' })} className="text-red-600">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -960,6 +979,60 @@ ${valor}`
           </TabsContent>
         </Tabs>
       )}
+
+      {/* Dialog Marcar como Pago */}
+      <AlertDialog open={!!dialogMarcarPago} onOpenChange={(open) => !open && setDialogMarcarPago(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Marcar como Pago</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja marcar esta conta como paga? Esta ação moverá a conta para a aba "Pagas".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleMarcarPago} className="bg-green-600 hover:bg-green-700">
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog Desmarcar Pago */}
+      <AlertDialog open={!!dialogDesmarcarPago} onOpenChange={(open) => !open && setDialogDesmarcarPago(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Retornar para Contas a Pagar</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja retornar esta conta para "Contas a Pagar"? A conta voltará a aparecer na lista de contas pendentes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDesmarcarPago} className="bg-orange-600 hover:bg-orange-700">
+              Retornar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog Excluir */}
+      <AlertDialog open={!!dialogExcluir} onOpenChange={(open) => !open && setDialogExcluir(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir {dialogExcluir?.tipo === 'conta' ? 'Conta' : 'Lembrete'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir {dialogExcluir?.tipo === 'conta' ? 'esta conta' : 'este lembrete'}? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleExcluir} className="bg-red-600 hover:bg-red-700">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

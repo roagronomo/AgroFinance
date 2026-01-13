@@ -151,6 +151,19 @@ export default function OutrosServicos() {
     setFormData({...formData, cliente_nome: cliente?.nome || ""});
   };
 
+  const formatarTelefone = (valor) => {
+    const numero = valor.replace(/\D/g, '');
+    if (numero.length <= 10) {
+      return numero.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
+    }
+    return numero.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
+  };
+
+  const handleTelefoneChange = (e) => {
+    const valorFormatado = formatarTelefone(e.target.value);
+    setFormData({...formData, telefone_contato: valorFormatado});
+  };
+
   const handleEnviarTeste = async () => {
     if (!formData.telefone_contato) {
       toast.error("Digite um número de telefone primeiro");
@@ -341,8 +354,9 @@ _Mensagem de teste - AgroFinance_`;
                           <Input
                             type="tel"
                             value={formData.telefone_contato}
-                            onChange={(e) => setFormData({...formData, telefone_contato: e.target.value})}
+                            onChange={handleTelefoneChange}
                             placeholder="(62) 99999-9999"
+                            maxLength={15}
                             className="flex-1"
                           />
                           <Button

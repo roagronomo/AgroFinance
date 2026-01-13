@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Edit, Trash2, Bell, Calendar, DollarSign, FileText, Upload, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
+import AutocompleteInput from "../components/common/AutocompleteInput";
 
 export default function DespesasLembretes() {
   const [contas, setContas] = useState([]);
@@ -22,6 +23,11 @@ export default function DespesasLembretes() {
   const [uploadingBoleto, setUploadingBoleto] = useState(false);
   const [uploadingRecibo, setUploadingRecibo] = useState(false);
   const [corrigindoTexto, setCorrigindoTexto] = useState({});
+  const [sugestoes, setSugestoes] = useState({
+    descricoes: [],
+    fornecedores: [],
+    categorias: []
+  });
 
   const [formDataConta, setFormDataConta] = useState({
     descricao: "",
@@ -49,6 +55,20 @@ export default function DespesasLembretes() {
   useEffect(() => {
     carregarDados();
   }, []);
+
+  useEffect(() => {
+    // Extrair sugestões únicas dos dados existentes
+    const descricoesContas = [...new Set(contas.map(c => c.descricao).filter(Boolean))];
+    const descricoesLembretes = [...new Set(lembretes.map(l => l.descricao).filter(Boolean))];
+    const fornecedoresUnicos = [...new Set(contas.map(c => c.fornecedor).filter(Boolean))];
+    const categoriasUnicas = [...new Set(contas.map(c => c.categoria).filter(Boolean))];
+    
+    setSugestoes({
+      descricoes: [...new Set([...descricoesContas, ...descricoesLembretes])].sort(),
+      fornecedores: fornecedoresUnicos.sort(),
+      categorias: categoriasUnicas.sort()
+    });
+  }, [contas, lembretes]);
 
   const carregarDados = async () => {
     try {
@@ -369,11 +389,12 @@ ${valor}`
                 <form onSubmit={handleSubmitConta} className="space-y-4">
                   <div>
                     <Label>Descrição *</Label>
-                    <Input
+                    <AutocompleteInput
                       value={formDataConta.descricao}
                       onChange={(e) => setFormDataConta({...formDataConta, descricao: e.target.value})}
                       onBlur={() => handleCorrecaoOrtografica('descricao', 'conta')}
                       placeholder="Ex: Conta de energia elétrica"
+                      suggestions={sugestoes.descricoes}
                       required
                       disabled={corrigindoTexto.descricao}
                     />
@@ -383,11 +404,12 @@ ${valor}`
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label>Fornecedor</Label>
-                      <Input
+                      <AutocompleteInput
                         value={formDataConta.fornecedor}
                         onChange={(e) => setFormDataConta({...formDataConta, fornecedor: e.target.value})}
                         onBlur={() => handleCorrecaoOrtografica('fornecedor', 'conta')}
                         placeholder="Nome do fornecedor"
+                        suggestions={sugestoes.fornecedores}
                         disabled={corrigindoTexto.fornecedor}
                       />
                       {corrigindoTexto.fornecedor && <p className="text-xs text-blue-600 mt-1">✨ Corrigindo...</p>}
@@ -395,11 +417,12 @@ ${valor}`
 
                     <div>
                       <Label>Categoria</Label>
-                      <Input
+                      <AutocompleteInput
                         value={formDataConta.categoria}
                         onChange={(e) => setFormDataConta({...formDataConta, categoria: e.target.value})}
                         onBlur={() => handleCorrecaoOrtografica('categoria', 'conta')}
                         placeholder="Ex: Energia, Água, etc"
+                        suggestions={sugestoes.categorias}
                         disabled={corrigindoTexto.categoria}
                       />
                       {corrigindoTexto.categoria && <p className="text-xs text-blue-600 mt-1">✨ Corrigindo...</p>}
@@ -567,11 +590,12 @@ ${valor}`
                 <form onSubmit={handleSubmitLembrete} className="space-y-4">
                   <div>
                     <Label>Descrição *</Label>
-                    <Input
+                    <AutocompleteInput
                       value={formDataLembrete.descricao}
                       onChange={(e) => setFormDataLembrete({...formDataLembrete, descricao: e.target.value})}
                       onBlur={() => handleCorrecaoOrtografica('descricao', 'lembrete')}
                       placeholder="Ex: Consórcio - Encerramento do Grupo"
+                      suggestions={sugestoes.descricoes}
                       required
                       disabled={corrigindoTexto.descricao}
                     />

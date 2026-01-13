@@ -90,8 +90,8 @@ Equipe AgroFinance
               }
             }
             
-            // Enviar WhatsApp se tiver celular
-            if (cliente.celular) {
+            // Enviar WhatsApp APENAS se o campo enviar_lembrete_whatsapp estiver marcado
+            if (servico.enviar_lembrete_whatsapp && servico.telefone_contato) {
               try {
                 const mensagemWhatsApp = `🔔 *Lembrete de Boleto*
 
@@ -109,11 +109,11 @@ Por favor, providencie o pagamento para evitar atrasos.
 _Mensagem automática - AgroFinance_`;
 
                 await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
-                  numero: cliente.celular,
+                  numero: servico.telefone_contato,
                   mensagem: mensagemWhatsApp
                 });
                 enviadoWhatsApp = true;
-                console.log(`✅ WhatsApp enviado para ${cliente.celular}`);
+                console.log(`✅ WhatsApp enviado para ${servico.telefone_contato}`);
               } catch (error) {
                 console.error(`❌ Erro ao enviar WhatsApp:`, error);
               }

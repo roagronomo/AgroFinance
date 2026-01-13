@@ -27,7 +27,9 @@ export default function OutrosServicos() {
     valor_receber: "",
     descricao_servico: "",
     boleto_emitido: false,
-    data_vencimento_boleto: ""
+    data_vencimento_boleto: "",
+    telefone_contato: "",
+    enviar_lembrete_whatsapp: false
   });
 
   useEffect(() => {
@@ -94,8 +96,10 @@ export default function OutrosServicos() {
       valor_receber: servico.valor_receber ? formatarMoeda(servico.valor_receber) : "",
       descricao_servico: servico.descricao_servico || "",
       boleto_emitido: servico.boleto_emitido || false,
-      data_vencimento_boleto: servico.data_vencimento_boleto || ""
-    });
+      data_vencimento_boleto: servico.data_vencimento_boleto || "",
+      telefone_contato: servico.telefone_contato || "",
+      enviar_lembrete_whatsapp: servico.enviar_lembrete_whatsapp || false
+      });
     setShowForm(true);
   };
 
@@ -282,18 +286,49 @@ export default function OutrosServicos() {
                   </div>
 
                   {formData.boleto_emitido && (
-                    <div>
-                      <Label>Data de Vencimento do Boleto *</Label>
-                      <Input
-                        type="date"
-                        value={formData.data_vencimento_boleto}
-                        onChange={(e) => setFormData({...formData, data_vencimento_boleto: e.target.value, lembrete_enviado: false})}
-                        required={formData.boleto_emitido}
-                        className="mt-1"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        🔔 Você receberá um lembrete automático por e-mail 3 dias antes e no dia do vencimento
-                      </p>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Data de Vencimento do Boleto *</Label>
+                        <Input
+                          type="date"
+                          value={formData.data_vencimento_boleto}
+                          onChange={(e) => setFormData({...formData, data_vencimento_boleto: e.target.value, lembrete_enviado: false})}
+                          required={formData.boleto_emitido}
+                          className="mt-1"
+                        />
+                      </div>
+
+                      <div>
+                        <Label>Telefone/WhatsApp para Lembrete</Label>
+                        <Input
+                          type="tel"
+                          value={formData.telefone_contato}
+                          onChange={(e) => setFormData({...formData, telefone_contato: e.target.value})}
+                          placeholder="(62) 99999-9999"
+                          className="mt-1"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Digite o número com DDD
+                        </p>
+                      </div>
+
+                      <div className="flex items-start gap-2 bg-green-50 p-3 rounded-lg">
+                        <input
+                          type="checkbox"
+                          id="enviar_lembrete_whatsapp"
+                          checked={formData.enviar_lembrete_whatsapp}
+                          onChange={(e) => setFormData({...formData, enviar_lembrete_whatsapp: e.target.checked})}
+                          className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500 mt-0.5"
+                        />
+                        <div>
+                          <Label htmlFor="enviar_lembrete_whatsapp" className="text-sm font-medium cursor-pointer text-green-800">
+                            📱 Enviar lembretes automáticos via WhatsApp
+                          </Label>
+                          <p className="text-xs text-green-600 mt-1">
+                            Se marcado, enviará lembretes por e-mail e WhatsApp 3 dias antes e no dia do vencimento
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

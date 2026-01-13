@@ -938,9 +938,20 @@ ${valor}`
                           <span className="font-semibold">R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => handleExcluir(conta.id, 'conta')} className="text-red-600">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleDesmarcarPago(conta.id)}
+                          className="text-orange-600 hover:text-orange-700"
+                          title="Retornar para a pagar"
+                        >
+                          <Undo2 className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleExcluir(conta.id, 'conta')} className="text-red-600">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

@@ -21,7 +21,8 @@ import {
   ChevronDown,
   ChevronRight,
   FolderOpen,
-  Wallet
+  Wallet,
+  Bell
 } from "lucide-react";
 import {
   Sidebar,
@@ -137,8 +138,13 @@ const navigationSections = [
         url: createPageUrl("OutrosServicos"),
         icon: FileText,
       },
-    ]
-  }
+      {
+        title: "Lembretes",
+        url: createPageUrl("Lembretes"),
+        icon: Bell,
+      },
+      ]
+      }
 ];
 
 export default function Layout({ children, currentPageName }) {

@@ -20,6 +20,7 @@ export default function OutrosServicos() {
   const [busca, setBusca] = useState("");
   const [clienteSelecionado, setClienteSelecionado] = useState(null);
   const [enviandoTeste, setEnviandoTeste] = useState(false);
+  const [corrigindoTexto, setCorrigindoTexto] = useState(false);
   const [formData, setFormData] = useState({
     cliente_nome: "",
     data_protocolo: "",
@@ -162,6 +163,29 @@ export default function OutrosServicos() {
   const handleTelefoneChange = (e) => {
     const valorFormatado = formatarTelefone(e.target.value);
     setFormData({...formData, telefone_contato: valorFormatado});
+  };
+
+  const handleCorrecaoOrtografica = async () => {
+    if (!formData.descricao_servico || formData.descricao_servico.trim().length < 3) {
+      return;
+    }
+
+    setCorrigindoTexto(true);
+    try {
+      const response = await base44.integrations.Core.InvokeLLM({
+        prompt: `Corrija apenas os erros ortográficos e gramaticais do texto a seguir, mantendo o mesmo sentido e estilo. Retorne apenas o texto corrigido, sem explicações:
+
+${formData.descricao_servico}`
+      });
+
+      if (response && typeof response === 'string') {
+        setFormData({...formData, descricao_servico: response.trim()});
+      }
+    } catch (error) {
+      console.error("Erro ao corrigir texto:", error);
+    } finally {
+      setCorrigindoTexto(false);
+    }
   };
 
   const handleEnviarTeste = async () => {
@@ -326,9 +350,15 @@ _Mensagem automática - AgroFinance_`;
                 <Textarea
                   value={formData.descricao_servico}
                   onChange={(e) => setFormData({...formData, descricao_servico: e.target.value})}
+                  onBlur={handleCorrecaoOrtografica}
                   rows={4}
                   required
+                  disabled={corrigindoTexto}
+                  className={corrigindoTexto ? "opacity-50" : ""}
                 />
+                {corrigindoTexto && (
+                  <p className="text-xs text-blue-600 mt-1">✨ Corrigindo ortografia...</p>
+                )}
               </div>
 
               {/* Seção de Boleto */}

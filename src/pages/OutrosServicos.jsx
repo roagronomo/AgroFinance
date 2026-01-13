@@ -170,15 +170,32 @@ export default function OutrosServicos() {
       return;
     }
 
+    if (!formData.cliente_nome || !formData.descricao_servico || !formData.data_vencimento_boleto || !formData.valor_receber) {
+      toast.error("Preencha todos os dados do serviço antes de testar");
+      return;
+    }
+
     setEnviandoTeste(true);
     try {
-      const mensagemTeste = `🔔 *Mensagem de Teste*
+      const dataVencimento = new Date(formData.data_vencimento_boleto + 'T00:00:00');
+      const dataFormatada = format(dataVencimento, 'dd/MM/yyyy');
+      const valorFormatado = typeof formData.valor_receber === 'string' 
+        ? parseFloat(formData.valor_receber.replace(/\./g, '').replace(',', '.'))
+        : formData.valor_receber;
 
-Olá! Este é um teste do sistema de lembretes via WhatsApp.
+      const mensagemTeste = `🔔 *Lembrete de Vencimento de Boleto*
 
-Se você recebeu esta mensagem, significa que a integração está funcionando corretamente! ✅
+Olá, ${formData.cliente_nome}!
 
-_Mensagem de teste - AgroFinance_`;
+Este é um lembrete sobre o vencimento do boleto referente ao serviço:
+
+📋 *Serviço:* ${formData.descricao_servico}
+📅 *Vencimento:* ${dataFormatada}
+💰 *Valor:* R$ ${valorFormatado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+
+⚠️ Por favor, não esqueça de efetuar o pagamento até a data de vencimento.
+
+_Mensagem automática - AgroFinance_`;
 
       const response = await base44.functions.invoke('enviarWhatsAppEvolution', {
         numero: formData.telefone_contato,

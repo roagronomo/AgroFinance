@@ -128,7 +128,9 @@ export default function OutrosServicos() {
       valor_receber: "",
       descricao_servico: "",
       boleto_emitido: false,
-      data_vencimento_boleto: ""
+      data_vencimento_boleto: "",
+      telefone_contato: "",
+      enviar_lembrete_whatsapp: false
     });
   };
 

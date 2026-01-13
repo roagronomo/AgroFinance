@@ -19,6 +19,7 @@ export default function OutrosServicos() {
   const [editingServico, setEditingServico] = useState(null);
   const [busca, setBusca] = useState("");
   const [clienteSelecionado, setClienteSelecionado] = useState(null);
+  const [enviandoTeste, setEnviandoTeste] = useState(false);
   const [formData, setFormData] = useState({
     cliente_nome: "",
     data_protocolo: "",
@@ -148,6 +149,40 @@ export default function OutrosServicos() {
   const handleClienteSelect = (cliente) => {
     setClienteSelecionado(cliente);
     setFormData({...formData, cliente_nome: cliente?.nome || ""});
+  };
+
+  const handleEnviarTeste = async () => {
+    if (!formData.telefone_contato) {
+      toast.error("Digite um número de telefone primeiro");
+      return;
+    }
+
+    setEnviandoTeste(true);
+    try {
+      const mensagemTeste = `🔔 *Mensagem de Teste*
+
+Olá! Este é um teste do sistema de lembretes via WhatsApp.
+
+Se você recebeu esta mensagem, significa que a integração está funcionando corretamente! ✅
+
+_Mensagem de teste - AgroFinance_`;
+
+      const response = await base44.functions.invoke('enviarWhatsAppEvolution', {
+        numero: formData.telefone_contato,
+        mensagem: mensagemTeste
+      });
+
+      if (response.success) {
+        toast.success("✅ Mensagem de teste enviada com sucesso!");
+      } else {
+        toast.error(`Erro: ${response.error || 'Falha ao enviar'}`);
+      }
+    } catch (error) {
+      console.error("Erro ao enviar teste:", error);
+      toast.error("Erro ao enviar mensagem de teste");
+    } finally {
+      setEnviandoTeste(false);
+    }
   };
 
   const servicosFiltrados = servicos.filter(s => 
@@ -302,15 +337,26 @@ export default function OutrosServicos() {
 
                       <div>
                         <Label>Telefone/WhatsApp para Lembrete</Label>
-                        <Input
-                          type="tel"
-                          value={formData.telefone_contato}
-                          onChange={(e) => setFormData({...formData, telefone_contato: e.target.value})}
-                          placeholder="(62) 99999-9999"
-                          className="mt-1"
-                        />
+                        <div className="flex gap-2 mt-1">
+                          <Input
+                            type="tel"
+                            value={formData.telefone_contato}
+                            onChange={(e) => setFormData({...formData, telefone_contato: e.target.value})}
+                            placeholder="(62) 99999-9999"
+                            className="flex-1"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleEnviarTeste}
+                            disabled={!formData.telefone_contato || enviandoTeste}
+                            className="whitespace-nowrap"
+                          >
+                            {enviandoTeste ? "Enviando..." : "📱 Testar"}
+                          </Button>
+                        </div>
                         <p className="text-xs text-gray-500 mt-1">
-                          Digite o número com DDD
+                          Digite o número com DDD e teste o envio antes de ativar os lembretes automáticos
                         </p>
                       </div>
 

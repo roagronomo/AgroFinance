@@ -126,6 +126,7 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
   const [cronogramaPreview, setCronogramaPreview] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [carregandoClientes, setCarregandoClientes] = useState(true);
+  const [corrigindoTexto, setCorrigindoTexto] = useState({});
 
   const getMesesPorPeriodo = useCallback((frequencia) => {
     const mapa = {
@@ -486,6 +487,31 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
     handleInputChange(field, nomeFormatado);
   };
 
+  const handleCorrecaoOrtografica = async (campo) => {
+    const valor = dadosProjeto[campo];
+
+    if (!valor || valor.trim().length < 3) {
+      return;
+    }
+
+    setCorrigindoTexto(prev => ({...prev, [campo]: true}));
+    try {
+      const response = await base44.integrations.Core.InvokeLLM({
+        prompt: `Corrija apenas os erros ortográficos e gramaticais do texto a seguir, mantendo o mesmo sentido e estilo. Retorne apenas o texto corrigido, sem explicações:
+
+${valor}`
+      });
+
+      if (response && typeof response === 'string') {
+        handleInputChange(campo, response.trim());
+      }
+    } catch (error) {
+      console.error("Erro ao corrigir texto:", error);
+    } finally {
+      setCorrigindoTexto(prev => ({...prev, [campo]: false}));
+    }
+  };
+
   const handleImovelChange = (index, field, value) => {
     console.log(`🏘️ Alterando imóvel [${index}].${field} →`, value);
     const novosImoveis = [...dadosProjeto.imoveis_beneficiados];
@@ -723,10 +749,13 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
             id="item_financiado"
             value={dadosProjeto.item_financiado}
             onChange={(e) => handleInputChange('item_financiado', e.target.value)}
+            onBlur={() => handleCorrecaoOrtografica('item_financiado')}
             placeholder="Ex: Trator, Implementos, Custeio..."
             required
+            disabled={corrigindoTexto.item_financiado}
             className="border-green-200 focus:border-green-500 h-9"
           />
+          {corrigindoTexto.item_financiado && <p className="text-xs text-blue-600 mt-1">✨ Corrigindo...</p>}
         </div>
 
         <div className="space-y-1.5">
@@ -1187,10 +1216,13 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
           id="observacoes"
           value={dadosProjeto.observacoes}
           onChange={(e) => handleInputChange('observacoes', e.target.value)}
+          onBlur={() => handleCorrecaoOrtografica('observacoes')}
           placeholder="Ex: Aguardando certidão, pendente documentação..."
           rows={3}
+          disabled={corrigindoTexto.observacoes}
           className="border-green-200 focus:border-green-500 resize-none"
         />
+        {corrigindoTexto.observacoes && <p className="text-xs text-blue-600 mt-1">✨ Corrigindo...</p>}
       </div>
 
       <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg focus:outline-none focus:shadow-outline" disabled={isLoading}>

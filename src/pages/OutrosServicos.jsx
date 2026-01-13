@@ -199,6 +199,10 @@ ${formData.descricao_servico}`
       return;
     }
 
+    if (!confirm("Tem certeza que deseja enviar uma mensagem de teste via WhatsApp?")) {
+      return;
+    }
+
     setEnviandoTeste(true);
     try {
       const dataVencimento = new Date(formData.data_vencimento_boleto + 'T00:00:00');

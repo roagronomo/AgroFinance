@@ -31,10 +31,11 @@ Deno.serve(async (req) => {
     // Obter credenciais da Evolution API
     const EVOLUTION_API_URL = Deno.env.get("EVOLUTION_API_URL");
     const EVOLUTION_API_KEY = Deno.env.get("EVOLUTION_API_KEY");
+    const EVOLUTION_INSTANCE_NAME = Deno.env.get("EVOLUTION_INSTANCE_NAME");
 
-    if (!EVOLUTION_API_URL || !EVOLUTION_API_KEY) {
+    if (!EVOLUTION_API_URL || !EVOLUTION_API_KEY || !EVOLUTION_INSTANCE_NAME) {
       return Response.json({ 
-        error: 'Credenciais da Evolution API não configuradas' 
+        error: 'Credenciais da Evolution API não configuradas (URL, API_KEY, INSTANCE_NAME)' 
       }, { status: 500 });
     }
 
@@ -47,7 +48,7 @@ Deno.serve(async (req) => {
     console.log(`📱 Enviando WhatsApp para: ${numeroFormatado}`);
 
     // Enviar mensagem via Evolution API
-    const response = await fetch(`${EVOLUTION_API_URL}/message/sendText/instance`, {
+    const response = await fetch(`${EVOLUTION_API_URL}/message/sendText/${EVOLUTION_INSTANCE_NAME}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

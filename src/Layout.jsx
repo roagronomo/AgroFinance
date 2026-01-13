@@ -139,8 +139,8 @@ const navigationSections = [
         icon: FileText,
       },
       {
-        title: "Lembretes",
-        url: createPageUrl("Lembretes"),
+        title: "Despesas e Lembretes",
+        url: createPageUrl("DespesasLembretes"),
         icon: Bell,
       },
       ]

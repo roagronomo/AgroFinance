@@ -6,6 +6,7 @@ import CadastroClientes from './pages/CadastroClientes';
 import CadastroImoveis from './pages/CadastroImoveis';
 import CorrecaoVinculos from './pages/CorrecaoVinculos';
 import Dashboard from './pages/Dashboard';
+import DespesasLembretes from './pages/DespesasLembretes';
 import EditarProjeto from './pages/EditarProjeto';
 import EditarServicoART from './pages/EditarServicoART';
 import ElaboracaoARTs from './pages/ElaboracaoARTs';
@@ -16,7 +17,6 @@ import OutrosServicos from './pages/OutrosServicos';
 import ProducaoAgricola from './pages/ProducaoAgricola';
 import TodosProjetos from './pages/TodosProjetos';
 import Vencimentos from './pages/Vencimentos';
-import DespesasLembretes from './pages/DespesasLembretes';
 import __Layout from './Layout.jsx';
 
 
@@ -29,6 +29,7 @@ export const PAGES = {
     "CadastroImoveis": CadastroImoveis,
     "CorrecaoVinculos": CorrecaoVinculos,
     "Dashboard": Dashboard,
+    "DespesasLembretes": DespesasLembretes,
     "EditarProjeto": EditarProjeto,
     "EditarServicoART": EditarServicoART,
     "ElaboracaoARTs": ElaboracaoARTs,
@@ -39,7 +40,6 @@ export const PAGES = {
     "ProducaoAgricola": ProducaoAgricola,
     "TodosProjetos": TodosProjetos,
     "Vencimentos": Vencimentos,
-    "DespesasLembretes": DespesasLembretes,
 }
 
 export const pagesConfig = {

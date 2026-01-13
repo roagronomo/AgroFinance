@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Bell, Calendar, DollarSign, FileText, Upload, Check, X } from "lucide-react";
+import { Plus, Edit, Trash2, Bell, Calendar, DollarSign, FileText, Upload, Check, X, Undo2, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 import AutocompleteInput from "../components/common/AutocompleteInput";
@@ -174,7 +174,7 @@ ${valor}`
         }
       });
 
-      toast.success("Boleto anexado! Extraindo código de barras...");
+      toast.success("✓ Boleto anexado com sucesso", { duration: 2000 });
       
       // Extrair código de barras automaticamente
       setExtraindoCodigo(true);
@@ -185,9 +185,7 @@ ${valor}`
           ...prev,
           codigo_barras: response.codigo_barras
         }));
-        toast.success("✅ Código de barras extraído automaticamente!");
-      } else {
-        toast.info("Código de barras não encontrado no documento");
+        toast.success("✓ Código de barras extraído", { duration: 2000 });
       }
     } catch (error) {
       console.error("Erro ao fazer upload:", error);
@@ -216,7 +214,7 @@ ${valor}`
         }
       });
 
-      toast.success("Recibo anexado com sucesso!");
+      toast.success("✓ Recibo anexado com sucesso", { duration: 2000 });
     } catch (error) {
       console.error("Erro ao fazer upload:", error);
       toast.error("Erro ao anexar recibo");
@@ -278,6 +276,8 @@ ${valor}`
   };
 
   const handleMarcarPago = async (contaId) => {
+    if (!confirm("Tem certeza que deseja marcar esta conta como paga?")) return;
+    
     try {
       await base44.entities.ContaPagar.update(contaId, {
         pago: true,
@@ -289,6 +289,42 @@ ${valor}`
       console.error("Erro ao marcar como pago:", error);
       toast.error("Erro ao marcar como pago");
     }
+  };
+
+  const handleDesmarcarPago = async (contaId) => {
+    if (!confirm("Deseja retornar esta conta para 'Contas a Pagar'?")) return;
+    
+    try {
+      await base44.entities.ContaPagar.update(contaId, {
+        pago: false,
+        data_pagamento: null
+      });
+      toast.success("Conta retornada para a pagar!");
+      await carregarDados();
+    } catch (error) {
+      console.error("Erro ao desmarcar como pago:", error);
+      toast.error("Erro ao processar");
+    }
+  };
+
+  const handleEditarConta = (conta) => {
+    setEditingItem(conta);
+    setTipoForm("conta");
+    setFormDataConta({
+      descricao: conta.descricao || "",
+      valor: conta.valor ? formatarMoeda(conta.valor) : "",
+      data_vencimento: conta.data_vencimento || "",
+      dias_antes_avisar: conta.dias_antes_avisar || 3,
+      telefone_contato: conta.telefone_contato || "",
+      codigo_barras: conta.codigo_barras || "",
+      fornecedor: conta.fornecedor || "",
+      categoria: conta.categoria || "",
+      observacoes: conta.observacoes || "",
+      ativo: conta.ativo !== false,
+      boleto_anexo: conta.boleto_anexo || null,
+      recibo_anexo: conta.recibo_anexo || null
+    });
+    setShowForm(true);
   };
 
   const handleExcluir = async (id, tipo) => {
@@ -485,26 +521,39 @@ ${valor}`
                     
                     <div>
                       <Label>Boleto (PDF)</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Input
-                          type="file"
-                          accept="application/pdf"
-                          onChange={handleUploadBoleto}
-                          disabled={uploadingBoleto || extraindoCodigo}
-                          className="flex-1"
-                        />
-                        {formDataConta.boleto_anexo && (
-                          <Check className="w-5 h-5 text-green-600" />
+                      <div className="mt-1">
+                        <label className={`flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                          uploadingBoleto || extraindoCodigo 
+                            ? 'bg-gray-50 border-gray-300 cursor-not-allowed' 
+                            : formDataConta.boleto_anexo
+                              ? 'bg-green-50 border-green-300 hover:bg-green-100'
+                              : 'border-gray-300 hover:bg-gray-50 hover:border-green-400'
+                        }`}>
+                          <input
+                            type="file"
+                            accept="application/pdf"
+                            onChange={handleUploadBoleto}
+                            disabled={uploadingBoleto || extraindoCodigo}
+                            className="hidden"
+                          />
+                          {formDataConta.boleto_anexo ? (
+                            <>
+                              <Check className="w-5 h-5 text-green-600" />
+                              <span className="text-sm font-medium text-green-700">{formDataConta.boleto_anexo.file_name}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Paperclip className="w-5 h-5 text-gray-400" />
+                              <span className="text-sm text-gray-600">Clique para anexar boleto (PDF)</span>
+                            </>
+                          )}
+                        </label>
+                        {(uploadingBoleto || extraindoCodigo) && (
+                          <p className="text-xs text-blue-600 mt-2 text-center">
+                            {extraindoCodigo ? "🔍 Extraindo código de barras..." : "📤 Carregando arquivo..."}
+                          </p>
                         )}
                       </div>
-                      {(uploadingBoleto || extraindoCodigo) && (
-                        <p className="text-xs text-blue-600 mt-1">
-                          {extraindoCodigo ? "🔍 Extraindo código de barras..." : "📤 Enviando..."}
-                        </p>
-                      )}
-                      {formDataConta.boleto_anexo && (
-                        <p className="text-xs text-green-600 mt-1">✅ {formDataConta.boleto_anexo.file_name}</p>
-                      )}
                     </div>
 
                     {formDataConta.codigo_barras && (
@@ -522,21 +571,36 @@ ${valor}`
 
                     <div>
                       <Label>Recibo de Pagamento</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Input
-                          type="file"
-                          onChange={handleUploadRecibo}
-                          disabled={uploadingRecibo}
-                          className="flex-1"
-                        />
-                        {formDataConta.recibo_anexo && (
-                          <Check className="w-5 h-5 text-green-600" />
+                      <div className="mt-1">
+                        <label className={`flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                          uploadingRecibo
+                            ? 'bg-gray-50 border-gray-300 cursor-not-allowed'
+                            : formDataConta.recibo_anexo
+                              ? 'bg-green-50 border-green-300 hover:bg-green-100'
+                              : 'border-gray-300 hover:bg-gray-50 hover:border-green-400'
+                        }`}>
+                          <input
+                            type="file"
+                            onChange={handleUploadRecibo}
+                            disabled={uploadingRecibo}
+                            className="hidden"
+                          />
+                          {formDataConta.recibo_anexo ? (
+                            <>
+                              <Check className="w-5 h-5 text-green-600" />
+                              <span className="text-sm font-medium text-green-700">{formDataConta.recibo_anexo.file_name}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Paperclip className="w-5 h-5 text-gray-400" />
+                              <span className="text-sm text-gray-600">Clique para anexar recibo</span>
+                            </>
+                          )}
+                        </label>
+                        {uploadingRecibo && (
+                          <p className="text-xs text-blue-600 mt-2 text-center">📤 Carregando arquivo...</p>
                         )}
                       </div>
-                      {uploadingRecibo && <p className="text-xs text-blue-600 mt-1">📤 Enviando...</p>}
-                      {formDataConta.recibo_anexo && (
-                        <p className="text-xs text-green-600 mt-1">✅ {formDataConta.recibo_anexo.file_name}</p>
-                      )}
                     </div>
                   </div>
 
@@ -765,6 +829,15 @@ ${valor}`
                           )}
                         </div>
                         <div className="flex gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleEditarConta(conta)}
+                            className="text-blue-600 hover:text-blue-700"
+                            title="Editar"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
                           <Button 
                             variant="ghost" 
                             size="icon" 

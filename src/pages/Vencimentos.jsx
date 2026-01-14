@@ -105,16 +105,19 @@ export default function Vencimentos() {
   const aplicarFiltros = useCallback(() => {
     let resultado = [...parcelas];
 
-    if (filtros.ano !== "todos") {
-      resultado = resultado.filter(p =>
-        new Date(p.data_vencimento).getFullYear().toString() === filtros.ano
-      );
-    }
+    // No relatório geral, ignorar filtro de ano e mês
+    if (filtros.tipoRelatorio === "detalhado") {
+      if (filtros.ano !== "todos") {
+        resultado = resultado.filter(p =>
+          new Date(p.data_vencimento).getFullYear().toString() === filtros.ano
+        );
+      }
 
-    if (filtros.mes !== "todos") {
-      resultado = resultado.filter(p =>
-        (new Date(p.data_vencimento).getMonth() + 1).toString() === filtros.mes
-      );
+      if (filtros.mes !== "todos") {
+        resultado = resultado.filter(p =>
+          (new Date(p.data_vencimento).getMonth() + 1).toString() === filtros.mes
+        );
+      }
     }
 
     if (filtros.status !== "todos") {
@@ -892,12 +895,6 @@ export default function Vencimentos() {
                               <span className="font-medium">Banco:</span> {bancoNomes[grupo.banco] || grupo.banco}
                             </p>
                           )}
-                        </div>
-
-                        <div className="text-right">
-                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 mb-2">
-                            {grupo.parcelas.length} parcela(s)
-                          </Badge>
                         </div>
                       </div>
 

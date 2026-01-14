@@ -115,132 +115,138 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
         />
       </div>
 
-      {/* Filtros em linha */}
-      <div className="flex flex-wrap gap-2">
-        <Select
-          value={filtros.status}
-          onValueChange={(value) => onFiltroChange('status', value)}
-        >
-          <SelectTrigger className="h-9 w-[120px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
-            <div className="flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5 text-gray-400" />
-              <SelectValue placeholder="Status" />
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos</SelectItem>
-            {STATUS_OPTIONS.map((status) => (
-              <SelectItem key={status.value} value={status.value}>
-                {status.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={filtros.banco}
-          onValueChange={(value) => onFiltroChange('banco', value)}
-        >
-          <SelectTrigger className="h-9 w-[135px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
-            <div className="flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5 text-gray-400" />
-              <SelectValue placeholder="Banco" />
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos</SelectItem>
-            {BANCOS.map((banco) => (
-              <SelectItem key={banco.value} value={banco.value}>
-                {banco.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={filtros.ano || "todos"}
-          onValueChange={(value) => onFiltroChange('ano', value === "todos" ? "todos" : value)}
-        >
-          <SelectTrigger className="h-9 w-[100px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-gray-400" />
-              <SelectValue placeholder="Ano" />
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos</SelectItem>
-            {yearOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={filtros.safra || "todos"}
-          onValueChange={(value) => onFiltroChange('safra', value === "todos" ? "todos" : value)}
-        >
-          <SelectTrigger className="h-9 w-[120px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
-            <div className="flex items-center gap-1.5">
-              <Wheat className="w-3.5 h-3.5 text-gray-400" />
-              <SelectValue placeholder="Safra" />
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todas</SelectItem>
-            {safrasDisponiveis.map((safra) => (
-              <SelectItem key={safra} value={safra}>
-                {safra}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <div className="relative w-[140px]">
-          <Hash className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
-          <Input
-            placeholder="Contrato"
-            value={filtros.contrato}
-            onChange={(e) => {
-              const valor = e.target.value.replace(/[^0-9/.\-\s]/g, '');
-              onFiltroChange('contrato', valor);
-            }}
-            inputMode="numeric"
-            className="h-9 pl-9 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50"
-          />
+      {/* Filtros com labels */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-gray-600">Status</label>
+          <Select
+            value={filtros.status}
+            onValueChange={(value) => onFiltroChange('status', value)}
+          >
+            <SelectTrigger className="h-9 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              {STATUS_OPTIONS.map((status) => (
+                <SelectItem key={status.value} value={status.value}>
+                  {status.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        <Button
-          variant={filtros.status_art === "a_fazer" ? "default" : "outline"}
-          size="sm"
-          onClick={() => onFiltroChange('status_art', filtros.status_art === "a_fazer" ? "todos" : "a_fazer")}
-          className={`h-9 px-3 rounded-lg text-xs ${
-            filtros.status_art === "a_fazer" 
-              ? "bg-amber-500 hover:bg-amber-600 text-white" 
-              : "border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300"
-          }`}
-        >
-          <ClipboardList className="w-3.5 h-3.5 mr-1.5" />
-          ART a fazer
-        </Button>
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-gray-600">Banco</label>
+          <Select
+            value={filtros.banco}
+            onValueChange={(value) => onFiltroChange('banco', value)}
+          >
+            <SelectTrigger className="h-9 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              {BANCOS.map((banco) => (
+                <SelectItem key={banco.value} value={banco.value}>
+                  {banco.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select
-          value={filtros.assistencia_tecnica || "todos"}
-          onValueChange={(value) => onFiltroChange('assistencia_tecnica', value)}
-        >
-          <SelectTrigger className="h-9 w-[130px] border-gray-200 focus:border-emerald-500 rounded-lg text-xs bg-gray-50/50">
-            <div className="flex items-center gap-1.5">
-              <FileCheck className="w-3.5 h-3.5 text-gray-400" />
-              <SelectValue placeholder="Assistência" />
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos</SelectItem>
-            <SelectItem value="sim">Com Assist.</SelectItem>
-            <SelectItem value="nao">Sem Assist.</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-gray-600">Ano</label>
+          <Select
+            value={filtros.ano || "todos"}
+            onValueChange={(value) => onFiltroChange('ano', value === "todos" ? "todos" : value)}
+          >
+            <SelectTrigger className="h-9 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              {yearOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-gray-600">Safra</label>
+          <Select
+            value={filtros.safra || "todos"}
+            onValueChange={(value) => onFiltroChange('safra', value === "todos" ? "todos" : value)}
+          >
+            <SelectTrigger className="h-9 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+              <SelectValue placeholder="Todas" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todas</SelectItem>
+              {safrasDisponiveis.map((safra) => (
+                <SelectItem key={safra} value={safra}>
+                  {safra}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-gray-600">Nº Contrato</label>
+          <div className="relative">
+            <Hash className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
+            <Input
+              placeholder="Ex: 21"
+              value={filtros.contrato}
+              onChange={(e) => {
+                const valor = e.target.value.replace(/[^0-9/.\-\s]/g, '');
+                onFiltroChange('contrato', valor);
+              }}
+              inputMode="numeric"
+              className="h-9 pl-9 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-gray-600">ART</label>
+          <Button
+            variant={filtros.status_art === "a_fazer" ? "default" : "outline"}
+            size="sm"
+            onClick={() => onFiltroChange('status_art', filtros.status_art === "a_fazer" ? "todos" : "a_fazer")}
+            className={`h-9 w-full rounded-lg text-xs ${
+              filtros.status_art === "a_fazer" 
+                ? "bg-amber-500 hover:bg-amber-600 text-white" 
+                : "border-gray-200 text-gray-600 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700"
+            }`}
+          >
+            <ClipboardList className="w-3.5 h-3.5 mr-1.5" />
+            {filtros.status_art === "a_fazer" ? "A fazer" : "Todos"}
+          </Button>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-gray-600">Assistência</label>
+          <Select
+            value={filtros.assistencia_tecnica || "todos"}
+            onValueChange={(value) => onFiltroChange('assistencia_tecnica', value)}
+          >
+            <SelectTrigger className="h-9 border-gray-200 focus:border-emerald-500 rounded-lg text-xs bg-gray-50/50">
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              <SelectItem value="sim">Com Assist.</SelectItem>
+              <SelectItem value="nao">Sem Assist.</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Seleção de Contratos */}

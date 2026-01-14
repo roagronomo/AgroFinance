@@ -1084,7 +1084,7 @@ export default function Vencimentos() {
               value={linhasPorPagina.toString()}
               onValueChange={(value) => setLinhasPorPagina(parseInt(value))}
             >
-              <SelectTrigger className="h-9 w-16 border-gray-200 text-xs text-gray-500">
+              <SelectTrigger className="h-9 w-16 bg-emerald-600 hover:bg-emerald-700 border-emerald-600 text-xs text-white">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

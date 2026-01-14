@@ -67,7 +67,10 @@ export default function Vencimentos() {
     ano: new Date().getFullYear().toString(),
     mes: "todos",
     status: "todos",
-    contrato: ""
+    contrato: "",
+    banco: "todos",
+    clientesSelecionados: [],
+    tipoRelatorio: "detalhado"
   });
 
   useEffect(() => {
@@ -117,10 +120,16 @@ export default function Vencimentos() {
       resultado = resultado.filter(p => p.status === filtros.status);
     }
 
-    if (filtros.busca) {
+    if (filtros.clientesSelecionados.length > 0) {
       const projetosFiltrados = projetos.filter(proj =>
-        proj.nome_cliente.toLowerCase().includes(filtros.busca.toLowerCase())
+        filtros.clientesSelecionados.includes(proj.nome_cliente)
       );
+      const projetosIds = projetosFiltrados.map(p => p.id);
+      resultado = resultado.filter(p => projetosIds.includes(p.projeto_id));
+    }
+
+    if (filtros.banco !== "todos") {
+      const projetosFiltrados = projetos.filter(proj => proj.banco === filtros.banco);
       const projetosIds = projetosFiltrados.map(p => p.id);
       resultado = resultado.filter(p => projetosIds.includes(p.projeto_id));
     }
@@ -594,6 +603,52 @@ export default function Vencimentos() {
   };
 
   const anos = [...new Set(parcelas.map(p => new Date(p.data_vencimento).getFullYear()))].sort();
+  const clientesDisponiveis = [...new Set(projetos.map(p => p.nome_cliente))].filter(Boolean).sort();
+  const bancosDisponiveis = [...new Set(projetos.map(p => p.banco))].filter(Boolean);
+
+  const toggleCliente = (cliente) => {
+    setFiltros(prev => ({
+      ...prev,
+      clientesSelecionados: prev.clientesSelecionados.includes(cliente)
+        ? prev.clientesSelecionados.filter(c => c !== cliente)
+        : [...prev.clientesSelecionados, cliente]
+    }));
+  };
+
+  const agruparPorContrato = () => {
+    const grupos = {};
+    
+    parcelasFiltradas.forEach(parcela => {
+      const projeto = projetos.find(p => p.id === parcela.projeto_id);
+      if (!projeto) return;
+      
+      const contratoKey = `${projeto.id}_${projeto.numero_contrato}`;
+      
+      if (!grupos[contratoKey]) {
+        grupos[contratoKey] = {
+          cliente: projeto.nome_cliente,
+          banco: projeto.banco,
+          itemFinanciado: projeto.item_financiado,
+          numeroContrato: projeto.numero_contrato,
+          parcelas: [],
+          saldoDevedor: 0,
+          ultimoVencimento: null
+        };
+      }
+      
+      grupos[contratoKey].parcelas.push(parcela);
+      grupos[contratoKey].saldoDevedor += parcela.valor_parcela;
+      
+      const dataVencimento = new Date(parcela.data_vencimento);
+      if (!grupos[contratoKey].ultimoVencimento || dataVencimento > grupos[contratoKey].ultimoVencimento) {
+        grupos[contratoKey].ultimoVencimento = dataVencimento;
+      }
+    });
+    
+    return Object.values(grupos);
+  };
+
+  const relatorioPorContrato = agruparPorContrato();
 
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-slate-100 min-h-screen">
@@ -639,79 +694,130 @@ export default function Vencimentos() {
 
         {/* Filtros modernos */}
         <div className="bg-white rounded-xl border border-gray-100 p-4 mb-5 shadow-sm">
-          <div className="flex flex-wrap gap-2">
-            <div className="relative flex-1 min-w-[180px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Buscar por cliente..."
-                value={filtros.busca}
-                onChange={(e) => handleFiltroChange('busca', e.target.value)}
-                className="pl-10 h-10 border-gray-200 focus:border-emerald-500 rounded-lg text-sm"
-              />
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Select
+                value={filtros.ano}
+                onValueChange={(value) => handleFiltroChange('ano', value)}
+              >
+                <SelectTrigger className="h-10 min-w-[100px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os anos</SelectItem>
+                  {anos.map(ano => (
+                    <SelectItem key={ano} value={ano.toString()}>{ano}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={filtros.mes}
+                onValueChange={(value) => handleFiltroChange('mes', value)}
+              >
+                <SelectTrigger className="h-10 min-w-[150px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+                  <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os meses</SelectItem>
+                  <SelectItem value="1">Janeiro</SelectItem>
+                  <SelectItem value="2">Fevereiro</SelectItem>
+                  <SelectItem value="3">Março</SelectItem>
+                  <SelectItem value="4">Abril</SelectItem>
+                  <SelectItem value="5">Maio</SelectItem>
+                  <SelectItem value="6">Junho</SelectItem>
+                  <SelectItem value="7">Julho</SelectItem>
+                  <SelectItem value="8">Agosto</SelectItem>
+                  <SelectItem value="9">Setembro</SelectItem>
+                  <SelectItem value="10">Outubro</SelectItem>
+                  <SelectItem value="11">Novembro</SelectItem>
+                  <SelectItem value="12">Dezembro</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={filtros.status}
+                onValueChange={(value) => handleFiltroChange('status', value)}
+              >
+                <SelectTrigger className="h-10 min-w-[140px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os status</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="paga">Paga</SelectItem>
+                  <SelectItem value="em_atraso">Em Atraso</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={filtros.banco}
+                onValueChange={(value) => handleFiltroChange('banco', value)}
+              >
+                <SelectTrigger className="h-10 min-w-[160px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+                  <SelectValue placeholder="Banco" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os bancos</SelectItem>
+                  {bancosDisponiveis.map(banco => (
+                    <SelectItem key={banco} value={banco}>
+                      {bancoNomes[banco] || banco}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={filtros.tipoRelatorio}
+                onValueChange={(value) => handleFiltroChange('tipoRelatorio', value)}
+              >
+                <SelectTrigger className="h-10 min-w-[160px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="detalhado">Relatório Detalhado</SelectItem>
+                  <SelectItem value="geral">Relatório Geral</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <div className="relative min-w-[150px]">
+                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Nº do contrato..."
+                  value={filtros.contrato}
+                  onChange={(e) => handleFiltroChange('contrato', e.target.value)}
+                  className="pl-10 h-10 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50"
+                />
+              </div>
             </div>
 
-            <Select
-              value={filtros.ano}
-              onValueChange={(value) => handleFiltroChange('ano', value)}
-            >
-              <SelectTrigger className="h-10 min-w-[100px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
-                <SelectValue placeholder="Ano" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os anos</SelectItem>
-                {anos.map(ano => (
-                  <SelectItem key={ano} value={ano.toString()}>{ano}</SelectItem>
+            <div>
+              <p className="text-xs text-gray-500 mb-2 font-medium">Selecionar Clientes:</p>
+              <div className="flex flex-wrap gap-2">
+                {clientesDisponiveis.map(cliente => (
+                  <Badge
+                    key={cliente}
+                    onClick={() => toggleCliente(cliente)}
+                    className={`cursor-pointer transition-all ${
+                      filtros.clientesSelecionados.includes(cliente)
+                        ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {cliente}
+                  </Badge>
                 ))}
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={filtros.mes}
-              onValueChange={(value) => handleFiltroChange('mes', value)}
-            >
-              <SelectTrigger className="h-10 min-w-[150px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
-                <SelectValue placeholder="Mês" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os meses</SelectItem>
-                <SelectItem value="1">Janeiro</SelectItem>
-                <SelectItem value="2">Fevereiro</SelectItem>
-                <SelectItem value="3">Março</SelectItem>
-                <SelectItem value="4">Abril</SelectItem>
-                <SelectItem value="5">Maio</SelectItem>
-                <SelectItem value="6">Junho</SelectItem>
-                <SelectItem value="7">Julho</SelectItem>
-                <SelectItem value="8">Agosto</SelectItem>
-                <SelectItem value="9">Setembro</SelectItem>
-                <SelectItem value="10">Outubro</SelectItem>
-                <SelectItem value="11">Novembro</SelectItem>
-                <SelectItem value="12">Dezembro</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={filtros.status}
-              onValueChange={(value) => handleFiltroChange('status', value)}
-            >
-              <SelectTrigger className="h-10 min-w-[140px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os status</SelectItem>
-                <SelectItem value="pendente">Pendente</SelectItem>
-                <SelectItem value="paga">Paga</SelectItem>
-                <SelectItem value="em_atraso">Em Atraso</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <div className="relative min-w-[150px]">
-              <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Nº do contrato..."
-                value={filtros.contrato}
-                onChange={(e) => handleFiltroChange('contrato', e.target.value)}
-                className="pl-10 h-10 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50"
-              />
+              </div>
+              {filtros.clientesSelecionados.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleFiltroChange('clientesSelecionados', [])}
+                  className="mt-2 h-7 text-xs text-gray-500"
+                >
+                  Limpar seleção
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -736,7 +842,62 @@ export default function Vencimentos() {
                 Ajuste os filtros para ver parcelas
               </p>
             </div>
+          ) : filtros.tipoRelatorio === "geral" ? (
+            // RELATÓRIO GERAL - Agrupado por Contrato
+            relatorioPorContrato.map((grupo, index) => (
+              <div 
+                key={index} 
+                className="bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-200 overflow-hidden"
+              >
+                <div className="p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="w-1 h-16 rounded-full flex-shrink-0 bg-emerald-500" />
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-base font-semibold text-gray-800">
+                            {grupo.cliente}
+                          </h3>
+                          <p className="text-sm text-gray-500">
+                            <span className="font-medium">Contrato:</span> {grupo.numeroContrato || 'N/A'}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            <span className="font-medium">Projeto:</span> {grupo.itemFinanciado || 'N/A'}
+                          </p>
+                          {grupo.banco && (
+                            <p className="text-sm text-gray-500">
+                              <span className="font-medium">Banco:</span> {bancoNomes[grupo.banco] || grupo.banco}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="text-right">
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 mb-2">
+                            {grupo.parcelas.length} parcela(s)
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-6 text-sm mt-3 pt-3 border-t border-gray-100">
+                        <div className="flex items-center gap-1.5 text-gray-500">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>Último venc: {format(grupo.ultimoVencimento, "dd/MM/yyyy", { locale: ptBR })}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-gray-500">Saldo Devedor:</span>
+                          <span className="text-emerald-700 font-bold text-base">
+                            R$ {grupo.saldoDevedor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
           ) : (
+            // RELATÓRIO DETALHADO - Todas as parcelas
             parcelasFiltradas.map((parcela) => {
               const projeto = projetos.find(p => p.id === parcela.projeto_id);
               const StatusIcon = statusConfig[parcela.status]?.icon || Clock;

@@ -941,6 +941,16 @@ ${valor}`
                     <Button type="submit" className="bg-green-600 hover:bg-green-700">
                       {editingItem ? "Atualizar" : "Cadastrar"}
                     </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setDialogTesteWhatsApp(true)}
+                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                      disabled={enviandoTeste}
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      Enviar Teste
+                    </Button>
                     <Button type="button" variant="outline" onClick={handleCancelar}>
                       Cancelar
                     </Button>

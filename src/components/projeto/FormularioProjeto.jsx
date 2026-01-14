@@ -93,7 +93,7 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
     data_protocolo: "",
     status: "em_analise",
     banco: "",
-    safra: "",
+    safra: "Não se aplica",
     numero_contrato: "",
     item_financiado: "",
     fonte_recurso: "",
@@ -487,6 +487,28 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
     handleInputChange(field, nomeFormatado);
   };
 
+  const handleSafraBlur = (value) => {
+    if (!value || value.trim() === '') {
+      return;
+    }
+    
+    // Verifica se contém apenas números, barra e espaços
+    const contemApenasNumerosEBarra = /^[\d\s\/]+$/.test(value);
+    
+    if (contemApenasNumerosEBarra) {
+      // Mantém formatação original para números
+      handleInputChange('safra', value);
+    } else {
+      // Formata texto: primeira letra maiúscula, resto minúscula
+      const palavras = value.trim().split(/\s+/);
+      const formatado = palavras.map(palavra => {
+        if (palavra.length === 0) return '';
+        return palavra.charAt(0).toUpperCase() + palavra.slice(1).toLowerCase();
+      }).join(' ');
+      handleInputChange('safra', formatado);
+    }
+  };
+
   const handleCorrecaoOrtografica = async (campo) => {
     const valor = dadosProjeto[campo];
 
@@ -723,6 +745,7 @@ ${valor}`
             id="safra"
             value={dadosProjeto.safra}
             onChange={(e) => handleInputChange('safra', e.target.value)}
+            onBlur={(e) => handleSafraBlur(e.target.value)}
             placeholder="Ex: 2025/2026"
             className="border-green-200 focus:border-green-500 h-9"
           />

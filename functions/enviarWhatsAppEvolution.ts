@@ -46,6 +46,7 @@ Deno.serve(async (req) => {
     const numeroFormatado = numeroLimpo.length === 11 ? `55${numeroLimpo}` : numeroLimpo;
 
     console.log(`📱 Enviando WhatsApp para: ${numeroFormatado}`);
+    console.log(`📍 Endpoint: ${EVOLUTION_API_URL}/message/sendText/${EVOLUTION_INSTANCE_NAME}`);
 
     // Enviar mensagem via Evolution API
     const response = await fetch(`${EVOLUTION_API_URL}/message/sendText/${EVOLUTION_INSTANCE_NAME}`, {
@@ -55,7 +56,7 @@ Deno.serve(async (req) => {
         'apikey': EVOLUTION_API_KEY
       },
       body: JSON.stringify({
-        number: `${numeroFormatado}@s.whatsapp.net`,
+        number: numeroFormatado,
         text: mensagem
       })
     });

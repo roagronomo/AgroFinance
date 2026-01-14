@@ -761,119 +761,46 @@ ${valor}`
 
                   {!formDataConta.recorrente && (
                     <div className="space-y-3 border-t pt-4">
-                      <h3 className="font-semibold text-sm mb-3">Anexos</h3>
+                      <h3 className="font-semibold text-sm mb-3">Anexo do Boleto</h3>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <Label className="text-xs text-gray-600">Boleto (PDF)</Label>
-                        <div className="mt-1">
-                          <label className={`flex items-center justify-center gap-2 p-2 border-2 border-dashed rounded-md cursor-pointer transition-colors text-xs ${
-                            uploadingBoleto || extraindoCodigo 
-                              ? 'bg-gray-50 border-gray-300 cursor-not-allowed' 
-                              : formDataConta.boleto_anexo
-                                ? 'bg-green-50 border-green-300 hover:bg-green-100'
-                                : 'border-gray-300 hover:bg-gray-50 hover:border-green-400'
-                          }`}>
-                            <input
-                              type="file"
-                              accept="application/pdf"
-                              onChange={handleUploadBoleto}
-                              disabled={uploadingBoleto || extraindoCodigo}
-                              className="hidden"
-                            />
-                            {formDataConta.boleto_anexo ? (
-                              <>
-                                <Check className="w-4 h-4 text-green-600" />
-                                <span className="font-medium text-green-700 truncate">{formDataConta.boleto_anexo.file_name}</span>
-                              </>
-                            ) : (
-                              <>
-                                <Paperclip className="w-4 h-4 text-gray-400" />
-                                <span className="text-gray-600">Anexar boleto</span>
-                              </>
-                            )}
-                          </label>
-                          {(uploadingBoleto || extraindoCodigo) && (
-                            <p className="text-xs text-blue-600 mt-1 text-center">
-                              {extraindoCodigo ? "🔍 Extraindo..." : "📤 Enviando..."}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label className="text-xs text-gray-600">Recibo de Pagamento</Label>
-                        <div className="mt-1">
-                          <label className={`flex items-center justify-center gap-2 p-2 border-2 border-dashed rounded-md cursor-pointer transition-colors text-xs ${
-                            uploadingRecibo
-                              ? 'bg-gray-50 border-gray-300 cursor-not-allowed'
-                              : formDataConta.recibo_anexo
-                                ? 'bg-green-50 border-green-300 hover:bg-green-100'
-                                : 'border-gray-300 hover:bg-gray-50 hover:border-green-400'
-                          }`}>
-                            <input
-                              type="file"
-                              onChange={handleUploadRecibo}
-                              disabled={uploadingRecibo}
-                              className="hidden"
-                            />
-                            {formDataConta.recibo_anexo ? (
-                              <>
-                                <Check className="w-4 h-4 text-green-600" />
-                                <span className="font-medium text-green-700 truncate">{formDataConta.recibo_anexo.file_name}</span>
-                              </>
-                            ) : (
-                              <>
-                                <Paperclip className="w-4 h-4 text-gray-400" />
-                                <span className="text-gray-600">Anexar recibo</span>
-                              </>
-                            )}
-                          </label>
-                          {uploadingRecibo && (
-                            <p className="text-xs text-blue-600 mt-1 text-center">📤 Enviando...</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-3 border-t pt-4">
-                    <h3 className="font-semibold text-sm mb-3">Recibo de Pagamento</h3>
                     <div>
-                      <Label className="text-xs text-gray-600">Recibo (opcional)</Label>
+                      <Label className="text-xs text-gray-600">Boleto (PDF)</Label>
                       <div className="mt-1">
                         <label className={`flex items-center justify-center gap-2 p-2 border-2 border-dashed rounded-md cursor-pointer transition-colors text-xs ${
-                          uploadingRecibo
-                            ? 'bg-gray-50 border-gray-300 cursor-not-allowed'
-                            : formDataConta.recibo_anexo
+                          uploadingBoleto || extraindoCodigo 
+                            ? 'bg-gray-50 border-gray-300 cursor-not-allowed' 
+                            : formDataConta.boleto_anexo
                               ? 'bg-green-50 border-green-300 hover:bg-green-100'
                               : 'border-gray-300 hover:bg-gray-50 hover:border-green-400'
                         }`}>
                           <input
                             type="file"
-                            onChange={handleUploadRecibo}
-                            disabled={uploadingRecibo}
+                            accept="application/pdf"
+                            onChange={handleUploadBoleto}
+                            disabled={uploadingBoleto || extraindoCodigo}
                             className="hidden"
                           />
-                          {formDataConta.recibo_anexo ? (
+                          {formDataConta.boleto_anexo ? (
                             <>
                               <Check className="w-4 h-4 text-green-600" />
-                              <span className="font-medium text-green-700 truncate">{formDataConta.recibo_anexo.file_name}</span>
+                              <span className="font-medium text-green-700 truncate">{formDataConta.boleto_anexo.file_name}</span>
                             </>
                           ) : (
                             <>
                               <Paperclip className="w-4 h-4 text-gray-400" />
-                              <span className="text-gray-600">Anexar recibo</span>
+                              <span className="text-gray-600">Anexar boleto</span>
                             </>
                           )}
                         </label>
-                        {uploadingRecibo && (
-                          <p className="text-xs text-blue-600 mt-1 text-center">📤 Enviando...</p>
+                        {(uploadingBoleto || extraindoCodigo) && (
+                          <p className="text-xs text-blue-600 mt-1 text-center">
+                            {extraindoCodigo ? "🔍 Extraindo..." : "📤 Enviando..."}
+                          </p>
                         )}
                       </div>
                     </div>
-                  </div>
+                    </div>
+                  )}
 
                   {!formDataConta.recorrente && formDataConta.codigo_barras && (
                     <div className="border-t pt-4">

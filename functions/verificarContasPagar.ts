@@ -57,7 +57,7 @@ ${recorrenteInfo}${conta.fornecedor ? `🏢 *Fornecedor:* ${conta.fornecedor}\n`
 💵 *Valor:* ${valorFormatado}
 ${conta.categoria ? `📂 *Categoria:* ${conta.categoria}\n` : ''}
 ${conta.observacoes ? `📝 ${conta.observacoes}\n` : ''}
-${conta.codigo_barras && !conta.recorrente ? `\n🔢 *Código de Barras:*\n\`${conta.codigo_barras}\`\n` : ''}
+${conta.codigo_barras && !conta.recorrente ? `\n🔢 *Código de Barras:*\n\`${conta.codigo_barras}\`\n` : ''}${conta.chave_pix ? `\n💳 *PIX para pagamento:*\n${conta.chave_pix}\n` : ''}
 ⚠️ *ATENÇÃO: Esta conta vence HOJE!*
 
 _Lembrete automático - AgroFinance_`;
@@ -71,7 +71,7 @@ ${recorrenteInfo}${conta.fornecedor ? `🏢 *Fornecedor:* ${conta.fornecedor}\n`
 💵 *Valor:* ${valorFormatado}
 ${conta.categoria ? `📂 *Categoria:* ${conta.categoria}\n` : ''}
 ${conta.observacoes ? `📝 ${conta.observacoes}\n` : ''}
-${conta.codigo_barras && !conta.recorrente ? `\n🔢 *Código de Barras:*\n\`${conta.codigo_barras}\`\n` : ''}
+${conta.codigo_barras && !conta.recorrente ? `\n🔢 *Código de Barras:*\n\`${conta.codigo_barras}\`\n` : ''}${conta.chave_pix ? `\n💳 *PIX para pagamento:*\n${conta.chave_pix}\n` : ''}
 _Lembrete automático - AgroFinance_`;
         }
 
@@ -98,6 +98,7 @@ _Lembrete automático - AgroFinance_`;
                 data_vencimento: proximaData.toISOString().split('T')[0],
                 dias_antes_avisar: conta.dias_antes_avisar,
                 telefone_contato: conta.telefone_contato,
+                chave_pix: conta.chave_pix,
                 fornecedor: conta.fornecedor,
                 categoria: conta.categoria,
                 observacoes: conta.observacoes,

@@ -1102,98 +1102,116 @@ export default function Vencimentos() {
         {/* Filtros modernos */}
         <div className="bg-white rounded-xl border border-gray-100 p-4 mb-5 shadow-sm">
           <div className="space-y-3">
-            <div className="flex flex-wrap gap-2">
-              <Select
-                value={filtros.ano}
-                onValueChange={(value) => handleFiltroChange('ano', value)}
-              >
-                <SelectTrigger className="h-10 min-w-[100px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
-                  <SelectValue placeholder="Ano" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os anos</SelectItem>
-                  {anos.map(ano => (
-                    <SelectItem key={ano} value={ano.toString()}>{ano}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-gray-600">Ano</label>
+                <Select
+                  value={filtros.ano}
+                  onValueChange={(value) => handleFiltroChange('ano', value)}
+                >
+                  <SelectTrigger className="h-9 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    {anos.map(ano => (
+                      <SelectItem key={ano} value={ano.toString()}>{ano}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <Select
-                value={filtros.mes}
-                onValueChange={(value) => handleFiltroChange('mes', value)}
-              >
-                <SelectTrigger className="h-10 min-w-[150px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
-                  <SelectValue placeholder="Mês" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os meses</SelectItem>
-                  <SelectItem value="1">Janeiro</SelectItem>
-                  <SelectItem value="2">Fevereiro</SelectItem>
-                  <SelectItem value="3">Março</SelectItem>
-                  <SelectItem value="4">Abril</SelectItem>
-                  <SelectItem value="5">Maio</SelectItem>
-                  <SelectItem value="6">Junho</SelectItem>
-                  <SelectItem value="7">Julho</SelectItem>
-                  <SelectItem value="8">Agosto</SelectItem>
-                  <SelectItem value="9">Setembro</SelectItem>
-                  <SelectItem value="10">Outubro</SelectItem>
-                  <SelectItem value="11">Novembro</SelectItem>
-                  <SelectItem value="12">Dezembro</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-gray-600">Mês</label>
+                <Select
+                  value={filtros.mes}
+                  onValueChange={(value) => handleFiltroChange('mes', value)}
+                >
+                  <SelectTrigger className="h-9 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="1">Janeiro</SelectItem>
+                    <SelectItem value="2">Fevereiro</SelectItem>
+                    <SelectItem value="3">Março</SelectItem>
+                    <SelectItem value="4">Abril</SelectItem>
+                    <SelectItem value="5">Maio</SelectItem>
+                    <SelectItem value="6">Junho</SelectItem>
+                    <SelectItem value="7">Julho</SelectItem>
+                    <SelectItem value="8">Agosto</SelectItem>
+                    <SelectItem value="9">Setembro</SelectItem>
+                    <SelectItem value="10">Outubro</SelectItem>
+                    <SelectItem value="11">Novembro</SelectItem>
+                    <SelectItem value="12">Dezembro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <Select
-                value={filtros.status}
-                onValueChange={(value) => handleFiltroChange('status', value)}
-              >
-                <SelectTrigger className="h-10 min-w-[140px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os status</SelectItem>
-                  <SelectItem value="pendente">Pendente / Em Atraso</SelectItem>
-                  <SelectItem value="paga">Paga</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-gray-600">Status</label>
+                <Select
+                  value={filtros.status}
+                  onValueChange={(value) => handleFiltroChange('status', value)}
+                >
+                  <SelectTrigger className="h-9 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="pendente">Pendente / Atraso</SelectItem>
+                    <SelectItem value="paga">Paga</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <Select
-                value={filtros.banco}
-                onValueChange={(value) => handleFiltroChange('banco', value)}
-              >
-                <SelectTrigger className="h-10 min-w-[160px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
-                  <SelectValue placeholder="Banco" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os bancos</SelectItem>
-                  {bancosDisponiveis.map(banco => (
-                    <SelectItem key={banco} value={banco}>
-                      {bancoNomes[banco] || banco}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-gray-600">Banco</label>
+                <Select
+                  value={filtros.banco}
+                  onValueChange={(value) => handleFiltroChange('banco', value)}
+                >
+                  <SelectTrigger className="h-9 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    {bancosDisponiveis.map(banco => (
+                      <SelectItem key={banco} value={banco}>
+                        {bancoNomes[banco] || banco}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <Select
-                value={filtros.tipoRelatorio}
-                onValueChange={(value) => handleFiltroChange('tipoRelatorio', value)}
-              >
-                <SelectTrigger className="h-10 min-w-[160px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
-                  <SelectValue placeholder="Tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="detalhado">Relatório Detalhado</SelectItem>
-                  <SelectItem value="geral">Relatório Geral</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-gray-600">Tipo de Relatório</label>
+                <Select
+                  value={filtros.tipoRelatorio}
+                  onValueChange={(value) => handleFiltroChange('tipoRelatorio', value)}
+                >
+                  <SelectTrigger className="h-9 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+                    <SelectValue placeholder="Tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="detalhado">Detalhado</SelectItem>
+                    <SelectItem value="geral">Geral</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <div className="relative min-w-[150px]">
-                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Nº do contrato..."
-                  value={filtros.contrato}
-                  onChange={(e) => handleFiltroChange('contrato', e.target.value)}
-                  className="pl-10 h-10 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50"
-                />
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-gray-600">Nº Contrato</label>
+                <div className="relative">
+                  <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                  <Input
+                    placeholder="Ex: 21"
+                    value={filtros.contrato}
+                    onChange={(e) => handleFiltroChange('contrato', e.target.value)}
+                    className="pl-9 h-9 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50"
+                  />
+                </div>
               </div>
             </div>
 

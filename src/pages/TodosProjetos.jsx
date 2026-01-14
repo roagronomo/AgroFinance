@@ -30,7 +30,8 @@ export default function TodosProjetos() {
     status_art: "todos", // Filtro de status da ART
     contrato: "", // Filtro: número de contrato
     safra: "todos", // Filtro de safra
-    contratos_selecionados: [] // IDs dos contratos selecionados
+    contratos_selecionados: [], // IDs dos contratos selecionados
+    assistencia_tecnica: "todos" // Filtro de assistência técnica
   });
   const [contratoDebounced, setContratoDebounced] = useState(""); // New state for debounced contract
 
@@ -137,8 +138,19 @@ export default function TodosProjetos() {
       resultado = resultado.filter(p => filtros.contratos_selecionados.includes(p.id));
     }
 
+    // Filtro de Assistência Técnica
+    if (filtros.assistencia_tecnica !== "todos") {
+      resultado = resultado.filter(p => {
+        if (filtros.assistencia_tecnica === "sim") {
+          return p.assistencia_tecnica === true;
+        } else {
+          return p.assistencia_tecnica !== true;
+        }
+      });
+    }
+
     setProjetosFiltrados(resultado);
-  }, [projetos, filtros.busca, filtros.status, filtros.banco, filtros.ano, filtros.mes, filtros.status_art, filtros.safra, filtros.contratos_selecionados, contratoDebounced]); // Dependencies for useCallback
+  }, [projetos, filtros.busca, filtros.status, filtros.banco, filtros.ano, filtros.mes, filtros.status_art, filtros.safra, filtros.contratos_selecionados, filtros.assistencia_tecnica, contratoDebounced]); // Dependencies for useCallback
 
   useEffect(() => {
     aplicarFiltros();
@@ -238,6 +250,9 @@ export default function TodosProjetos() {
     }
     if (filtros.contrato) {
       filtrosAtivos.push(`Nº Contrato: "${filtros.contrato}"`);
+    }
+    if (filtros.assistencia_tecnica !== "todos") {
+      filtrosAtivos.push(`Assistência Técnica: ${filtros.assistencia_tecnica === "sim" ? "Sim" : "Não"}`);
     }
 
     const filtrosTexto = filtrosAtivos.length > 0

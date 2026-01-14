@@ -1065,6 +1065,14 @@ export default function Vencimentos() {
             </div>
           </div>
           <div className="flex gap-2 items-center">
+            <Button
+              onClick={exportarParaExcel}
+              variant="outline"
+              className="h-10 px-4 border-gray-200 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 hover:border-emerald-200 rounded-lg"
+            >
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              Exportar Excel
+            </Button>
             <Select
               value={linhasPorPagina.toString()}
               onValueChange={(value) => setLinhasPorPagina(parseInt(value))}
@@ -1081,14 +1089,6 @@ export default function Vencimentos() {
                 <SelectItem value="20">20</SelectItem>
               </SelectContent>
             </Select>
-            <Button
-              onClick={exportarParaExcel}
-              variant="outline"
-              className="h-10 px-4 border-gray-200 text-gray-600 hover:text-emerald-700 hover:bg-emerald-50 hover:border-emerald-200 rounded-lg"
-            >
-              <FileSpreadsheet className="w-4 h-4 mr-2" />
-              Exportar Excel
-            </Button>
             <Button
               onClick={salvarPDF}
               className="h-10 px-5 bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm"

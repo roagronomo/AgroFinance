@@ -121,14 +121,14 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
           value={filtros.status}
           onValueChange={(value) => onFiltroChange('status', value)}
         >
-          <SelectTrigger className="h-9 min-w-[140px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+          <SelectTrigger className="h-9 w-[120px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
             <div className="flex items-center gap-1.5">
               <Filter className="w-3.5 h-3.5 text-gray-400" />
               <SelectValue placeholder="Status" />
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="todos">Todos os Status</SelectItem>
+            <SelectItem value="todos">Todos</SelectItem>
             {STATUS_OPTIONS.map((status) => (
               <SelectItem key={status.value} value={status.value}>
                 {status.label}
@@ -141,14 +141,14 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
           value={filtros.banco}
           onValueChange={(value) => onFiltroChange('banco', value)}
         >
-          <SelectTrigger className="h-9 min-w-[140px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+          <SelectTrigger className="h-9 w-[135px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
             <div className="flex items-center gap-1.5">
               <Filter className="w-3.5 h-3.5 text-gray-400" />
               <SelectValue placeholder="Banco" />
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="todos">Todos os Bancos</SelectItem>
+            <SelectItem value="todos">Todos</SelectItem>
             {BANCOS.map((banco) => (
               <SelectItem key={banco.value} value={banco.value}>
                 {banco.label}
@@ -156,21 +156,19 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
             ))}
           </SelectContent>
         </Select>
-        
 
-        
         <Select
           value={filtros.ano || "todos"}
           onValueChange={(value) => onFiltroChange('ano', value === "todos" ? "todos" : value)}
         >
-          <SelectTrigger className="h-9 min-w-[130px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+          <SelectTrigger className="h-9 w-[100px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-gray-400" />
               <SelectValue placeholder="Ano" />
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="todos">Todos os Anos</SelectItem>
+            <SelectItem value="todos">Todos</SelectItem>
             {yearOptions.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
@@ -183,14 +181,14 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
           value={filtros.safra || "todos"}
           onValueChange={(value) => onFiltroChange('safra', value === "todos" ? "todos" : value)}
         >
-          <SelectTrigger className="h-9 min-w-[140px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
+          <SelectTrigger className="h-9 w-[120px] border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50">
             <div className="flex items-center gap-1.5">
               <Wheat className="w-3.5 h-3.5 text-gray-400" />
               <SelectValue placeholder="Safra" />
             </div>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="todos">Todas as Safras</SelectItem>
+            <SelectItem value="todos">Todas</SelectItem>
             {safrasDisponiveis.map((safra) => (
               <SelectItem key={safra} value={safra}>
                 {safra}
@@ -199,10 +197,10 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
           </SelectContent>
         </Select>
 
-        <div className="relative flex-1 min-w-[160px]">
+        <div className="relative w-[140px]">
           <Hash className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
           <Input
-            placeholder="Contrato (ex.: 21)"
+            placeholder="Contrato"
             value={filtros.contrato}
             onChange={(e) => {
               const valor = e.target.value.replace(/[^0-9/.\-\s]/g, '');
@@ -212,15 +210,12 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
             className="h-9 pl-9 border-gray-200 focus:border-emerald-500 rounded-lg text-sm bg-gray-50/50"
           />
         </div>
-      </div>
 
-      {/* Filtro rápido ART a fazer */}
-      <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100">
         <Button
           variant={filtros.status_art === "a_fazer" ? "default" : "outline"}
           size="sm"
           onClick={() => onFiltroChange('status_art', filtros.status_art === "a_fazer" ? "todos" : "a_fazer")}
-          className={`h-8 rounded-lg text-xs ${
+          className={`h-9 px-3 rounded-lg text-xs ${
             filtros.status_art === "a_fazer" 
               ? "bg-amber-500 hover:bg-amber-600 text-white" 
               : "border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300"
@@ -234,7 +229,7 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
           value={filtros.assistencia_tecnica || "todos"}
           onValueChange={(value) => onFiltroChange('assistencia_tecnica', value)}
         >
-          <SelectTrigger className="h-8 min-w-[150px] border-gray-200 focus:border-emerald-500 rounded-lg text-xs bg-gray-50/50">
+          <SelectTrigger className="h-9 w-[130px] border-gray-200 focus:border-emerald-500 rounded-lg text-xs bg-gray-50/50">
             <div className="flex items-center gap-1.5">
               <FileCheck className="w-3.5 h-3.5 text-gray-400" />
               <SelectValue placeholder="Assistência" />
@@ -242,13 +237,16 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos</SelectItem>
-            <SelectItem value="sim">Com Assistência</SelectItem>
-            <SelectItem value="nao">Sem Assistência</SelectItem>
+            <SelectItem value="sim">Com Assist.</SelectItem>
+            <SelectItem value="nao">Sem Assist.</SelectItem>
           </SelectContent>
         </Select>
+      </div>
 
+      {/* Seleção de Contratos */}
+      {filtros.busca && contratosDoCliente.length > 0 && (
+      <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100">
         {/* Seleção de Contratos - só aparece quando há busca por cliente */}
-        {filtros.busca && contratosDoCliente.length > 0 && (
           <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
             <PopoverTrigger asChild>
               <Button 
@@ -325,9 +323,8 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
                   </Button>
                 </div>
               )}
-            </PopoverContent>
-          </Popover>
-        )}
+          </PopoverContent>
+        </Popover>
 
         {/* Badge mostrando contratos selecionados */}
         {contratosSelecionados.length > 0 && (
@@ -345,10 +342,11 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
               }}
             >
               <X className="w-3.5 h-3.5" />
-            </Button>
-          </div>
+          </Button>
+        </div>
         )}
       </div>
+      )}
     </div>
   );
 }

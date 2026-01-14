@@ -957,7 +957,45 @@ export default function Vencimentos() {
   const agruparPorContrato = () => {
     const grupos = {};
     
-    parcelasFiltradas.forEach(parcela => {
+    // No relatório geral, aplicar todos os filtros EXCETO ano e mês
+    let parcelasParaAgrupar = [...parcelas];
+    
+    // Aplicar filtros de status
+    if (filtros.status !== "todos") {
+      if (filtros.status === "pendente") {
+        parcelasParaAgrupar = parcelasParaAgrupar.filter(p => p.status === 'pendente' || p.status === 'em_atraso');
+      } else {
+        parcelasParaAgrupar = parcelasParaAgrupar.filter(p => p.status === filtros.status);
+      }
+    }
+
+    // Aplicar filtros de clientes
+    if (filtros.clientesSelecionados.length > 0) {
+      const projetosFiltrados = projetos.filter(proj =>
+        filtros.clientesSelecionados.includes(proj.nome_cliente)
+      );
+      const projetosIds = projetosFiltrados.map(p => p.id);
+      parcelasParaAgrupar = parcelasParaAgrupar.filter(p => projetosIds.includes(p.projeto_id));
+    }
+
+    // Aplicar filtros de banco
+    if (filtros.banco !== "todos") {
+      const projetosFiltrados = projetos.filter(proj => proj.banco === filtros.banco);
+      const projetosIds = projetosFiltrados.map(p => p.id);
+      parcelasParaAgrupar = parcelasParaAgrupar.filter(p => projetosIds.includes(p.projeto_id));
+    }
+
+    // Aplicar filtros de contrato
+    if (filtros.contrato) {
+      const contratoLimpo = filtros.contrato.replace(/\D/g, '').toLowerCase();
+      const projetosComContrato = projetos.filter(p => 
+        p.numero_contrato && p.numero_contrato.replace(/\D/g, '').toLowerCase().includes(contratoLimpo)
+      );
+      const projetosIdsComContrato = projetosComContrato.map(p => p.id);
+      parcelasParaAgrupar = parcelasParaAgrupar.filter(p => projetosIdsComContrato.includes(p.projeto_id));
+    }
+    
+    parcelasParaAgrupar.forEach(parcela => {
       const projeto = projetos.find(p => p.id === parcela.projeto_id);
       if (!projeto) return;
       
@@ -987,7 +1025,7 @@ export default function Vencimentos() {
     return Object.values(grupos);
   };
 
-  const relatorioPorContrato = agruparPorContrato();
+  const relatorioPorContrato = filtros.tipoRelatorio === "geral" ? agruparPorContrato() : [];
 
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-slate-100 min-h-screen">

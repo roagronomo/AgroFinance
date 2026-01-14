@@ -266,7 +266,7 @@ export default function Vencimentos() {
       const totalContratos = grupos.length;
 
       // Paginação para Relatório Geral
-      const ROWS_PER_PAGE = 12;
+      const ROWS_PER_PAGE = 15;
       const pages = [];
 
       if (grupos.length === 0) {
@@ -414,7 +414,10 @@ export default function Vencimentos() {
             }
             .col-valor {
               width: 100px;
-              text-align: right;
+              text-align: left;
+            }
+            thead .col-valor {
+              text-align: center;
             }
             .col-status {
               width: 80px;

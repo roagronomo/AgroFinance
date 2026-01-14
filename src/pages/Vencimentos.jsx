@@ -559,7 +559,7 @@ export default function Vencimentos() {
                       return `
                         <tr>
                           <td class="col-num">${startIndex + idx + 1}</td>
-                          <td class="col-cliente">${grupo.cliente || ''}</td>
+                          <td class="col-cliente">${grupo.cliente?.split(' ')[0] || ''}</td>
                           <td class="col-banco">${bancoNomes[grupo.banco] || grupo.banco || 'N/A'}</td>
                           <td class="col-projeto">${grupo.itemFinanciado || 'N/A'}</td>
                           <td class="col-contrato">${grupo.numeroContrato || 'N/A'}</td>

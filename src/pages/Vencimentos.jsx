@@ -1073,6 +1073,13 @@ export default function Vencimentos() {
               <FileSpreadsheet className="w-4 h-4 mr-2" />
               Exportar Excel
             </Button>
+            <Button
+              onClick={salvarPDF}
+              className="h-10 px-5 bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm"
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              Salvar PDF
+            </Button>
             <Select
               value={linhasPorPagina.toString()}
               onValueChange={(value) => setLinhasPorPagina(parseInt(value))}
@@ -1089,13 +1096,6 @@ export default function Vencimentos() {
                 <SelectItem value="20">20</SelectItem>
               </SelectContent>
             </Select>
-            <Button
-              onClick={salvarPDF}
-              className="h-10 px-5 bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm"
-            >
-              <Printer className="w-4 h-4 mr-2" />
-              Salvar PDF
-            </Button>
           </div>
         </div>
 

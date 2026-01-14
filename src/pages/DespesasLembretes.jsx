@@ -178,59 +178,54 @@ export default function DespesasLembretes() {
   };
 
   const enviarTesteWhatsApp = async () => {
-    console.log('🔵 enviarTesteWhatsApp chamada');
-    console.log('📋 formDataConta:', formDataConta);
-    
-    if (!formDataConta.telefone_contato || !formDataConta.descricao) {
-      console.log('❌ Validação falhou - telefone:', formDataConta.telefone_contato, 'descricao:', formDataConta.descricao);
-      toast.error("Preencha a descrição e o telefone antes de enviar o teste");
+    if (!formDataConta.telefone_contato) {
+      toast.error("Digite um número de telefone primeiro");
       return;
     }
 
-    console.log('✅ Validação passou, enviando...');
+    if (!formDataConta.descricao || !formDataConta.valor || !formDataConta.data_vencimento) {
+      toast.error("Preencha todos os dados da conta antes de testar");
+      return;
+    }
+
+    if (!confirm("Tem certeza que deseja enviar uma mensagem de teste via WhatsApp?")) {
+      return;
+    }
+
     setEnviandoTeste(true);
     try {
-      const valorFormatado = formDataConta.valor 
-        ? `R$ ${parseFloat(formDataConta.valor.replace(/\./g, '').replace(',', '.')).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-        : "Valor não informado";
+      const valorFormatado = typeof formDataConta.valor === 'string' 
+        ? parseFloat(formDataConta.valor.replace(/\./g, '').replace(',', '.'))
+        : formDataConta.valor;
 
-      let mensagem = `🔔 *TESTE - Lembrete de Conta*\n\n`;
-      mensagem += `📋 *Descrição:* ${formDataConta.descricao}\n`;
-      mensagem += `💰 *Valor:* ${valorFormatado}\n`;
-      
-      if (formDataConta.data_vencimento) {
-        mensagem += `📅 *Vencimento:* ${format(new Date(formDataConta.data_vencimento + 'T00:00:00'), 'dd/MM/yyyy')}\n`;
-      }
+      const dataVencimento = new Date(formDataConta.data_vencimento + 'T00:00:00');
+      const dataFormatada = format(dataVencimento, 'dd/MM/yyyy');
+
+      let mensagemTeste = `🔔 *TESTE - Lembrete de Conta a Pagar*\n\n`;
+      mensagemTeste += `📋 *Descrição:* ${formDataConta.descricao}\n`;
+      mensagemTeste += `📅 *Vencimento:* ${dataFormatada}\n`;
+      mensagemTeste += `💰 *Valor:* R$ ${valorFormatado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n`;
       
       if (formDataConta.fornecedor) {
-        mensagem += `🏢 *Fornecedor:* ${formDataConta.fornecedor}\n`;
+        mensagemTeste += `🏢 *Fornecedor:* ${formDataConta.fornecedor}\n`;
       }
 
       if (formDataConta.chave_pix) {
-        mensagem += `\n💳 *PIX para pagamento:*\n${formDataConta.chave_pix}`;
+        mensagemTeste += `\n💳 *PIX para pagamento:*\n${formDataConta.chave_pix}`;
       }
 
-      const numeroLimpo = formDataConta.telefone_contato.replace(/\D/g, '');
-      
-      console.log('Enviando teste WhatsApp para:', numeroLimpo);
-      console.log('Mensagem:', mensagem);
-      
+      mensagemTeste += `\n\n_Mensagem automática - AgroFinance_`;
+
       const response = await base44.functions.invoke('enviarWhatsAppEvolution', {
-        numero: numeroLimpo,
-        mensagem: mensagem
+        numero: formDataConta.telefone_contato,
+        mensagem: mensagemTeste
       });
 
-      console.log('Response completa:', response);
-      console.log('Response.data:', response?.data);
-
-      // A resposta vem em response.data
-      const resultado = response?.data || response;
-      
-      if (resultado?.success) {
-        toast.success("✓ Mensagem de teste enviada!");
+      if (response.success) {
+        toast.success("✅ Mensagem de teste enviada com sucesso!");
         setDialogTesteWhatsApp(false);
       } else {
-        toast.error(resultado?.error || "Erro ao enviar mensagem");
+        toast.error(`Erro: ${response.error || 'Falha ao enviar'}`);
       }
     } catch (error) {
       console.error("Erro ao enviar teste:", error);
@@ -964,16 +959,11 @@ ${valor}`
                     <Button 
                       type="button" 
                       variant="outline" 
-                      onClick={() => {
-                        console.log('🔷 Botão "Enviar Teste" clicado');
-                        console.log('📝 formDataConta atual:', formDataConta);
-                        setDialogTesteWhatsApp(true);
-                      }}
+                      onClick={enviarTesteWhatsApp}
+                      disabled={!formDataConta.telefone_contato || enviandoTeste}
                       className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                      disabled={enviandoTeste}
                     >
-                      <Send className="w-4 h-4 mr-2" />
-                      Enviar Teste
+                      {enviandoTeste ? "Enviando..." : "📱 Testar"}
                     </Button>
                     <Button type="button" variant="outline" onClick={handleCancelar}>
                       Cancelar
@@ -1478,31 +1468,7 @@ ${valor}`
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Dialog Teste WhatsApp */}
-      <AlertDialog open={dialogTesteWhatsApp} onOpenChange={(open) => !open && setDialogTesteWhatsApp(false)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Enviar Mensagem de Teste</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja enviar uma mensagem de teste para o número {formDataConta.telefone_contato}?
-              Esta mensagem conterá as informações da conta que você está cadastrando.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={enviandoTeste}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={() => {
-                console.log('🟢 Botão AlertDialog confirmação clicado');
-                enviarTesteWhatsApp();
-              }}
-              disabled={enviandoTeste}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {enviandoTeste ? "Enviando..." : "Enviar Teste"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+
     </div>
   );
 }

@@ -178,11 +178,16 @@ export default function DespesasLembretes() {
   };
 
   const enviarTesteWhatsApp = async () => {
+    console.log('🔵 enviarTesteWhatsApp chamada');
+    console.log('📋 formDataConta:', formDataConta);
+    
     if (!formDataConta.telefone_contato || !formDataConta.descricao) {
+      console.log('❌ Validação falhou - telefone:', formDataConta.telefone_contato, 'descricao:', formDataConta.descricao);
       toast.error("Preencha a descrição e o telefone antes de enviar o teste");
       return;
     }
 
+    console.log('✅ Validação passou, enviando...');
     setEnviandoTeste(true);
     try {
       const valorFormatado = formDataConta.valor 
@@ -955,7 +960,11 @@ ${valor}`
                     <Button 
                       type="button" 
                       variant="outline" 
-                      onClick={() => setDialogTesteWhatsApp(true)}
+                      onClick={() => {
+                        console.log('🔷 Botão "Enviar Teste" clicado');
+                        console.log('📝 formDataConta atual:', formDataConta);
+                        setDialogTesteWhatsApp(true);
+                      }}
                       className="border-blue-600 text-blue-600 hover:bg-blue-50"
                       disabled={enviandoTeste}
                     >
@@ -1478,7 +1487,10 @@ ${valor}`
           <AlertDialogFooter>
             <AlertDialogCancel disabled={enviandoTeste}>Cancelar</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={enviarTesteWhatsApp} 
+              onClick={() => {
+                console.log('🟢 Botão AlertDialog confirmação clicado');
+                enviarTesteWhatsApp();
+              }}
               disabled={enviandoTeste}
               className="bg-blue-600 hover:bg-blue-700"
             >

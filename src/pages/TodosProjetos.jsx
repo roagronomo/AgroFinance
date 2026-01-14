@@ -43,11 +43,6 @@ export default function TodosProjetos() {
 
   useEffect(() => {
     carregarProjetos();
-    
-    return () => {
-      // Limpar filtros ao desmontar o componente (mudar de página)
-      sessionStorage.removeItem('todosProjetos_filtros');
-    };
   }, []);
 
   // Debounce para o filtro de contrato

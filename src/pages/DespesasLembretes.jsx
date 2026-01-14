@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Bell, Calendar, DollarSign, FileText, Upload, Check, X, Undo2, Paperclip, Upload as UploadIcon, Download, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Edit, Trash2, Bell, Calendar, DollarSign, FileText, Upload, Check, X, Undo2, Paperclip, Upload as UploadIcon, Download, ChevronDown, ChevronRight, Send } from "lucide-react";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 import AutocompleteInput from "../components/common/AutocompleteInput";
@@ -44,6 +44,7 @@ export default function DespesasLembretes() {
   const [dialogAnexarRecibo, setDialogAnexarRecibo] = useState(null);
   const [uploadingReciboRapido, setUploadingReciboRapido] = useState(false);
   const [gruposExpandidos, setGruposExpandidos] = useState({});
+  const [dialogTesteWhatsApp, setDialogTesteWhatsApp] = useState(false);
 
   const [formDataConta, setFormDataConta] = useState({
     descricao: "",
@@ -51,6 +52,7 @@ export default function DespesasLembretes() {
     data_vencimento: "",
     dias_antes_avisar: 3,
     telefone_contato: "(64) 98147-2081",
+    chave_pix: "",
     codigo_barras: "",
     fornecedor: "",
     categoria: "",
@@ -93,8 +95,8 @@ export default function DespesasLembretes() {
     try {
       setIsLoading(true);
       const [contasData, lembretesData] = await Promise.all([
-        base44.entities.ContaPagar.list("-data_vencimento"),
-        base44.entities.Lembrete.list("-data_evento")
+        base44.entities.ContaPagar.list("data_vencimento"),
+        base44.entities.Lembrete.list("data_evento")
       ]);
       setContas(contasData || []);
       setLembretes(lembretesData || []);
@@ -137,6 +139,84 @@ export default function DespesasLembretes() {
       setFormDataConta({...formDataConta, telefone_contato: valorFormatado});
     } else {
       setFormDataLembrete({...formDataLembrete, telefone_contato: valorFormatado});
+    }
+  };
+
+  const formatarChavePix = (valor) => {
+    // Se contém @, é e-mail - deixar como está
+    if (valor.includes('@')) {
+      return valor;
+    }
+
+    const numeros = valor.replace(/\D/g, '');
+    
+    // Se tem 11 dígitos, formatar como CPF
+    if (numeros.length === 11) {
+      return numeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+    
+    // Se tem 14 dígitos, formatar como CNPJ
+    if (numeros.length === 14) {
+      return numeros.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    }
+    
+    // Se tem dígitos e não é CPF/CNPJ, pode ser telefone
+    if (numeros.length > 0 && numeros.length <= 11) {
+      if (numeros.length <= 10) {
+        return numeros.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
+      }
+      return numeros.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
+    }
+    
+    // Qualquer outra coisa (chave aleatória), retornar como está
+    return valor;
+  };
+
+  const handleChavePixChange = (valor) => {
+    const valorFormatado = formatarChavePix(valor);
+    setFormDataConta({...formDataConta, chave_pix: valorFormatado});
+  };
+
+  const enviarTesteWhatsApp = async () => {
+    if (!formDataConta.telefone_contato || !formDataConta.descricao) {
+      toast.error("Preencha a descrição e o telefone antes de enviar o teste");
+      return;
+    }
+
+    setEnviandoTeste(true);
+    try {
+      const valorFormatado = formDataConta.valor 
+        ? `R$ ${parseFloat(formDataConta.valor.replace(/\./g, '').replace(',', '.')).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+        : "Valor não informado";
+
+      let mensagem = `🔔 *TESTE - Lembrete de Conta*\n\n`;
+      mensagem += `📋 *Descrição:* ${formDataConta.descricao}\n`;
+      mensagem += `💰 *Valor:* ${valorFormatado}\n`;
+      
+      if (formDataConta.data_vencimento) {
+        mensagem += `📅 *Vencimento:* ${format(new Date(formDataConta.data_vencimento + 'T00:00:00'), 'dd/MM/yyyy')}\n`;
+      }
+      
+      if (formDataConta.fornecedor) {
+        mensagem += `🏢 *Fornecedor:* ${formDataConta.fornecedor}\n`;
+      }
+
+      if (formDataConta.chave_pix) {
+        mensagem += `\n💳 *PIX para pagamento:*\n${formDataConta.chave_pix}`;
+      }
+
+      await base44.functions.invoke('enviarWhatsAppEvolution', {
+        numero: formDataConta.telefone_contato.replace(/\D/g, ''),
+        mensagem: mensagem
+      });
+
+      toast.success("✓ Mensagem de teste enviada!");
+      setDialogTesteWhatsApp(false);
+    } catch (error) {
+      console.error("Erro ao enviar teste:", error);
+      toast.error("Erro ao enviar mensagem de teste");
+    } finally {
+      setEnviandoTeste(false);
     }
   };
 
@@ -435,6 +515,7 @@ ${valor}`
       data_vencimento: conta.data_vencimento || "",
       dias_antes_avisar: conta.dias_antes_avisar || 3,
       telefone_contato: conta.telefone_contato || "",
+      chave_pix: conta.chave_pix || "",
       codigo_barras: conta.codigo_barras || "",
       fornecedor: conta.fornecedor || "",
       categoria: conta.categoria || "",
@@ -479,6 +560,7 @@ ${valor}`
       data_vencimento: "",
       dias_antes_avisar: 3,
       telefone_contato: "(64) 98147-2081",
+      chave_pix: "",
       codigo_barras: "",
       fornecedor: "",
       categoria: "",
@@ -757,6 +839,18 @@ ${valor}`
                         required
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <Label>Chave PIX (opcional)</Label>
+                    <Input
+                      value={formDataConta.chave_pix}
+                      onChange={(e) => handleChavePixChange(e.target.value)}
+                      placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      💳 Será incluída nos lembretes por WhatsApp
+                    </p>
                   </div>
 
                   {!formDataConta.recorrente && (
@@ -1346,6 +1440,29 @@ ${valor}`
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={uploadingReciboRapido}>Cancelar</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog Teste WhatsApp */}
+      <AlertDialog open={dialogTesteWhatsApp} onOpenChange={(open) => !open && setDialogTesteWhatsApp(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Enviar Mensagem de Teste</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja enviar uma mensagem de teste para o número {formDataConta.telefone_contato}?
+              Esta mensagem conterá as informações da conta que você está cadastrando.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={enviandoTeste}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={enviarTesteWhatsApp} 
+              disabled={enviandoTeste}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {enviandoTeste ? "Enviando..." : "Enviar Teste"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -72,6 +72,7 @@ export default function Vencimentos() {
     clientesSelecionados: [],
     tipoRelatorio: "detalhado"
   });
+  const [mostrarClientes, setMostrarClientes] = useState(false);
 
   useEffect(() => {
     carregarDados();
@@ -117,7 +118,11 @@ export default function Vencimentos() {
     }
 
     if (filtros.status !== "todos") {
-      resultado = resultado.filter(p => p.status === filtros.status);
+      if (filtros.status === "pendente") {
+        resultado = resultado.filter(p => p.status === 'pendente' || p.status === 'em_atraso');
+      } else {
+        resultado = resultado.filter(p => p.status === filtros.status);
+      }
     }
 
     if (filtros.clientesSelecionados.length > 0) {
@@ -744,9 +749,8 @@ export default function Vencimentos() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos os status</SelectItem>
-                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="pendente">Pendente / Em Atraso</SelectItem>
                   <SelectItem value="paga">Paga</SelectItem>
-                  <SelectItem value="em_atraso">Em Atraso</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -792,31 +796,49 @@ export default function Vencimentos() {
             </div>
 
             <div>
-              <p className="text-xs text-gray-500 mb-2 font-medium">Selecionar Clientes:</p>
-              <div className="flex flex-wrap gap-2">
-                {clientesDisponiveis.map(cliente => (
-                  <Badge
-                    key={cliente}
-                    onClick={() => toggleCliente(cliente)}
-                    className={`cursor-pointer transition-all ${
-                      filtros.clientesSelecionados.includes(cliente)
-                        ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {cliente}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setMostrarClientes(!mostrarClientes)}
+                className="h-9 text-sm"
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                {mostrarClientes ? 'Ocultar Clientes' : 'Selecionar Clientes'}
+                {filtros.clientesSelecionados.length > 0 && (
+                  <Badge className="ml-2 bg-emerald-600 text-white">
+                    {filtros.clientesSelecionados.length}
                   </Badge>
-                ))}
-              </div>
-              {filtros.clientesSelecionados.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleFiltroChange('clientesSelecionados', [])}
-                  className="mt-2 h-7 text-xs text-gray-500"
-                >
-                  Limpar seleção
-                </Button>
+                )}
+              </Button>
+
+              {mostrarClientes && (
+                <div className="mt-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                  <div className="flex flex-wrap gap-2">
+                    {clientesDisponiveis.map(cliente => (
+                      <Badge
+                        key={cliente}
+                        onClick={() => toggleCliente(cliente)}
+                        className={`cursor-pointer transition-all ${
+                          filtros.clientesSelecionados.includes(cliente)
+                            ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {cliente}
+                      </Badge>
+                    ))}
+                  </div>
+                  {filtros.clientesSelecionados.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleFiltroChange('clientesSelecionados', [])}
+                      className="mt-2 h-7 text-xs text-gray-500"
+                    >
+                      Limpar seleção
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           </div>

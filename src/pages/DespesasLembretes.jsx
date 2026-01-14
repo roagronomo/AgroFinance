@@ -540,10 +540,97 @@ ${valor}`
                       <Input
                         type="date"
                         value={formDataConta.data_vencimento}
-                        onChange={(e) => setFormDataConta({...formDataConta, data_vencimento: e.target.value})}
+                        onChange={(e) => {
+                          setFormDataConta({...formDataConta, data_vencimento: e.target.value});
+                          // Recalcular data final se for recorrente
+                          if (formDataConta.recorrente && formDataConta.parcelas_total) {
+                            const dataInicial = new Date(e.target.value + 'T00:00:00');
+                            const dataFinal = new Date(dataInicial);
+                            dataFinal.setMonth(dataFinal.getMonth() + parseInt(formDataConta.parcelas_total) - 1);
+                            setFormDataConta(prev => ({
+                              ...prev,
+                              data_vencimento: e.target.value,
+                              data_vencimento_final: dataFinal.toISOString().split('T')[0]
+                            }));
+                          }
+                        }}
                         required
                       />
                     </div>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <input
+                        type="checkbox"
+                        id="recorrente"
+                        checked={formDataConta.recorrente}
+                        onChange={(e) => setFormDataConta({
+                          ...formDataConta, 
+                          recorrente: e.target.checked,
+                          parcelas_total: e.target.checked ? formDataConta.parcelas_total : "",
+                          data_vencimento_final: e.target.checked ? formDataConta.data_vencimento_final : "",
+                          codigo_barras: e.target.checked ? "" : formDataConta.codigo_barras,
+                          boleto_anexo: e.target.checked ? null : formDataConta.boleto_anexo
+                        })}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <Label htmlFor="recorrente" className="cursor-pointer font-medium">
+                        💳 Pagamento Recorrente (mensal)
+                      </Label>
+                    </div>
+
+                    {formDataConta.recorrente && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
+                        <div>
+                          <Label>Quantidade de Parcelas *</Label>
+                          <Input
+                            type="number"
+                            min="2"
+                            max="120"
+                            value={formDataConta.parcelas_total}
+                            onChange={(e) => {
+                              const parcelas = e.target.value;
+                              setFormDataConta({...formDataConta, parcelas_total: parcelas});
+                              
+                              // Calcular data final automaticamente
+                              if (parcelas && formDataConta.data_vencimento) {
+                                const dataInicial = new Date(formDataConta.data_vencimento + 'T00:00:00');
+                                const dataFinal = new Date(dataInicial);
+                                dataFinal.setMonth(dataFinal.getMonth() + parseInt(parcelas) - 1);
+                                setFormDataConta(prev => ({
+                                  ...prev,
+                                  parcelas_total: parcelas,
+                                  data_vencimento_final: dataFinal.toISOString().split('T')[0]
+                                }));
+                              }
+                            }}
+                            placeholder="Ex: 12"
+                            required={formDataConta.recorrente}
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Número de meses que a conta se repetirá
+                          </p>
+                        </div>
+
+                        <div>
+                          <Label>Data do Vencimento Final</Label>
+                          <Input
+                            type="date"
+                            value={formDataConta.data_vencimento_final}
+                            disabled
+                            className="bg-gray-50"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Calculado automaticamente
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-blue-600 mt-2 pl-6">
+                      ℹ️ Contas recorrentes não utilizam código de barras ou boleto anexo
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -326,11 +326,48 @@ ${valor}`
     if (!dialogMarcarPago) return;
     
     try {
+      const conta = contas.find(c => c.id === dialogMarcarPago);
+      
+      // Marcar como paga
       await base44.entities.ContaPagar.update(dialogMarcarPago, {
         pago: true,
         data_pagamento: new Date().toISOString().split('T')[0]
       });
-      toast.success("Conta marcada como paga!");
+      
+      // Se for recorrente e ainda houver parcelas, criar a próxima
+      if (conta.recorrente && conta.parcela_atual < conta.parcelas_total) {
+        const proximaData = new Date(conta.data_vencimento + 'T00:00:00');
+        proximaData.setMonth(proximaData.getMonth() + 1);
+        
+        const proximaConta = {
+          descricao: conta.descricao,
+          valor: conta.valor,
+          data_vencimento: proximaData.toISOString().split('T')[0],
+          dias_antes_avisar: conta.dias_antes_avisar,
+          telefone_contato: conta.telefone_contato,
+          fornecedor: conta.fornecedor,
+          categoria: conta.categoria,
+          observacoes: conta.observacoes,
+          ativo: conta.ativo,
+          recorrente: true,
+          parcelas_total: conta.parcelas_total,
+          parcela_atual: conta.parcela_atual + 1,
+          data_vencimento_final: conta.data_vencimento_final,
+          grupo_recorrencia_id: conta.grupo_recorrencia_id,
+          pago: false,
+          lembrete_enviado: false,
+          lembrete_antecipado_enviado: false,
+          codigo_barras: null,
+          boleto_anexo: null,
+          recibo_anexo: null
+        };
+        
+        await base44.entities.ContaPagar.create(proximaConta);
+        toast.success(`Conta paga! Próxima parcela ${conta.parcela_atual + 1}/${conta.parcelas_total} criada.`);
+      } else {
+        toast.success("Conta marcada como paga!");
+      }
+      
       await carregarDados();
     } catch (error) {
       console.error("Erro ao marcar como pago:", error);

@@ -73,6 +73,7 @@ export default function Vencimentos() {
     tipoRelatorio: "detalhado"
   });
   const [mostrarClientes, setMostrarClientes] = useState(false);
+  const [linhasPorPagina, setLinhasPorPagina] = useState(15);
 
   useEffect(() => {
     carregarDados();
@@ -266,7 +267,7 @@ export default function Vencimentos() {
       const totalContratos = grupos.length;
 
       // Paginação para Relatório Geral
-      const ROWS_PER_PAGE = 15;
+      const ROWS_PER_PAGE = linhasPorPagina;
       const pages = [];
 
       if (grupos.length === 0) {
@@ -275,9 +276,15 @@ export default function Vencimentos() {
       } else {
         for (let i = 0; i < grupos.length; i += ROWS_PER_PAGE) {
           const pageItems = grupos.slice(i, i + ROWS_PER_PAGE);
-          const fillCount = ROWS_PER_PAGE - pageItems.length;
-          const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
-          pages.push([...pageItems, ...filler]);
+          // Só preenche com linhas vazias se não for a última página
+          const isLastPage = (i + ROWS_PER_PAGE) >= grupos.length;
+          if (!isLastPage) {
+            const fillCount = ROWS_PER_PAGE - pageItems.length;
+            const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
+            pages.push([...pageItems, ...filler]);
+          } else {
+            pages.push(pageItems);
+          }
         }
       }
 
@@ -300,13 +307,12 @@ export default function Vencimentos() {
             .page {
               position: relative;
               min-height: 100vh;
-              page-break-after: always;
               padding-top: 2.5cm;
               padding-bottom: 1.5cm;
               box-sizing: border-box;
             }
-            .page:last-child {
-              page-break-after: auto;
+            .page:not(:last-child) {
+              page-break-after: always;
             }
             .header-container {
               position: fixed;
@@ -609,7 +615,7 @@ export default function Vencimentos() {
       const valorTotal = parcelasComCliente.reduce((sum, p) => sum + p.valor_parcela, 0);
       const periodo = filtros.ano !== 'todos' ? filtros.ano : 'Todos os anos';
 
-      const ROWS_PER_PAGE = 15;
+      const ROWS_PER_PAGE = linhasPorPagina;
       const pages = [];
 
       if (parcelasOrdenadas.length === 0) {
@@ -618,9 +624,15 @@ export default function Vencimentos() {
       } else {
         for (let i = 0; i < parcelasOrdenadas.length; i += ROWS_PER_PAGE) {
           const pageItems = parcelasOrdenadas.slice(i, i + ROWS_PER_PAGE);
-          const fillCount = ROWS_PER_PAGE - pageItems.length;
-          const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
-          pages.push([...pageItems, ...filler]);
+          // Só preenche com linhas vazias se não for a última página
+          const isLastPage = (i + ROWS_PER_PAGE) >= parcelasOrdenadas.length;
+          if (!isLastPage) {
+            const fillCount = ROWS_PER_PAGE - pageItems.length;
+            const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
+            pages.push([...pageItems, ...filler]);
+          } else {
+            pages.push(pageItems);
+          }
         }
       }
 
@@ -643,13 +655,12 @@ export default function Vencimentos() {
               .page {
                 position: relative;
                 min-height: 100vh;
-                page-break-after: always;
                 padding-top: 2.5cm;
                 padding-bottom: 1.5cm;
                 box-sizing: border-box;
               }
-              .page:last-child {
-                page-break-after: auto;
+              .page:not(:last-child) {
+                page-break-after: always;
               }
               .header-container {
                 position: fixed;
@@ -1053,7 +1064,23 @@ export default function Vencimentos() {
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            <Select
+              value={linhasPorPagina.toString()}
+              onValueChange={(value) => setLinhasPorPagina(parseInt(value))}
+            >
+              <SelectTrigger className="h-9 w-16 border-gray-200 text-xs text-gray-500">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="15">15</SelectItem>
+                <SelectItem value="16">16</SelectItem>
+                <SelectItem value="17">17</SelectItem>
+                <SelectItem value="18">18</SelectItem>
+                <SelectItem value="19">19</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+              </SelectContent>
+            </Select>
             <Button
               onClick={exportarParaExcel}
               variant="outline"

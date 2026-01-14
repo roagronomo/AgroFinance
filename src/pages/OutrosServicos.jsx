@@ -438,7 +438,7 @@ _Mensagem automática - AgroFinance_`;
                             📱 Enviar lembretes automáticos via WhatsApp
                           </Label>
                           <p className="text-xs text-green-600 mt-1">
-                            Se marcado, enviará lembretes por e-mail e WhatsApp 3 dias antes e no dia do vencimento
+                            Se marcado, enviará lembretes via WhatsApp 3 dias antes e no dia do vencimento
                           </p>
                         </div>
                       </div>

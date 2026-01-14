@@ -47,7 +47,7 @@ export default function DespesasLembretes() {
     valor: "",
     data_vencimento: "",
     dias_antes_avisar: 3,
-    telefone_contato: "",
+    telefone_contato: "(64) 98147-2081",
     codigo_barras: "",
     fornecedor: "",
     categoria: "",
@@ -60,7 +60,7 @@ export default function DespesasLembretes() {
     valor: "",
     data_evento: "",
     dias_antes_avisar: 7,
-    telefone_contato: "",
+    telefone_contato: "(64) 98147-2081",
     observacoes: "",
     ativo: true
   });
@@ -372,7 +372,7 @@ ${valor}`
       valor: "",
       data_vencimento: "",
       dias_antes_avisar: 3,
-      telefone_contato: "",
+      telefone_contato: "(64) 98147-2081",
       codigo_barras: "",
       fornecedor: "",
       categoria: "",
@@ -384,7 +384,7 @@ ${valor}`
       valor: "",
       data_evento: "",
       dias_antes_avisar: 7,
-      telefone_contato: "",
+      telefone_contato: "(64) 98147-2081",
       observacoes: "",
       ativo: true
     });

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Bell, Calendar, DollarSign, FileText, Upload, Check, X, Undo2, Paperclip } from "lucide-react";
+import { Plus, Edit, Trash2, Bell, Calendar, DollarSign, FileText, Upload, Check, X, Undo2, Paperclip, Upload as UploadIcon } from "lucide-react";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 import AutocompleteInput from "../components/common/AutocompleteInput";
@@ -41,6 +41,8 @@ export default function DespesasLembretes() {
   const [dialogMarcarPago, setDialogMarcarPago] = useState(null);
   const [dialogDesmarcarPago, setDialogDesmarcarPago] = useState(null);
   const [dialogExcluir, setDialogExcluir] = useState(null);
+  const [dialogAnexarRecibo, setDialogAnexarRecibo] = useState(null);
+  const [uploadingReciboRapido, setUploadingReciboRapido] = useState(false);
 
   const [formDataConta, setFormDataConta] = useState({
     descricao: "",
@@ -395,6 +397,34 @@ ${valor}`
     }
   };
 
+  const handleAnexarReciboRapido = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !dialogAnexarRecibo) return;
+
+    setUploadingReciboRapido(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      
+      await base44.entities.ContaPagar.update(dialogAnexarRecibo, {
+        recibo_anexo: {
+          url: file_url,
+          file_name: file.name,
+          file_size: file.size,
+          mime_type: file.type
+        }
+      });
+
+      toast.success("✓ Recibo anexado com sucesso!");
+      await carregarDados();
+      setDialogAnexarRecibo(null);
+    } catch (error) {
+      console.error("Erro ao anexar recibo:", error);
+      toast.error("Erro ao anexar recibo");
+    } finally {
+      setUploadingReciboRapido(false);
+    }
+  };
+
   const handleEditarConta = (conta) => {
     setEditingItem(conta);
     setTipoForm("conta");
@@ -413,7 +443,8 @@ ${valor}`
       recibo_anexo: conta.recibo_anexo || null,
       recorrente: conta.recorrente || false,
       parcelas_total: conta.parcelas_total || "",
-      data_vencimento_final: conta.data_vencimento_final || ""
+      data_vencimento_final: conta.data_vencimento_final || "",
+      parcela_atual: conta.parcela_atual || 1
     });
     setShowForm(true);
   };
@@ -775,8 +806,49 @@ ${valor}`
                         </div>
                       </div>
                     </div>
+                    </div>
+                  )}
 
-                    {formDataConta.codigo_barras && (
+                  <div className="space-y-3 border-t pt-4">
+                    <h3 className="font-semibold text-sm mb-3">Recibo de Pagamento</h3>
+                    <div>
+                      <Label className="text-xs text-gray-600">Recibo (opcional)</Label>
+                      <div className="mt-1">
+                        <label className={`flex items-center justify-center gap-2 p-2 border-2 border-dashed rounded-md cursor-pointer transition-colors text-xs ${
+                          uploadingRecibo
+                            ? 'bg-gray-50 border-gray-300 cursor-not-allowed'
+                            : formDataConta.recibo_anexo
+                              ? 'bg-green-50 border-green-300 hover:bg-green-100'
+                              : 'border-gray-300 hover:bg-gray-50 hover:border-green-400'
+                        }`}>
+                          <input
+                            type="file"
+                            onChange={handleUploadRecibo}
+                            disabled={uploadingRecibo}
+                            className="hidden"
+                          />
+                          {formDataConta.recibo_anexo ? (
+                            <>
+                              <Check className="w-4 h-4 text-green-600" />
+                              <span className="font-medium text-green-700 truncate">{formDataConta.recibo_anexo.file_name}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Paperclip className="w-4 h-4 text-gray-400" />
+                              <span className="text-gray-600">Anexar recibo</span>
+                            </>
+                          )}
+                        </label>
+                        {uploadingRecibo && (
+                          <p className="text-xs text-blue-600 mt-1 text-center">📤 Enviando...</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {!formDataConta.recorrente && formDataConta.codigo_barras && (
+                    <div className="border-t pt-4">
+                      <h3 className="font-semibold text-sm mb-3">Código de Barras</h3>
                       <div>
                         <Label className="text-xs text-gray-600">Código de Barras Extraído</Label>
                         <Input
@@ -787,7 +859,6 @@ ${valor}`
                         />
                         <p className="text-xs text-gray-500 mt-1">✨ Extraído automaticamente do PDF</p>
                       </div>
-                    )}
                     </div>
                   )}
 
@@ -1015,34 +1086,46 @@ ${valor}`
                            {conta.fornecedor && <span>🏢 {conta.fornecedor}</span>}
                            {conta.categoria && <span className="text-blue-600">📂 {conta.categoria}</span>}
                            {conta.codigo_barras && <span className="text-green-600">🔢 Código extraído</span>}
-                          </div>
-                          {conta.observacoes && (
+                           {conta.recibo_anexo && (
+                             <span className="text-purple-600">📄 Recibo anexado</span>
+                           )}
+                           </div>
+                           {conta.observacoes && (
                             <p className="text-sm text-gray-500 mt-2">{conta.observacoes}</p>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button 
+                           )}
+                           </div>
+                           <div className="flex gap-2">
+                           <Button 
                             variant="ghost" 
                             size="icon" 
                             onClick={() => handleEditarConta(conta)}
                             className="text-blue-600 hover:text-blue-700"
                             title="Editar"
-                          >
+                           >
                             <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button 
+                           </Button>
+                           <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => setDialogAnexarRecibo(conta.id)}
+                            className="text-purple-600 hover:text-purple-700"
+                            title="Anexar recibo"
+                           >
+                            <FileText className="w-4 h-4" />
+                           </Button>
+                           <Button 
                             variant="ghost" 
                             size="icon" 
                             onClick={() => setDialogMarcarPago(conta.id)}
                             className="text-green-600 hover:text-green-700"
                             title="Marcar como pago"
-                          >
+                           >
                             <Check className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => setDialogExcluir({ id: conta.id, tipo: 'conta' })} className="text-red-600">
+                           </Button>
+                           <Button variant="ghost" size="icon" onClick={() => setDialogExcluir({ id: conta.id, tipo: 'conta' })} className="text-red-600">
                             <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
+                           </Button>
+                           </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -1203,6 +1286,46 @@ ${valor}`
             <AlertDialogAction onClick={handleExcluir} className="bg-red-600 hover:bg-red-700">
               Excluir
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog Anexar Recibo */}
+      <AlertDialog open={!!dialogAnexarRecibo} onOpenChange={(open) => !open && setDialogAnexarRecibo(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Anexar Recibo de Pagamento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Selecione o arquivo do recibo de pagamento desta conta.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <label className={`flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-md cursor-pointer transition-colors ${
+              uploadingReciboRapido
+                ? 'bg-gray-50 border-gray-300 cursor-not-allowed'
+                : 'border-gray-300 hover:bg-gray-50 hover:border-purple-400'
+            }`}>
+              <input
+                type="file"
+                onChange={handleAnexarReciboRapido}
+                disabled={uploadingReciboRapido}
+                className="hidden"
+              />
+              {uploadingReciboRapido ? (
+                <>
+                  <Upload className="w-5 h-5 text-gray-400 animate-pulse" />
+                  <span className="text-gray-600">Enviando...</span>
+                </>
+              ) : (
+                <>
+                  <FileText className="w-5 h-5 text-purple-600" />
+                  <span className="text-gray-700">Clique para selecionar o arquivo</span>
+                </>
+              )}
+            </label>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={uploadingReciboRapido}>Cancelar</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

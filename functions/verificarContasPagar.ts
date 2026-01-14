@@ -75,13 +75,16 @@ ${conta.codigo_barras && !conta.recorrente ? `\n🔢 *Código de Barras:*\n\`${c
 _Lembrete automático - AgroFinance_`;
         }
 
-        // Enviar WhatsApp
+        // Enviar WhatsApp - usando o mesmo padrão que funciona no teste
         const response = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
           numero: conta.telefone_contato,
           mensagem: mensagem
         });
 
-        if (response.success) {
+        // A resposta pode vir direto ou em response.data
+        const resultado = response?.data || response;
+
+        if (resultado?.success) {
           // Atualizar o status do lembrete
           const updateData = {};
           if (deveEnviarNoDia) {
@@ -130,9 +133,9 @@ _Lembrete automático - AgroFinance_`;
         } else {
           erros.push({
             conta: conta.descricao,
-            erro: response.error || 'Erro desconhecido'
+            erro: resultado?.error || 'Erro desconhecido'
           });
-          console.error(`Erro ao enviar lembrete ${conta.descricao}:`, response.error);
+          console.error(`Erro ao enviar lembrete ${conta.descricao}:`, resultado?.error);
         }
 
       } catch (error) {

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Bell, Calendar, DollarSign, FileText, Upload, Check, X, Undo2, Paperclip, Upload as UploadIcon } from "lucide-react";
+import { Plus, Edit, Trash2, Bell, Calendar, DollarSign, FileText, Upload, Check, X, Undo2, Paperclip, Upload as UploadIcon, Download, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 import AutocompleteInput from "../components/common/AutocompleteInput";
@@ -43,6 +43,7 @@ export default function DespesasLembretes() {
   const [dialogExcluir, setDialogExcluir] = useState(null);
   const [dialogAnexarRecibo, setDialogAnexarRecibo] = useState(null);
   const [uploadingReciboRapido, setUploadingReciboRapido] = useState(false);
+  const [gruposExpandidos, setGruposExpandidos] = useState({});
 
   const [formDataConta, setFormDataConta] = useState({
     descricao: "",
@@ -524,6 +525,34 @@ ${valor}`
   const contasAtivas = contas.filter(c => !c.pago && c.ativo !== false);
   const contasPagas = contas.filter(c => c.pago);
   const lembretesAtivos = lembretes.filter(l => l.ativo !== false);
+
+  // Agrupar contas pagas por descrição
+  const contasPagasAgrupadas = contasPagas.reduce((grupos, conta) => {
+    const chave = conta.descricao || "Sem descrição";
+    if (!grupos[chave]) {
+      grupos[chave] = [];
+    }
+    grupos[chave].push(conta);
+    return grupos;
+  }, {});
+
+  const toggleGrupo = (descricao) => {
+    setGruposExpandidos(prev => ({
+      ...prev,
+      [descricao]: !prev[descricao]
+    }));
+  };
+
+  const handleDownloadAnexo = (url, fileName) => {
+    if (!url) return;
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName || 'documento.pdf';
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   if (showForm) {
     return (
@@ -1194,40 +1223,104 @@ ${valor}`
                 </CardContent>
               </Card>
             ) : (
-              contasPagas.map((conta) => (
-                <Card key={conta.id} className="opacity-60">
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-700">{conta.descricao}</h3>
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            ✓ Pago
-                          </span>
-                        </div>
-                        <div className="flex gap-4 text-sm text-gray-500">
-                          <span>Vencimento: {format(new Date(conta.data_vencimento + 'T00:00:00'), 'dd/MM/yyyy')}</span>
-                          {conta.data_pagamento && (
-                            <span>Pago em: {format(new Date(conta.data_pagamento + 'T00:00:00'), 'dd/MM/yyyy')}</span>
-                          )}
-                          <span className="font-semibold">R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                        </div>
+              Object.entries(contasPagasAgrupadas).map(([descricao, contas]) => (
+                <Card key={descricao} className="overflow-hidden">
+                  <CardContent className="p-0">
+                    {/* Cabeçalho do grupo */}
+                    <div 
+                      className="flex items-center justify-between p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => toggleGrupo(descricao)}
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        {gruposExpandidos[descricao] ? (
+                          <ChevronDown className="w-5 h-5 text-gray-500" />
+                        ) : (
+                          <ChevronRight className="w-5 h-5 text-gray-500" />
+                        )}
+                        <h3 className="text-lg font-semibold text-gray-700">{descricao}</h3>
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          {contas.length} {contas.length === 1 ? 'pagamento' : 'pagamentos'}
+                        </span>
                       </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => setDialogDesmarcarPago(conta.id)}
-                          className="text-orange-600 hover:text-orange-700"
-                          title="Retornar para a pagar"
-                        >
-                          <Undo2 className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => setDialogExcluir({ id: conta.id, tipo: 'conta' })} className="text-red-600">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                      <div className="text-sm text-gray-600 font-semibold">
+                        Total: R$ {contas.reduce((sum, c) => sum + c.valor, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </div>
                     </div>
+
+                    {/* Lista de contas do grupo */}
+                    {gruposExpandidos[descricao] && (
+                      <div className="divide-y">
+                        {contas.map((conta) => (
+                          <div key={conta.id} className="p-4 bg-white">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  {conta.recorrente && (
+                                    <span className="text-xs text-purple-600 font-medium">
+                                      💳 Parcela {conta.parcela_atual}/{conta.parcelas_total}
+                                    </span>
+                                  )}
+                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    ✓ Pago
+                                  </span>
+                                </div>
+                                <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                                  <span>📅 Vencimento: {format(new Date(conta.data_vencimento + 'T00:00:00'), 'dd/MM/yyyy')}</span>
+                                  {conta.data_pagamento && (
+                                    <span>✅ Pago em: {format(new Date(conta.data_pagamento + 'T00:00:00'), 'dd/MM/yyyy')}</span>
+                                  )}
+                                  <span className="font-semibold text-green-700">💰 R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                  {conta.fornecedor && <span>🏢 {conta.fornecedor}</span>}
+                                  {conta.categoria && <span className="text-blue-600">📂 {conta.categoria}</span>}
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                {conta.boleto_anexo && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    onClick={() => handleDownloadAnexo(conta.boleto_anexo.url, conta.boleto_anexo.file_name)}
+                                    className="text-blue-600 hover:text-blue-700"
+                                    title="Baixar boleto"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                  </Button>
+                                )}
+                                {conta.recibo_anexo && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    onClick={() => handleDownloadAnexo(conta.recibo_anexo.url, conta.recibo_anexo.file_name)}
+                                    className="text-purple-600 hover:text-purple-700"
+                                    title="Baixar recibo"
+                                  >
+                                    <FileText className="w-4 h-4" />
+                                  </Button>
+                                )}
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => setDialogDesmarcarPago(conta.id)}
+                                  className="text-orange-600 hover:text-orange-700"
+                                  title="Retornar para a pagar"
+                                >
+                                  <Undo2 className="w-4 h-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => setDialogExcluir({ id: conta.id, tipo: 'conta' })} 
+                                  className="text-red-600 hover:text-red-700"
+                                  title="Excluir"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))

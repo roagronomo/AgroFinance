@@ -230,6 +230,23 @@ export default function FiltrosProjetos({ filtros, onFiltroChange, projetos = []
           ART a fazer
         </Button>
 
+        <Select
+          value={filtros.assistencia_tecnica || "todos"}
+          onValueChange={(value) => onFiltroChange('assistencia_tecnica', value)}
+        >
+          <SelectTrigger className="h-8 min-w-[150px] border-gray-200 focus:border-emerald-500 rounded-lg text-xs bg-gray-50/50">
+            <div className="flex items-center gap-1.5">
+              <FileCheck className="w-3.5 h-3.5 text-gray-400" />
+              <SelectValue placeholder="Assistência" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos</SelectItem>
+            <SelectItem value="sim">Com Assistência</SelectItem>
+            <SelectItem value="nao">Sem Assistência</SelectItem>
+          </SelectContent>
+        </Select>
+
         {/* Seleção de Contratos - só aparece quando há busca por cliente */}
         {filtros.busca && contratosDoCliente.length > 0 && (
           <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>

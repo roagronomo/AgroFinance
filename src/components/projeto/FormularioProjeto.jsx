@@ -869,6 +869,24 @@ ${valor}`
             </SelectContent>
           </Select>
         </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="assistencia_tecnica" className="text-green-800 font-semibold text-sm">
+            Assistência Técnica
+          </Label>
+          <div className="flex items-center space-x-2 h-9">
+            <input
+              type="checkbox"
+              id="assistencia_tecnica"
+              checked={dadosProjeto.assistencia_tecnica || false}
+              onChange={(e) => handleInputChange('assistencia_tecnica', e.target.checked)}
+              className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500"
+            />
+            <Label htmlFor="assistencia_tecnica" className="text-sm text-green-700 cursor-pointer">
+              Terá assistência técnica
+            </Label>
+          </div>
+        </div>
       </div>
 
       {/* Imóveis Beneficiados Section */}

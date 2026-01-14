@@ -492,6 +492,14 @@ export default function FormularioProjeto({ onSubmit, isLoading, projeto = null 
       return;
     }
     
+    const valorNormalizado = value.trim().toLowerCase();
+    
+    // Se for "não se aplica" em qualquer capitalização, formatar para "Não se aplica"
+    if (valorNormalizado === 'não se aplica' || valorNormalizado === 'nao se aplica') {
+      handleInputChange('safra', 'Não se aplica');
+      return;
+    }
+    
     // Verifica se contém apenas números, barra e espaços
     const contemApenasNumerosEBarra = /^[\d\s\/]+$/.test(value);
     

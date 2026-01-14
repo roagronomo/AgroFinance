@@ -257,42 +257,35 @@ export default function Vencimentos() {
   };
 
   const salvarPDF = () => {
-    const parcelasComCliente = parcelasFiltradas.filter(parcela => {
-      const projeto = projetos.find(p => p.id === parcela.projeto_id);
-      return projeto && projeto.nome_cliente && projeto.nome_cliente.trim() !== '';
-    });
+    const tipoRelatorio = filtros.tipoRelatorio;
+    
+    if (tipoRelatorio === "geral") {
+      // PDF do Relatório Geral - Agrupado por Contrato
+      const grupos = agruparPorContrato();
+      const valorTotal = grupos.reduce((sum, g) => sum + g.saldoDevedor, 0);
+      const totalContratos = grupos.length;
 
-    const parcelasOrdenadas = [...parcelasComCliente].sort((a, b) =>
-      new Date(a.data_vencimento).getTime() - new Date(b.data_vencimento).getTime()
-    );
+      // Paginação para Relatório Geral
+      const ROWS_PER_PAGE = 12;
+      const pages = [];
 
-    const totalParcelas = parcelasComCliente.length;
-    const valorTotal = parcelasComCliente.reduce((sum, p) => sum + p.valor_parcela, 0);
-    const periodo = filtros.ano !== 'todos' ? filtros.ano : 'Todos os anos';
-
-    // Paginação: EXATAMENTE 15 linhas por página
-    const ROWS_PER_PAGE = 15;
-    const pages = [];
-
-    if (parcelasOrdenadas.length === 0) {
-      // Se não houver dados, criar uma página com 20 linhas em branco
-      const filler = Array.from({ length: ROWS_PER_PAGE }, () => ({ __blank: true }));
-      pages.push(filler);
-    } else {
-      for (let i = 0; i < parcelasOrdenadas.length; i += ROWS_PER_PAGE) {
-        const pageItems = parcelasOrdenadas.slice(i, i + ROWS_PER_PAGE);
-        // Preencher com linhas em branco até completar 20 linhas
-        const fillCount = ROWS_PER_PAGE - pageItems.length;
-        const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
-        pages.push([...pageItems, ...filler]);
+      if (grupos.length === 0) {
+        const filler = Array.from({ length: ROWS_PER_PAGE }, () => ({ __blank: true }));
+        pages.push(filler);
+      } else {
+        for (let i = 0; i < grupos.length; i += ROWS_PER_PAGE) {
+          const pageItems = grupos.slice(i, i + ROWS_PER_PAGE);
+          const fillCount = ROWS_PER_PAGE - pageItems.length;
+          const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
+          pages.push([...pageItems, ...filler]);
+        }
       }
-    }
 
-    const conteudo = `
-      <html>
-        <head>
-          <title>Relatório de Vencimentos</title>
-          <style>
+      const conteudo = `
+        <html>
+          <head>
+            <title>Relatório de Vencimentos - Geral</title>
+            <style>
             @page {
               size: A4 landscape;
               margin: 0.8cm;
@@ -516,19 +509,18 @@ export default function Vencimentos() {
                 </div>
               </div>
               <div class="header-center">
-                <h1>Relatório de Vencimentos</h1>
-                <p>Período: ${periodo} ${filtros.mes !== 'todos' ? ` - ${getMonthName(filtros.mes)}` : ''}</p>
+                <h1>Relatório Geral de Contratos</h1>
+                <p>Todos os Contratos e Saldos Devedores</p>
               </div>
               <div class="header-right">
-                <p style="font-weight: bold; color: #059669;">Total de Parcelas:</p>
-                <p style="font-size: 14pt; font-weight: bold; color: #059669;">${totalParcelas}</p>
+                <p style="font-weight: bold; color: #059669;">Total de Contratos:</p>
+                <p style="font-size: 14pt; font-weight: bold; color: #059669;">${totalContratos}</p>
               </div>
             </div>
           </div>
 
           ${pages.map((page, pageIndex) => {
             const startIndex = pageIndex * ROWS_PER_PAGE;
-            const isLastPage = pageIndex === pages.length - 1;
 
             return `
               <div class="page">
@@ -540,10 +532,8 @@ export default function Vencimentos() {
                       <th class="col-banco">Banco</th>
                       <th class="col-projeto">Projeto</th>
                       <th class="col-contrato">Contrato</th>
-                      <th class="col-parcela">Parcela</th>
-                      <th class="col-vencimento">Vencimento</th>
-                      <th class="col-valor">Valor</th>
-                      <th class="col-status">Status</th>
+                      <th class="col-vencimento">Último Vencimento</th>
+                      <th class="col-valor">Saldo Devedor</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -556,57 +546,398 @@ export default function Vencimentos() {
                             <td class="col-banco"></td>
                             <td class="col-projeto"></td>
                             <td class="col-contrato"></td>
-                            <td class="col-parcela"></td>
                             <td class="col-vencimento"></td>
                             <td class="col-valor"></td>
-                            <td class="col-status"></td>
                           </tr>
                         `;
                       }
 
-                      const parcela = item;
-                      const projeto = projetos.find(p => p.id === parcela.projeto_id);
+                      const grupo = item;
                       return `
                         <tr>
                           <td class="col-num">${startIndex + idx + 1}</td>
-                          <td class="col-cliente">${projeto?.nome_cliente?.split(' ')[0] || ''}</td>
-                          <td class="col-banco">${bancoNomes[projeto?.banco] || projeto?.banco || 'N/A'}</td>
-                          <td class="col-projeto">${projeto?.item_financiado || 'N/A'}</td>
-                          <td class="col-contrato">${projeto?.numero_contrato || 'N/A'}</td>
-                          <td class="col-parcela">${parcela.numero_parcela}</td>
-                          <td class="col-vencimento">${format(new Date(parcela.data_vencimento), "dd/MM/yyyy", { locale: ptBR })}</td>
-                          <td class="col-valor">R$ ${parcela.valor_parcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                          <td class="col-status status-${parcela.status}">${statusConfig[parcela.status]?.label || parcela.status}</td>
+                          <td class="col-cliente">${grupo.cliente || ''}</td>
+                          <td class="col-banco">${bancoNomes[grupo.banco] || grupo.banco || 'N/A'}</td>
+                          <td class="col-projeto">${grupo.itemFinanciado || 'N/A'}</td>
+                          <td class="col-contrato">${grupo.numeroContrato || 'N/A'}</td>
+                          <td class="col-vencimento">${format(grupo.ultimoVencimento, "dd/MM/yyyy", { locale: ptBR })}</td>
+                          <td class="col-valor">R$ ${grupo.saldoDevedor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                         </tr>
                       `;
                     }).join('')}
                   </tbody>
                 </table>
-
-
               </div>
             `;
           }).join('')}
 
           <div class="footer-container">
             <span>Relatório gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
-            <span class="footer-total">Total Geral: R$ ${valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+            <span class="footer-total">Saldo Devedor Total: R$ ${valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
             <span>Cerrado Consultoria - Financiamentos Agrícolas</span>
           </div>
         </body>
       </html>
-    `;
+      `;
 
-    const janela = window.open('', '_blank');
-    if (janela) {
-      janela.document.write(conteudo);
-      janela.document.close();
-      janela.document.title = `Relatorio_Vencimentos_${format(new Date(), 'dd-MM-yyyy')}`;
-      setTimeout(() => {
-        janela.print();
-      }, 500);
+      const janela = window.open('', '_blank');
+      if (janela) {
+        janela.document.write(conteudo);
+        janela.document.close();
+        janela.document.title = `Relatorio_Geral_Contratos_${format(new Date(), 'dd-MM-yyyy')}`;
+        setTimeout(() => {
+          janela.print();
+        }, 500);
+      } else {
+        alert("Seu navegador bloqueou a abertura da janela de impressão. Por favor, desative o bloqueador de pop-ups para este site.");
+      }
     } else {
-      alert("Seu navegador bloqueou a abertura da janela de impressão. Por favor, desative o bloqueador de pop-ups para este site.");
+      // PDF do Relatório Detalhado - Todas as parcelas
+      const parcelasComCliente = parcelasFiltradas.filter(parcela => {
+        const projeto = projetos.find(p => p.id === parcela.projeto_id);
+        return projeto && projeto.nome_cliente && projeto.nome_cliente.trim() !== '';
+      });
+
+      const parcelasOrdenadas = [...parcelasComCliente].sort((a, b) =>
+        new Date(a.data_vencimento).getTime() - new Date(b.data_vencimento).getTime()
+      );
+
+      const totalParcelas = parcelasComCliente.length;
+      const valorTotal = parcelasComCliente.reduce((sum, p) => sum + p.valor_parcela, 0);
+      const periodo = filtros.ano !== 'todos' ? filtros.ano : 'Todos os anos';
+
+      const ROWS_PER_PAGE = 15;
+      const pages = [];
+
+      if (parcelasOrdenadas.length === 0) {
+        const filler = Array.from({ length: ROWS_PER_PAGE }, () => ({ __blank: true }));
+        pages.push(filler);
+      } else {
+        for (let i = 0; i < parcelasOrdenadas.length; i += ROWS_PER_PAGE) {
+          const pageItems = parcelasOrdenadas.slice(i, i + ROWS_PER_PAGE);
+          const fillCount = ROWS_PER_PAGE - pageItems.length;
+          const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
+          pages.push([...pageItems, ...filler]);
+        }
+      }
+
+      const conteudo = `
+        <html>
+          <head>
+            <title>Relatório de Vencimentos</title>
+            <style>
+              @page {
+                size: A4 landscape;
+                margin: 0.8cm;
+              }
+              body {
+                font-family: 'Calibri Light', Calibri, sans-serif;
+                font-size: 11pt;
+                color: #333;
+                margin: 0;
+                padding: 0;
+              }
+              .page {
+                position: relative;
+                min-height: 100vh;
+                page-break-after: always;
+                padding-top: 2.5cm;
+                padding-bottom: 1.5cm;
+                box-sizing: border-box;
+              }
+              .page:last-child {
+                page-break-after: auto;
+              }
+              .header-container {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 2cm;
+                background-color: white;
+                border-bottom: 2px solid #059669;
+                padding: 10px 20px;
+                box-sizing: border-box;
+                z-index: 1000;
+              }
+              .header-content {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                height: 100%;
+              }
+              .header-left {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+              }
+              .header-left img {
+                height: 50px;
+                width: auto;
+              }
+              .header-center {
+                text-align: center;
+                flex-grow: 1;
+              }
+              .header-center h1 {
+                font-size: 16pt;
+                margin: 0 0 5px 0;
+                color: #059669;
+                font-weight: bold;
+              }
+              .header-center p {
+                font-size: 11pt;
+                margin: 0;
+                color: #333;
+              }
+              .header-right {
+                text-align: right;
+                min-width: 150px;
+              }
+              .header-right p {
+                margin: 0;
+                font-size: 11pt;
+              }
+              table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 0;
+              }
+              th, td {
+                border: 1px solid #ddd;
+                padding: 5px 8px;
+                text-align: left;
+                line-height: 1.1;
+              }
+              thead th {
+                background-color: #e6f4ea;
+                font-weight: bold;
+                color: #065f46;
+                font-size: 11pt;
+                text-align: center;
+              }
+              tbody tr:nth-child(even) {
+                background-color: #f9f9f9;
+              }
+              tbody tr:nth-child(odd) {
+                background-color: white;
+              }
+              tbody tr.blank-row td {
+                background-color: white;
+                border-color: #ddd;
+                height: 24px;
+              }
+              .col-num {
+                width: 35px;
+                text-align: center;
+              }
+              .col-cliente {
+                width: 112px;
+              }
+              .col-banco {
+                width: 130px;
+                text-align: left;
+              }
+              .col-projeto {
+                width: 144px;
+              }
+              .col-contrato {
+                width: 110px;
+              }
+              .col-parcela {
+                width: 55px;
+                text-align: center;
+              }
+              .col-vencimento {
+                width: 85px;
+                text-align: center;
+              }
+              .col-valor {
+                width: 100px;
+                text-align: right;
+              }
+              .col-status {
+                width: 80px;
+                text-align: center;
+              }
+              .status-paga {
+                color: #15803d;
+                font-weight: bold;
+              }
+              .status-pendente {
+                color: #ca8a04;
+                font-weight: bold;
+              }
+              .status-em_atraso {
+                color: #dc2626;
+                font-weight: bold;
+              }
+
+              .total-row {
+                border-top: 3px double #059669 !important;
+                background-color: #f3f4f6 !important;
+                font-weight: bold;
+                font-size: 12pt;
+              }
+              .total-row td {
+                padding: 12px 8px;
+                border: 1px solid #ddd;
+                border-top: 3px double #059669 !important;
+              }
+              .total-label {
+                text-align: right;
+                color: #059669;
+                padding-right: 20px;
+              }
+              .total-value {
+                text-align: right;
+                color: #065f46;
+              }
+
+              .footer-container {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 1.2cm;
+                background-color: white;
+                border-top: 1px solid #e5e7eb;
+                padding: 5px 20px;
+                font-size: 9pt;
+                color: #666;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              }
+              .footer-total {
+                font-size: 9pt;
+                color: #065f46;
+                font-weight: 500;
+              }
+
+              @media print {
+                .page {
+                  page-break-after: always;
+                }
+                .page:last-child {
+                  page-break-after: auto;
+                }
+                table {
+                  page-break-inside: avoid;
+                }
+                tr {
+                  page-break-inside: avoid;
+                  page-break-after: auto;
+                }
+                thead {
+                  display: table-header-group;
+                }
+                .total-row {
+                  page-break-before: avoid;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="header-container">
+              <div class="header-content">
+                <div class="header-left">
+                  <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68c43a9d96ab992732fde594/c21e63e22_LogoSemente2.png" alt="Logo">
+                  <div>
+                    <p style="font-weight: bold; font-size: 12pt; margin: 0; color: #059669;">Cerrado Consultoria</p>
+                    <p style="font-size: 10pt; margin: 0; color: #666;">Financiamentos Agrícolas</p>
+                  </div>
+                </div>
+                <div class="header-center">
+                  <h1>Relatório de Vencimentos</h1>
+                  <p>Período: ${periodo} ${filtros.mes !== 'todos' ? ` - ${getMonthName(filtros.mes)}` : ''}</p>
+                </div>
+                <div class="header-right">
+                  <p style="font-weight: bold; color: #059669;">Total de Parcelas:</p>
+                  <p style="font-size: 14pt; font-weight: bold; color: #059669;">${totalParcelas}</p>
+                </div>
+              </div>
+            </div>
+
+            ${pages.map((page, pageIndex) => {
+              const startIndex = pageIndex * ROWS_PER_PAGE;
+
+              return `
+                <div class="page">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th class="col-num">#</th>
+                        <th class="col-cliente">Cliente</th>
+                        <th class="col-banco">Banco</th>
+                        <th class="col-projeto">Projeto</th>
+                        <th class="col-contrato">Contrato</th>
+                        <th class="col-parcela">Parcela</th>
+                        <th class="col-vencimento">Vencimento</th>
+                        <th class="col-valor">Valor</th>
+                        <th class="col-status">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${page.map((item, idx) => {
+                        if (item.__blank) {
+                          return `
+                            <tr class="blank-row">
+                              <td class="col-num"></td>
+                              <td class="col-cliente"></td>
+                              <td class="col-banco"></td>
+                              <td class="col-projeto"></td>
+                              <td class="col-contrato"></td>
+                              <td class="col-parcela"></td>
+                              <td class="col-vencimento"></td>
+                              <td class="col-valor"></td>
+                              <td class="col-status"></td>
+                            </tr>
+                          `;
+                        }
+
+                        const parcela = item;
+                        const projeto = projetos.find(p => p.id === parcela.projeto_id);
+                        return `
+                          <tr>
+                            <td class="col-num">${startIndex + idx + 1}</td>
+                            <td class="col-cliente">${projeto?.nome_cliente?.split(' ')[0] || ''}</td>
+                            <td class="col-banco">${bancoNomes[projeto?.banco] || projeto?.banco || 'N/A'}</td>
+                            <td class="col-projeto">${projeto?.item_financiado || 'N/A'}</td>
+                            <td class="col-contrato">${projeto?.numero_contrato || 'N/A'}</td>
+                            <td class="col-parcela">${parcela.numero_parcela}</td>
+                            <td class="col-vencimento">${format(new Date(parcela.data_vencimento), "dd/MM/yyyy", { locale: ptBR })}</td>
+                            <td class="col-valor">R$ ${parcela.valor_parcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                            <td class="col-status status-${parcela.status}">${statusConfig[parcela.status]?.label || parcela.status}</td>
+                          </tr>
+                        `;
+                      }).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              `;
+            }).join('')}
+
+            <div class="footer-container">
+              <span>Relatório gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+              <span class="footer-total">Total Geral: R$ ${valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+              <span>Cerrado Consultoria - Financiamentos Agrícolas</span>
+            </div>
+          </body>
+        </html>
+      `;
+
+      const janela = window.open('', '_blank');
+      if (janela) {
+        janela.document.write(conteudo);
+        janela.document.close();
+        janela.document.title = `Relatorio_Vencimentos_${format(new Date(), 'dd-MM-yyyy')}`;
+        setTimeout(() => {
+          janela.print();
+        }, 500);
+      } else {
+        alert("Seu navegador bloqueou a abertura da janela de impressão. Por favor, desative o bloqueador de pop-ups para este site.");
+      }
     }
   };
 

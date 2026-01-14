@@ -220,13 +220,17 @@ export default function DespesasLembretes() {
         mensagem: mensagem
       });
 
-      console.log('Response:', response);
+      console.log('Response completa:', response);
+      console.log('Response.data:', response?.data);
 
-      if (response?.success) {
+      // A resposta vem em response.data
+      const resultado = response?.data || response;
+      
+      if (resultado?.success) {
         toast.success("✓ Mensagem de teste enviada!");
         setDialogTesteWhatsApp(false);
       } else {
-        toast.error(response?.error || "Erro ao enviar mensagem");
+        toast.error(resultado?.error || "Erro ao enviar mensagem");
       }
     } catch (error) {
       console.error("Erro ao enviar teste:", error);

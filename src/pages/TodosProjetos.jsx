@@ -21,22 +21,33 @@ export default function TodosProjetos() {
   const [projetosFiltrados, setProjetosFiltrados] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [anexosResumo, setAnexosResumo] = useState(new Map()); // New state for attachment summaries
-  const [filtros, setFiltros] = useState({
-    busca: "",
-    status: "todos",
-    banco: "todos",
-    ano: "todos",
-    mes: "todos",
-    status_art: "todos", // Filtro de status da ART
-    contrato: "", // Filtro: número de contrato
-    safra: "todos", // Filtro de safra
-    contratos_selecionados: [], // IDs dos contratos selecionados
-    assistencia_tecnica: "todos" // Filtro de assistência técnica
+  const [filtros, setFiltros] = useState(() => {
+    const filtrosSalvos = sessionStorage.getItem('todosProjetos_filtros');
+    if (filtrosSalvos) {
+      return JSON.parse(filtrosSalvos);
+    }
+    return {
+      busca: "",
+      status: "todos",
+      banco: "todos",
+      ano: "todos",
+      mes: "todos",
+      status_art: "todos",
+      contrato: "",
+      safra: "todos",
+      contratos_selecionados: [],
+      assistencia_tecnica: "todos"
+    };
   });
   const [contratoDebounced, setContratoDebounced] = useState(""); // New state for debounced contract
 
   useEffect(() => {
     carregarProjetos();
+    
+    return () => {
+      // Limpar filtros ao desmontar o componente (mudar de página)
+      sessionStorage.removeItem('todosProjetos_filtros');
+    };
   }, []);
 
   // Debounce para o filtro de contrato
@@ -157,10 +168,14 @@ export default function TodosProjetos() {
   }, [aplicarFiltros]); // Now depends on the memoized callback
 
   const handleFiltroChange = (tipo, valor) => {
-    setFiltros(prev => ({
-      ...prev,
-      [tipo]: valor
-    }));
+    setFiltros(prev => {
+      const novosFiltros = {
+        ...prev,
+        [tipo]: valor
+      };
+      sessionStorage.setItem('todosProjetos_filtros', JSON.stringify(novosFiltros));
+      return novosFiltros;
+    });
   };
 
   const handleDeleteProject = async (projectId) => {

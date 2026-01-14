@@ -46,16 +46,18 @@ Deno.serve(async (req) => {
         });
 
         let mensagem;
+        const recorrenteInfo = conta.recorrente ? `💳 *Parcela ${conta.parcela_atual}/${conta.parcelas_total}*\n` : '';
+        
         if (deveEnviarNoDia) {
           mensagem = `💰 *CONTA A PAGAR - VENCE HOJE!*
 
 📋 *${conta.descricao}*
-${conta.fornecedor ? `🏢 *Fornecedor:* ${conta.fornecedor}\n` : ''}
+${recorrenteInfo}${conta.fornecedor ? `🏢 *Fornecedor:* ${conta.fornecedor}\n` : ''}
 📅 *Vencimento:* ${dataFormatada} (HOJE)
 💵 *Valor:* ${valorFormatado}
 ${conta.categoria ? `📂 *Categoria:* ${conta.categoria}\n` : ''}
 ${conta.observacoes ? `📝 ${conta.observacoes}\n` : ''}
-${conta.codigo_barras ? `\n🔢 *Código de Barras:*\n\`${conta.codigo_barras}\`\n` : ''}
+${conta.codigo_barras && !conta.recorrente ? `\n🔢 *Código de Barras:*\n\`${conta.codigo_barras}\`\n` : ''}
 ⚠️ *ATENÇÃO: Esta conta vence HOJE!*
 
 _Lembrete automático - AgroFinance_`;
@@ -63,13 +65,13 @@ _Lembrete automático - AgroFinance_`;
           mensagem = `💰 *LEMBRETE - CONTA A PAGAR*
 
 📋 *${conta.descricao}*
-${conta.fornecedor ? `🏢 *Fornecedor:* ${conta.fornecedor}\n` : ''}
+${recorrenteInfo}${conta.fornecedor ? `🏢 *Fornecedor:* ${conta.fornecedor}\n` : ''}
 📅 *Vencimento:* ${dataFormatada}
 ⏰ *Faltam ${conta.dias_antes_avisar} dia(s)*
 💵 *Valor:* ${valorFormatado}
 ${conta.categoria ? `📂 *Categoria:* ${conta.categoria}\n` : ''}
 ${conta.observacoes ? `📝 ${conta.observacoes}\n` : ''}
-${conta.codigo_barras ? `\n🔢 *Código de Barras:*\n\`${conta.codigo_barras}\`\n` : ''}
+${conta.codigo_barras && !conta.recorrente ? `\n🔢 *Código de Barras:*\n\`${conta.codigo_barras}\`\n` : ''}
 _Lembrete automático - AgroFinance_`;
         }
 
@@ -84,6 +86,38 @@ _Lembrete automático - AgroFinance_`;
           const updateData = {};
           if (deveEnviarNoDia) {
             updateData.lembrete_enviado = true;
+            
+            // Se for conta recorrente e foi enviado no dia, criar a próxima parcela
+            if (conta.recorrente && conta.parcela_atual < conta.parcelas_total) {
+              const proximaData = new Date(conta.data_vencimento + 'T00:00:00');
+              proximaData.setMonth(proximaData.getMonth() + 1);
+              
+              const proximaConta = {
+                descricao: conta.descricao,
+                valor: conta.valor,
+                data_vencimento: proximaData.toISOString().split('T')[0],
+                dias_antes_avisar: conta.dias_antes_avisar,
+                telefone_contato: conta.telefone_contato,
+                fornecedor: conta.fornecedor,
+                categoria: conta.categoria,
+                observacoes: conta.observacoes,
+                ativo: conta.ativo,
+                recorrente: true,
+                parcelas_total: conta.parcelas_total,
+                parcela_atual: conta.parcela_atual + 1,
+                data_vencimento_final: conta.data_vencimento_final,
+                grupo_recorrencia_id: conta.grupo_recorrencia_id,
+                pago: false,
+                lembrete_enviado: false,
+                lembrete_antecipado_enviado: false,
+                codigo_barras: null,
+                boleto_anexo: null,
+                recibo_anexo: null
+              };
+              
+              await base44.asServiceRole.entities.ContaPagar.create(proximaConta);
+              console.log(`Próxima parcela criada: ${conta.parcela_atual + 1}/${conta.parcelas_total}`);
+            }
           }
           if (deveEnviarAntecipado) {
             updateData.lembrete_antecipado_enviado = true;

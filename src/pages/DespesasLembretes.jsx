@@ -52,7 +52,10 @@ export default function DespesasLembretes() {
     fornecedor: "",
     categoria: "",
     observacoes: "",
-    ativo: true
+    ativo: true,
+    recorrente: false,
+    parcelas_total: "",
+    data_vencimento_final: ""
   });
 
   const [formDataLembrete, setFormDataLembrete] = useState({
@@ -240,18 +243,49 @@ ${valor}`
     e.preventDefault();
     try {
       const valorLimpo = parseFloat(formDataConta.valor.replace(/\./g, '').replace(',', '.'));
-      const dados = {
-        ...formDataConta,
-        valor: valorLimpo,
-        dias_antes_avisar: parseInt(formDataConta.dias_antes_avisar) || 3
-      };
-
+      
       if (editingItem) {
+        // Ao editar, não criar novas parcelas
+        const dados = {
+          ...formDataConta,
+          valor: valorLimpo,
+          dias_antes_avisar: parseInt(formDataConta.dias_antes_avisar) || 3,
+          parcelas_total: formDataConta.recorrente ? parseInt(formDataConta.parcelas_total) : null
+        };
         await base44.entities.ContaPagar.update(editingItem.id, dados);
         toast.success("Conta atualizada com sucesso!");
       } else {
-        await base44.entities.ContaPagar.create(dados);
-        toast.success("Conta cadastrada com sucesso!");
+        // Ao criar nova conta
+        if (formDataConta.recorrente && formDataConta.parcelas_total > 0) {
+          // Criar conta recorrente - apenas a primeira parcela
+          const grupoId = `rec_${Date.now()}`;
+          const dados = {
+            ...formDataConta,
+            valor: valorLimpo,
+            dias_antes_avisar: parseInt(formDataConta.dias_antes_avisar) || 3,
+            parcelas_total: parseInt(formDataConta.parcelas_total),
+            parcela_atual: 1,
+            grupo_recorrencia_id: grupoId,
+            // Não incluir código de barras para recorrentes
+            codigo_barras: null,
+            boleto_anexo: null
+          };
+          await base44.entities.ContaPagar.create(dados);
+          toast.success(`Conta recorrente cadastrada! Total de ${formDataConta.parcelas_total} parcelas.`);
+        } else {
+          // Conta normal
+          const dados = {
+            ...formDataConta,
+            valor: valorLimpo,
+            dias_antes_avisar: parseInt(formDataConta.dias_antes_avisar) || 3,
+            recorrente: false,
+            parcelas_total: null,
+            parcela_atual: null,
+            grupo_recorrencia_id: null
+          };
+          await base44.entities.ContaPagar.create(dados);
+          toast.success("Conta cadastrada com sucesso!");
+        }
       }
 
       await carregarDados();
@@ -339,7 +373,10 @@ ${valor}`
       observacoes: conta.observacoes || "",
       ativo: conta.ativo !== false,
       boleto_anexo: conta.boleto_anexo || null,
-      recibo_anexo: conta.recibo_anexo || null
+      recibo_anexo: conta.recibo_anexo || null,
+      recorrente: conta.recorrente || false,
+      parcelas_total: conta.parcelas_total || "",
+      data_vencimento_final: conta.data_vencimento_final || ""
     });
     setShowForm(true);
   };
@@ -377,7 +414,10 @@ ${valor}`
       fornecedor: "",
       categoria: "",
       observacoes: "",
-      ativo: true
+      ativo: true,
+      recorrente: false,
+      parcelas_total: "",
+      data_vencimento_final: ""
     });
     setFormDataLembrete({
       descricao: "",
@@ -535,8 +575,9 @@ ${valor}`
                     </div>
                   </div>
 
-                  <div className="space-y-3 border-t pt-4">
-                    <h3 className="font-semibold text-sm mb-3">Anexos</h3>
+                  {!formDataConta.recorrente && (
+                    <div className="space-y-3 border-t pt-4">
+                      <h3 className="font-semibold text-sm mb-3">Anexos</h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
@@ -623,7 +664,8 @@ ${valor}`
                         <p className="text-xs text-gray-500 mt-1">✨ Extraído automaticamente do PDF</p>
                       </div>
                     )}
-                  </div>
+                    </div>
+                  )}
 
                   <div>
                     <Label>Observações</Label>
@@ -834,16 +876,21 @@ ${valor}`
                             </span>
                           </div>
                           <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-4 h-4" />
-                              {format(new Date(conta.data_vencimento + 'T00:00:00'), 'dd/MM/yyyy')}
-                            </span>
-                            <span className="font-semibold text-red-600">
-                              💰 R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                            </span>
-                            {conta.fornecedor && <span>🏢 {conta.fornecedor}</span>}
-                            {conta.categoria && <span className="text-blue-600">📂 {conta.categoria}</span>}
-                            {conta.codigo_barras && <span className="text-green-600">🔢 Código extraído</span>}
+                           <span className="flex items-center gap-1">
+                             <Calendar className="w-4 h-4" />
+                             {format(new Date(conta.data_vencimento + 'T00:00:00'), 'dd/MM/yyyy')}
+                           </span>
+                           <span className="font-semibold text-red-600">
+                             💰 R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                           </span>
+                           {conta.recorrente && (
+                             <span className="text-purple-600 font-medium">
+                               💳 Recorrente {conta.parcela_atual}/{conta.parcelas_total}
+                             </span>
+                           )}
+                           {conta.fornecedor && <span>🏢 {conta.fornecedor}</span>}
+                           {conta.categoria && <span className="text-blue-600">📂 {conta.categoria}</span>}
+                           {conta.codigo_barras && <span className="text-green-600">🔢 Código extraído</span>}
                           </div>
                           {conta.observacoes && (
                             <p className="text-sm text-gray-500 mt-2">{conta.observacoes}</p>

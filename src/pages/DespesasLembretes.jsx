@@ -188,10 +188,6 @@ export default function DespesasLembretes() {
       return;
     }
 
-    if (!confirm("Tem certeza que deseja enviar uma mensagem de teste via WhatsApp?")) {
-      return;
-    }
-
     setEnviandoTeste(true);
     try {
       const valorFormatado = typeof formDataConta.valor === 'string' 

@@ -10,6 +10,7 @@ import { Plus, Edit, Trash2, Bell, Calendar, DollarSign, FileText, Upload, Check
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 import AutocompleteInput from "../components/common/AutocompleteInput";
+import { enviarWhatsAppEvolution } from "@/functions/enviarWhatsAppEvolution";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -205,13 +206,19 @@ export default function DespesasLembretes() {
         mensagem += `\n💳 *PIX para pagamento:*\n${formDataConta.chave_pix}`;
       }
 
-      await base44.functions.invoke('enviarWhatsAppEvolution', {
-        numero: formDataConta.telefone_contato.replace(/\D/g, ''),
+      const numeroLimpo = formDataConta.telefone_contato.replace(/\D/g, '');
+      
+      const response = await enviarWhatsAppEvolution({
+        numero: numeroLimpo,
         mensagem: mensagem
       });
 
-      toast.success("✓ Mensagem de teste enviada!");
-      setDialogTesteWhatsApp(false);
+      if (response.data?.success) {
+        toast.success("✓ Mensagem de teste enviada!");
+        setDialogTesteWhatsApp(false);
+      } else {
+        toast.error(response.data?.error || "Erro ao enviar mensagem");
+      }
     } catch (error) {
       console.error("Erro ao enviar teste:", error);
       toast.error("Erro ao enviar mensagem de teste");

@@ -20,6 +20,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function DespesasLembretes() {
   const [contas, setContas] = useState([]);
@@ -1566,14 +1573,15 @@ ${valor}`
       </AlertDialog>
 
       {/* Dialog Gerenciar Chaves PIX */}
-      <AlertDialog open={showGerenciarPix} onOpenChange={(open) => {
-        if (!open) {
-          setShowGerenciarPix(false);
-          setFormChavePix({ descricao: "", chave: "" });
-          setEditingChavePix(null);
-        }
-      }}>
-        <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      {showGerenciarPix && (
+        <AlertDialog open={showGerenciarPix} onOpenChange={(open) => {
+          if (!open) {
+            setShowGerenciarPix(false);
+            setFormChavePix({ descricao: "", chave: "" });
+            setEditingChavePix(null);
+          }
+        }}>
+          <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-blue-600" />
@@ -1671,7 +1679,8 @@ ${valor}`
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      )}
 
-      </div>
-      );
-      }
+    </div>
+  );
+}

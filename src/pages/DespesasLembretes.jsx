@@ -947,8 +947,8 @@ ${valor}`
 
                     {chavesPix.length > 0 ? (
                       <Select
-                        value={formDataConta.chave_pix}
-                        onValueChange={(value) => setFormDataConta({...formDataConta, chave_pix: value})}
+                        value={formDataConta.chave_pix || ""}
+                        onValueChange={(value) => setFormDataConta({...formDataConta, chave_pix: value === "" ? "" : value})}
                       >
                         <SelectTrigger className="mt-1">
                           <SelectValue placeholder="Selecione uma chave PIX cadastrada" />
@@ -957,7 +957,8 @@ ${valor}`
                           <SelectItem value={null}>Nenhuma</SelectItem>
                           {chavesPix.map((chave) => (
                             <SelectItem key={chave.id} value={chave.chave}>
-                              {chave.descricao ? `${chave.descricao} - ${chave.chave}` : chave.chave}
+                              {chave.chave}
+                              {chave.descricao && <span className="text-xs text-gray-500 ml-2">({chave.descricao})</span>}
                             </SelectItem>
                           ))}
                         </SelectContent>

@@ -52,6 +52,7 @@ export default function DespesasLembretes() {
   const [dialogAnexarRecibo, setDialogAnexarRecibo] = useState(null);
   const [uploadingReciboRapido, setUploadingReciboRapido] = useState(false);
   const [gruposExpandidos, setGruposExpandidos] = useState({});
+  const [gruposPixExpandidos, setGruposPixExpandidos] = useState({});
   const [dialogTesteWhatsApp, setDialogTesteWhatsApp] = useState(false);
   const [showGerenciarPix, setShowGerenciarPix] = useState(false);
   const [formChavePix, setFormChavePix] = useState({ descricao: "", chave: "", tipo: "cpf" });
@@ -1736,14 +1737,17 @@ ${valor}`
                     }, {});
 
                     return Object.entries(grupos).map(([nomeGrupo, chavesDoGrupo]) => {
-                      const [grupoAberto, setGrupoAberto] = useState(false);
+                      const grupoAberto = gruposPixExpandidos[nomeGrupo] || false;
                       
                       return (
                         <div key={nomeGrupo} className="border rounded-lg overflow-hidden">
                           {/* Cabeçalho do grupo */}
                           <div 
                             className="flex items-center justify-between p-3 bg-blue-50 cursor-pointer hover:bg-blue-100 transition-colors"
-                            onClick={() => setGrupoAberto(!grupoAberto)}
+                            onClick={() => setGruposPixExpandidos(prev => ({
+                              ...prev,
+                              [nomeGrupo]: !grupoAberto
+                            }))}
                           >
                             <div className="flex items-center gap-2 flex-1">
                               {grupoAberto ? (

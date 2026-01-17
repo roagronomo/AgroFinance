@@ -54,7 +54,7 @@ export default function DespesasLembretes() {
   const [gruposExpandidos, setGruposExpandidos] = useState({});
   const [dialogTesteWhatsApp, setDialogTesteWhatsApp] = useState(false);
   const [showGerenciarPix, setShowGerenciarPix] = useState(false);
-  const [formChavePix, setFormChavePix] = useState({ descricao: "", chave: "" });
+  const [formChavePix, setFormChavePix] = useState({ descricao: "", chave: "", tipo: "cpf" });
   const [editingChavePix, setEditingChavePix] = useState(null);
 
   const [formDataConta, setFormDataConta] = useState({
@@ -112,7 +112,7 @@ export default function DespesasLembretes() {
         toast.success("Chave PIX cadastrada!");
       }
       await carregarChavesPix();
-      setFormChavePix({ descricao: "", chave: "" });
+      setFormChavePix({ descricao: "", chave: "", tipo: "cpf" });
       setEditingChavePix(null);
       setShowGerenciarPix(false);
     } catch (error) {
@@ -198,33 +198,56 @@ export default function DespesasLembretes() {
     }
   };
 
-  const formatarChavePix = (valor) => {
-    // Se contém @, é e-mail - deixar como está
-    if (valor.includes('@')) {
+  const formatarChavePixPorTipo = (valor, tipo) => {
+    // Se for e-mail, deixar como está
+    if (tipo === 'email') {
+      return valor;
+    }
+
+    // Se for aleatória, deixar como está
+    if (tipo === 'aleatoria') {
       return valor;
     }
 
     const numeros = valor.replace(/\D/g, '');
     
-    // Se tem 11 dígitos, formatar como CPF
-    if (numeros.length === 11) {
-      return numeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    // CPF: 11 dígitos
+    if (tipo === 'cpf' && numeros.length <= 11) {
+      if (numeros.length === 11) {
+        return numeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+      }
+      return numeros.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, (_, a, b, c, d) => {
+        let result = a;
+        if (b) result += '.' + b;
+        if (c) result += '.' + c;
+        if (d) result += '-' + d;
+        return result;
+      });
     }
     
-    // Se tem 14 dígitos, formatar como CNPJ
-    if (numeros.length === 14) {
-      return numeros.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    // CNPJ: 14 dígitos
+    if (tipo === 'cnpj' && numeros.length <= 14) {
+      if (numeros.length === 14) {
+        return numeros.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+      }
+      return numeros.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, (_, a, b, c, d, e) => {
+        let result = a;
+        if (b) result += '.' + b;
+        if (c) result += '.' + c;
+        if (d) result += '/' + d;
+        if (e) result += '-' + e;
+        return result;
+      });
     }
     
-    // Se tem dígitos e não é CPF/CNPJ, pode ser telefone
-    if (numeros.length > 0 && numeros.length <= 11) {
+    // Telefone: 10 ou 11 dígitos
+    if (tipo === 'telefone' && numeros.length <= 11) {
       if (numeros.length <= 10) {
         return numeros.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
       }
       return numeros.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
     }
     
-    // Qualquer outra coisa (chave aleatória), retornar como está
     return valor;
   };
 
@@ -1577,7 +1600,7 @@ ${valor}`
         <AlertDialog open={showGerenciarPix} onOpenChange={(open) => {
           if (!open) {
             setShowGerenciarPix(false);
-            setFormChavePix({ descricao: "", chave: "" });
+            setFormChavePix({ descricao: "", chave: "", tipo: "cpf" });
             setEditingChavePix(null);
           }
         }}>
@@ -1605,16 +1628,37 @@ ${valor}`
                 />
               </div>
               <div>
+                <Label>Tipo de Chave *</Label>
+                <Select
+                  value={formChavePix.tipo}
+                  onValueChange={(value) => setFormChavePix({...formChavePix, tipo: value, chave: ""})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cpf">CPF</SelectItem>
+                    <SelectItem value="cnpj">CNPJ</SelectItem>
+                    <SelectItem value="email">E-mail</SelectItem>
+                    <SelectItem value="telefone">Telefone/Celular</SelectItem>
+                    <SelectItem value="aleatoria">Chave Aleatória</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
                 <Label>Chave PIX *</Label>
                 <Input
                   value={formChavePix.chave}
-                  onChange={(e) => setFormChavePix({...formChavePix, chave: formatarChavePix(e.target.value)})}
-                  placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória"
+                  onChange={(e) => setFormChavePix({...formChavePix, chave: formatarChavePixPorTipo(e.target.value, formChavePix.tipo)})}
+                  placeholder={
+                    formChavePix.tipo === 'cpf' ? '000.000.000-00' :
+                    formChavePix.tipo === 'cnpj' ? '00.000.000/0000-00' :
+                    formChavePix.tipo === 'email' ? 'seu@email.com' :
+                    formChavePix.tipo === 'telefone' ? '(00) 00000-0000' :
+                    'Cole a chave aleatória'
+                  }
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Formatação automática: CPF, CNPJ, telefone detectados automaticamente
-                </p>
               </div>
               <div className="flex gap-2">
                 <Button type="submit" size="sm" className="bg-blue-600 hover:bg-blue-700">
@@ -1626,7 +1670,7 @@ ${valor}`
                     size="sm" 
                     variant="outline" 
                     onClick={() => {
-                      setFormChavePix({ descricao: "", chave: "" });
+                      setFormChavePix({ descricao: "", chave: "", tipo: "cpf" });
                       setEditingChavePix(null);
                     }}
                   >
@@ -1655,7 +1699,11 @@ ${valor}`
                           size="icon"
                           onClick={() => {
                             setEditingChavePix(chave);
-                            setFormChavePix({ descricao: chave.descricao || "", chave: chave.chave });
+                            setFormChavePix({ 
+                              descricao: chave.descricao || "", 
+                              chave: chave.chave,
+                              tipo: chave.tipo || "cpf"
+                            });
                           }}
                           className="text-blue-600 hover:text-blue-700"
                         >

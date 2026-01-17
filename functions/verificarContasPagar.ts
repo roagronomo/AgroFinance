@@ -17,6 +17,7 @@ Deno.serve(async (req) => {
 
     let lembretesEnviados = 0;
     const erros = [];
+    const resumoPorTelefone = {}; // Acumular valores por telefone
 
     for (const conta of contas) {
       try {
@@ -130,6 +131,16 @@ _Lembrete automático - AgroFinance_`;
           await base44.asServiceRole.entities.ContaPagar.update(conta.id, updateData);
           lembretesEnviados++;
           console.log(`Lembrete enviado: ${conta.descricao}`);
+
+          // Acumular valor para resumo
+          if (!resumoPorTelefone[conta.telefone_contato]) {
+            resumoPorTelefone[conta.telefone_contato] = {
+              total: 0,
+              quantidade: 0
+            };
+          }
+          resumoPorTelefone[conta.telefone_contato].total += conta.valor;
+          resumoPorTelefone[conta.telefone_contato].quantidade += 1;
         } else {
           erros.push({
             conta: conta.descricao,
@@ -148,6 +159,33 @@ _Lembrete automático - AgroFinance_`;
     }
 
     console.log(`Verificação concluída. ${lembretesEnviados} lembrete(s) enviado(s).`);
+
+    // Enviar mensagem de resumo para cada telefone
+    for (const [telefone, dados] of Object.entries(resumoPorTelefone)) {
+      if (dados.quantidade > 0) {
+        const totalFormatado = dados.total.toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        });
+
+        const mensagemResumo = `📊 *RESUMO - CONTAS A PAGAR*
+
+Total de contas notificadas: ${dados.quantidade}
+💰 *VALOR TOTAL: ${totalFormatado}*
+
+_Resumo automático - AgroFinance_`;
+
+        try {
+          await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
+            numero: telefone,
+            mensagem: mensagemResumo
+          });
+          console.log(`Resumo enviado para ${telefone}: ${dados.quantidade} contas, total ${totalFormatado}`);
+        } catch (error) {
+          console.error(`Erro ao enviar resumo para ${telefone}:`, error);
+        }
+      }
+    }
 
     return Response.json({
       success: true,

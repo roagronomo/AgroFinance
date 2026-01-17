@@ -1608,10 +1608,13 @@ ${valor}`
                 <Label>Chave PIX *</Label>
                 <Input
                   value={formChavePix.chave}
-                  onChange={(e) => setFormChavePix({...formChavePix, chave: e.target.value})}
+                  onChange={(e) => setFormChavePix({...formChavePix, chave: formatarChavePix(e.target.value)})}
                   placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória"
                   required
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Formatação automática: CPF, CNPJ, telefone detectados automaticamente
+                </p>
               </div>
               <div className="flex gap-2">
                 <Button type="submit" size="sm" className="bg-blue-600 hover:bg-blue-700">

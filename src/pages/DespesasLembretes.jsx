@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Bell, Calendar, DollarSign, FileText, Upload, Check, X, Undo2, Paperclip, Upload as UploadIcon, Download, ChevronDown, ChevronRight, Send } from "lucide-react";
+import { Plus, Edit, Trash2, Bell, Calendar, DollarSign, FileText, Upload, Check, X, Undo2, Paperclip, Upload as UploadIcon, Download, ChevronDown, ChevronRight, Send, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 import AutocompleteInput from "../components/common/AutocompleteInput";
@@ -24,6 +24,7 @@ import {
 export default function DespesasLembretes() {
   const [contas, setContas] = useState([]);
   const [lembretes, setLembretes] = useState([]);
+  const [chavesPix, setChavesPix] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [tipoForm, setTipoForm] = useState("conta"); // "conta" ou "lembrete"
@@ -75,7 +76,17 @@ export default function DespesasLembretes() {
 
   useEffect(() => {
     carregarDados();
+    carregarChavesPix();
   }, []);
+
+  const carregarChavesPix = async () => {
+    try {
+      const data = await base44.entities.ChavePix.list("-ultima_utilizacao");
+      setChavesPix(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar chaves PIX:", error);
+    }
+  };
 
   useEffect(() => {
     // Extrair sugestões únicas dos dados existentes
@@ -337,6 +348,23 @@ ${valor}`
     e.preventDefault();
     try {
       const valorLimpo = parseFloat(formDataConta.valor.replace(/\./g, '').replace(',', '.'));
+      
+      // Salvar chave PIX se for nova
+      if (formDataConta.chave_pix && formDataConta.chave_pix.trim()) {
+        const chaveExiste = chavesPix.find(c => c.chave === formDataConta.chave_pix);
+        if (!chaveExiste) {
+          await base44.entities.ChavePix.create({
+            chave: formDataConta.chave_pix,
+            ultima_utilizacao: new Date().toISOString()
+          });
+          await carregarChavesPix();
+        } else {
+          // Atualizar data de última utilização
+          await base44.entities.ChavePix.update(chaveExiste.id, {
+            ultima_utilizacao: new Date().toISOString()
+          });
+        }
+      }
       
       if (editingItem) {
         // Ao editar, não criar novas parcelas
@@ -853,14 +881,45 @@ ${valor}`
                   </div>
 
                   <div>
-                    <Label>Chave PIX (opcional)</Label>
+                    <Label className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-blue-600" />
+                      Chave PIX (opcional)
+                    </Label>
+
+                    {chavesPix.length > 0 && (
+                      <Select
+                        value={formDataConta.chave_pix}
+                        onValueChange={(value) => {
+                          if (value === "nova") {
+                            setFormDataConta({...formDataConta, chave_pix: ""});
+                          } else {
+                            setFormDataConta({...formDataConta, chave_pix: value});
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Selecione uma chave salva ou digite nova" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="nova">✏️ Digitar nova chave</SelectItem>
+                          {chavesPix.map((chave) => (
+                            <SelectItem key={chave.id} value={chave.chave}>
+                              {chave.chave}
+                              {chave.descricao && ` (${chave.descricao})`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+
                     <Input
                       value={formDataConta.chave_pix}
                       onChange={(e) => handleChavePixChange(e.target.value)}
                       placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória"
+                      className="mt-2"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      💳 Será incluída nos lembretes por WhatsApp
+                      💳 Será incluída nos lembretes por WhatsApp e salva para uso futuro
                     </p>
                   </div>
 

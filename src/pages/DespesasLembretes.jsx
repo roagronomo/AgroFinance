@@ -252,8 +252,7 @@ export default function DespesasLembretes() {
   };
 
   const handleChavePixChange = (valor) => {
-    const valorFormatado = formatarChavePix(valor);
-    setFormDataConta({...formDataConta, chave_pix: valorFormatado});
+    setFormDataConta({...formDataConta, chave_pix: valor});
   };
 
   const enviarTesteWhatsApp = async () => {

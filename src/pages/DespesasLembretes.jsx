@@ -416,17 +416,10 @@ ${valor}`
     try {
       const valorLimpo = parseFloat(formDataConta.valor.replace(/\./g, '').replace(',', '.'));
       
-      // Salvar chave PIX se for nova
+      // Atualizar data de última utilização da chave PIX se foi selecionada
       if (formDataConta.chave_pix && formDataConta.chave_pix.trim()) {
         const chaveExiste = chavesPix.find(c => c.chave === formDataConta.chave_pix);
-        if (!chaveExiste) {
-          await base44.entities.ChavePix.create({
-            chave: formDataConta.chave_pix,
-            ultima_utilizacao: new Date().toISOString()
-          });
-          await carregarChavesPix();
-        } else {
-          // Atualizar data de última utilização
+        if (chaveExiste) {
           await base44.entities.ChavePix.update(chaveExiste.id, {
             ultima_utilizacao: new Date().toISOString()
           });
@@ -953,40 +946,30 @@ ${valor}`
                       Chave PIX (opcional)
                     </Label>
 
-                    {chavesPix.length > 0 && (
+                    {chavesPix.length > 0 ? (
                       <Select
                         value={formDataConta.chave_pix}
-                        onValueChange={(value) => {
-                          if (value === "nova") {
-                            setFormDataConta({...formDataConta, chave_pix: ""});
-                          } else {
-                            setFormDataConta({...formDataConta, chave_pix: value});
-                          }
-                        }}
+                        onValueChange={(value) => setFormDataConta({...formDataConta, chave_pix: value})}
                       >
                         <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Selecione uma chave salva ou digite nova" />
+                          <SelectValue placeholder="Selecione uma chave PIX cadastrada" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="nova">✏️ Digitar nova chave</SelectItem>
+                          <SelectItem value={null}>Nenhuma</SelectItem>
                           {chavesPix.map((chave) => (
                             <SelectItem key={chave.id} value={chave.chave}>
-                              {chave.chave}
-                              {chave.descricao && ` (${chave.descricao})`}
+                              {chave.descricao ? `${chave.descricao} - ${chave.chave}` : chave.chave}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                    ) : (
+                      <p className="text-sm text-amber-600 mt-1">
+                        Cadastre chaves PIX usando o botão "Chaves PIX"
+                      </p>
                     )}
-
-                    <Input
-                      value={formDataConta.chave_pix}
-                      onChange={(e) => handleChavePixChange(e.target.value)}
-                      placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória"
-                      className="mt-2"
-                    />
                     <p className="text-xs text-gray-500 mt-1">
-                      💳 Será incluída nos lembretes por WhatsApp e salva para uso futuro
+                      💳 Será incluída nos lembretes por WhatsApp
                     </p>
                   </div>
 

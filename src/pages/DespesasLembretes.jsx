@@ -46,6 +46,9 @@ export default function DespesasLembretes() {
   const [uploadingReciboRapido, setUploadingReciboRapido] = useState(false);
   const [gruposExpandidos, setGruposExpandidos] = useState({});
   const [dialogTesteWhatsApp, setDialogTesteWhatsApp] = useState(false);
+  const [showGerenciarPix, setShowGerenciarPix] = useState(false);
+  const [formChavePix, setFormChavePix] = useState({ descricao: "", chave: "" });
+  const [editingChavePix, setEditingChavePix] = useState(null);
 
   const [formDataConta, setFormDataConta] = useState({
     descricao: "",
@@ -85,6 +88,41 @@ export default function DespesasLembretes() {
       setChavesPix(data || []);
     } catch (error) {
       console.error("Erro ao carregar chaves PIX:", error);
+    }
+  };
+
+  const handleSalvarChavePix = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingChavePix) {
+        await base44.entities.ChavePix.update(editingChavePix.id, formChavePix);
+        toast.success("Chave PIX atualizada!");
+      } else {
+        await base44.entities.ChavePix.create({
+          ...formChavePix,
+          ultima_utilizacao: new Date().toISOString()
+        });
+        toast.success("Chave PIX cadastrada!");
+      }
+      await carregarChavesPix();
+      setFormChavePix({ descricao: "", chave: "" });
+      setEditingChavePix(null);
+      setShowGerenciarPix(false);
+    } catch (error) {
+      console.error("Erro ao salvar chave PIX:", error);
+      toast.error("Erro ao salvar chave PIX");
+    }
+  };
+
+  const handleExcluirChavePix = async (id) => {
+    if (!confirm("Deseja excluir esta chave PIX?")) return;
+    try {
+      await base44.entities.ChavePix.delete(id);
+      toast.success("Chave PIX excluída!");
+      await carregarChavesPix();
+    } catch (error) {
+      console.error("Erro ao excluir:", error);
+      toast.error("Erro ao excluir chave PIX");
     }
   };
 
@@ -1152,6 +1190,10 @@ ${valor}`
           </p>
         </div>
         <div className="flex gap-2">
+          <Button onClick={() => setShowGerenciarPix(true)} variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+            <CreditCard className="w-4 h-4 mr-2" />
+            Chaves PIX
+          </Button>
           <Button onClick={() => { setShowForm(true); setTipoForm("conta"); }} className="bg-green-600 hover:bg-green-700">
             <Plus className="w-4 h-4 mr-2" />
             Nova Conta
@@ -1523,7 +1565,113 @@ ${valor}`
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Dialog Gerenciar Chaves PIX */}
+      <AlertDialog open={showGerenciarPix} onOpenChange={(open) => {
+        if (!open) {
+          setShowGerenciarPix(false);
+          setFormChavePix({ descricao: "", chave: "" });
+          setEditingChavePix(null);
+        }
+      }}>
+        <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-blue-600" />
+              Gerenciar Chaves PIX
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Cadastre suas chaves PIX para usar rapidamente ao criar contas a pagar
+            </AlertDialogDescription>
+          </AlertDialogHeader>
 
-    </div>
-  );
-}
+          <div className="space-y-4">
+            {/* Formulário de cadastro/edição */}
+            <form onSubmit={handleSalvarChavePix} className="space-y-3 border rounded-lg p-4 bg-blue-50">
+              <div>
+                <Label>Descrição *</Label>
+                <Input
+                  value={formChavePix.descricao}
+                  onChange={(e) => setFormChavePix({...formChavePix, descricao: e.target.value})}
+                  placeholder="Ex: Banco Itaú - Isabela"
+                  required
+                />
+              </div>
+              <div>
+                <Label>Chave PIX *</Label>
+                <Input
+                  value={formChavePix.chave}
+                  onChange={(e) => setFormChavePix({...formChavePix, chave: e.target.value})}
+                  placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória"
+                  required
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button type="submit" size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  {editingChavePix ? "Atualizar" : "Adicionar"}
+                </Button>
+                {editingChavePix && (
+                  <Button 
+                    type="button" 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => {
+                      setFormChavePix({ descricao: "", chave: "" });
+                      setEditingChavePix(null);
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                )}
+              </div>
+            </form>
+
+            {/* Lista de chaves cadastradas */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-gray-700">Chaves Cadastradas ({chavesPix.length})</h3>
+              {chavesPix.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-4">Nenhuma chave cadastrada</p>
+              ) : (
+                <div className="space-y-2">
+                  {chavesPix.map((chave) => (
+                    <div key={chave.id} className="flex items-center justify-between p-3 border rounded-lg bg-white hover:shadow-sm">
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">{chave.descricao || "Sem descrição"}</p>
+                        <p className="text-sm text-gray-600 font-mono">{chave.chave}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setEditingChavePix(chave);
+                            setFormChavePix({ descricao: chave.descricao || "", chave: chave.chave });
+                          }}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleExcluirChavePix(chave.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Fechar</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      </div>
+      );
+      }

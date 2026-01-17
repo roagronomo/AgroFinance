@@ -1719,46 +1719,91 @@ ${valor}`
               </div>
             </form>
 
-            {/* Lista de chaves cadastradas */}
+            {/* Lista de chaves cadastradas agrupadas */}
             <div className="space-y-2">
               <h3 className="text-sm font-semibold text-gray-700">Chaves Cadastradas ({chavesPix.length})</h3>
               {chavesPix.length === 0 ? (
                 <p className="text-sm text-gray-500 text-center py-4">Nenhuma chave cadastrada</p>
               ) : (
                 <div className="space-y-2">
-                  {chavesPix.map((chave) => (
-                    <div key={chave.id} className="flex items-center justify-between p-3 border rounded-lg bg-white hover:shadow-sm">
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">{chave.descricao || "Sem descrição"}</p>
-                        <p className="text-sm text-gray-600 font-mono">{chave.chave}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setEditingChavePix(chave);
-                            setFormChavePix({ 
-                              descricao: chave.descricao || "", 
-                              chave: chave.chave,
-                              tipo: chave.tipo || "cpf"
-                            });
-                          }}
-                          className="text-blue-600 hover:text-blue-700"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleExcluirChavePix(chave.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                  {(() => {
+                    // Agrupar chaves por descrição
+                    const grupos = chavesPix.reduce((acc, chave) => {
+                      const nomeGrupo = chave.descricao || "Sem descrição";
+                      if (!acc[nomeGrupo]) acc[nomeGrupo] = [];
+                      acc[nomeGrupo].push(chave);
+                      return acc;
+                    }, {});
+
+                    return Object.entries(grupos).map(([nomeGrupo, chavesDoGrupo]) => {
+                      const [grupoAberto, setGrupoAberto] = useState(false);
+                      
+                      return (
+                        <div key={nomeGrupo} className="border rounded-lg overflow-hidden">
+                          {/* Cabeçalho do grupo */}
+                          <div 
+                            className="flex items-center justify-between p-3 bg-blue-50 cursor-pointer hover:bg-blue-100 transition-colors"
+                            onClick={() => setGrupoAberto(!grupoAberto)}
+                          >
+                            <div className="flex items-center gap-2 flex-1">
+                              {grupoAberto ? (
+                                <ChevronDown className="w-4 h-4 text-blue-600" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4 text-blue-600" />
+                              )}
+                              <p className="font-semibold text-gray-900">{nomeGrupo}</p>
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-200 text-blue-800">
+                                {chavesDoGrupo.length} {chavesDoGrupo.length === 1 ? 'chave' : 'chaves'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Chaves do grupo */}
+                          {grupoAberto && (
+                            <div className="divide-y bg-white">
+                              {chavesDoGrupo.map((chave) => (
+                                <div key={chave.id} className="flex items-center justify-between p-3 hover:bg-gray-50">
+                                  <div className="flex-1">
+                                    <p className="text-sm text-gray-600 font-mono">{chave.chave}</p>
+                                    <p className="text-xs text-gray-400">Tipo: {chave.tipo || 'CPF'}</p>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditingChavePix(chave);
+                                        setFormChavePix({ 
+                                          descricao: chave.descricao || "", 
+                                          chave: chave.chave,
+                                          tipo: chave.tipo || "cpf"
+                                        });
+                                      }}
+                                      className="text-blue-600 hover:text-blue-700 h-8 w-8"
+                                    >
+                                      <Edit className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleExcluirChavePix(chave.id);
+                                      }}
+                                      className="text-red-600 hover:text-red-700 h-8 w-8"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               )}
             </div>

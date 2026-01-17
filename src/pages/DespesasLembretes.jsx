@@ -114,7 +114,6 @@ export default function DespesasLembretes() {
       await carregarChavesPix();
       setFormChavePix({ descricao: "", chave: "", tipo: "cpf" });
       setEditingChavePix(null);
-      setShowGerenciarPix(false);
     } catch (error) {
       console.error("Erro ao salvar chave PIX:", error);
       toast.error("Erro ao salvar chave PIX");
@@ -1659,6 +1658,19 @@ ${valor}`
                     Cancelar
                   </Button>
                 )}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setShowGerenciarPix(false);
+                    setFormChavePix({ descricao: "", chave: "", tipo: "cpf" });
+                    setEditingChavePix(null);
+                  }}
+                  className="ml-auto"
+                >
+                  Fechar
+                </Button>
               </div>
             </form>
 
@@ -1705,12 +1717,8 @@ ${valor}`
                 </div>
               )}
             </div>
-          </div>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel>Fechar</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
+            </div>
+            </AlertDialogContent>
       </AlertDialog>
       )}
 

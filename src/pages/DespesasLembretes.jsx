@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Bell, Calendar, DollarSign, FileText, Upload, Check, X, Undo2, Paperclip, Upload as UploadIcon, Download, ChevronDown, ChevronRight, Send, CreditCard } from "lucide-react";
+import { Plus, Edit, Trash2, Bell, Calendar, DollarSign, FileText, Upload, Check, X, Undo2, Paperclip, Upload as UploadIcon, Download, ChevronDown, ChevronRight, Send, CreditCard, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
 import AutocompleteInput from "../components/common/AutocompleteInput";
@@ -627,6 +627,31 @@ ${valor}`
       parcela_atual: conta.parcela_atual || 1
     });
     setShowForm(true);
+  };
+
+  const handleReutilizarConta = (conta) => {
+    setEditingItem(null); // Não estamos editando, é uma nova conta
+    setTipoForm("conta");
+    setFormDataConta({
+      descricao: conta.descricao || "",
+      valor: "", // Deixar vazio para o usuário preencher
+      data_vencimento: "", // Deixar vazio para o usuário preencher
+      dias_antes_avisar: conta.dias_antes_avisar || 3,
+      telefone_contato: conta.telefone_contato || "",
+      chave_pix: conta.chave_pix || "",
+      codigo_barras: "", // Não copiar código de barras
+      fornecedor: conta.fornecedor || "",
+      categoria: conta.categoria || "",
+      observacoes: conta.observacoes || "",
+      ativo: true,
+      boleto_anexo: null, // Não copiar anexos
+      recibo_anexo: null,
+      recorrente: false,
+      parcelas_total: "",
+      data_vencimento_final: ""
+    });
+    setShowForm(true);
+    toast.success("Dados copiados! Preencha valor e vencimento.");
   };
 
   const handleExcluir = async () => {
@@ -1439,6 +1464,15 @@ ${valor}`
                                 </div>
                               </div>
                               <div className="flex gap-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => handleReutilizarConta(conta)}
+                                  className="text-green-600 hover:text-green-700"
+                                  title="Usar como rascunho"
+                                >
+                                  <Copy className="w-4 h-4" />
+                                </Button>
                                 {conta.boleto_anexo && (
                                   <Button 
                                     variant="ghost" 

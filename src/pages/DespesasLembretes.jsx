@@ -951,14 +951,24 @@ ${valor}`
                         onValueChange={(value) => setFormDataConta({...formDataConta, chave_pix: value === "" ? "" : value})}
                       >
                         <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Selecione uma chave PIX cadastrada" />
+                          <SelectValue placeholder="Selecione uma chave PIX cadastrada">
+                            {formDataConta.chave_pix && (
+                              <span className="font-mono text-sm">
+                                {chavesPix.find(c => c.chave === formDataConta.chave_pix)?.descricao 
+                                  ? `${chavesPix.find(c => c.chave === formDataConta.chave_pix)?.descricao} - ${formDataConta.chave_pix}`
+                                  : formDataConta.chave_pix}
+                              </span>
+                            )}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value={null}>Nenhuma</SelectItem>
                           {chavesPix.map((chave) => (
                             <SelectItem key={chave.id} value={chave.chave}>
-                              {chave.chave}
-                              {chave.descricao && <span className="text-xs text-gray-500 ml-2">({chave.descricao})</span>}
+                              <div className="flex flex-col py-1">
+                                {chave.descricao && <span className="font-medium text-sm">{chave.descricao}</span>}
+                                <span className="font-mono text-xs text-gray-600">{chave.chave}</span>
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>

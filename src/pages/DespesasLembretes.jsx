@@ -1219,56 +1219,54 @@ ${valor}`
                     {corrigindoTexto.descricao && <p className="text-xs text-blue-600 mt-1">✨ Corrigindo...</p>}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <Label>Valor (R$)</Label>
+                      <Label className="text-xs text-gray-600">Valor (R$)</Label>
                       <Input
                         value={formDataLembrete.valor}
                         onChange={(e) => handleValorChange(e.target.value, 'lembrete')}
-                        placeholder="0,00 (opcional)"
+                        placeholder="0,00"
+                        className="h-9"
                       />
                     </div>
 
                     <div>
-                      <Label>Data do Evento *</Label>
+                      <Label className="text-xs text-gray-600">Data do Evento *</Label>
                       <Input
                         type="date"
                         value={formDataLembrete.data_evento}
                         onChange={(e) => setFormDataLembrete({...formDataLembrete, data_evento: e.target.value})}
                         required
+                        className="h-9"
                       />
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label>Hora do Evento</Label>
+                      <Label className="text-xs text-gray-600">Hora</Label>
                       <Input
                         type="time"
                         value={formDataLembrete.hora_evento}
                         onChange={(e) => setFormDataLembrete({...formDataLembrete, hora_evento: e.target.value})}
                         placeholder="HH:MM"
+                        className="h-9"
                       />
-                      <p className="text-xs text-gray-500 mt-1">
-                        ⏰ WhatsApp será enviado 10 minutos antes
-                      </p>
-                    </div>
-
-                    <div>
-                      <Label>Link de Acesso da Live/Evento</Label>
-                      <Input
-                        type="url"
-                        value={formDataLembrete.link_acesso}
-                        onChange={(e) => setFormDataLembrete({...formDataLembrete, link_acesso: e.target.value})}
-                        placeholder="https://..."
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        🔗 Será incluído no WhatsApp
-                      </p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label>Link de Acesso da Live/Evento</Label>
+                    <Input
+                      type="url"
+                      value={formDataLembrete.link_acesso}
+                      onChange={(e) => setFormDataLembrete({...formDataLembrete, link_acesso: e.target.value})}
+                      placeholder="https://..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      🔗 Será incluído no WhatsApp • ⏰ Aviso enviado 10 minutos antes da hora
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="md:col-span-1">
                       <Label className="text-xs text-gray-600">Dias antes</Label>
                       <Input
@@ -1282,8 +1280,8 @@ ${valor}`
                       />
                     </div>
 
-                    <div className="md:col-span-2">
-                      <Label>Telefone/WhatsApp *</Label>
+                    <div className="md:col-span-3">
+                      <Label className="text-xs text-gray-600">Telefone/WhatsApp *</Label>
                       <Input
                         type="tel"
                         value={formDataLembrete.telefone_contato}
@@ -1291,6 +1289,7 @@ ${valor}`
                         placeholder="(62) 99999-9999"
                         maxLength={15}
                         required
+                        className="h-9"
                       />
                     </div>
                   </div>

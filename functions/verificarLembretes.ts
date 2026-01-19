@@ -23,10 +23,15 @@ Deno.serve(async (req) => {
 
         const diasRestantes = Math.floor((dataEvento - hoje) / (1000 * 60 * 60 * 24));
 
-        // Verificar se deve enviar o lembrete antecipado
-        const deveEnviarAntecipado = 
-          diasRestantes === lembrete.dias_antes_avisar && 
-          !lembrete.lembrete_antecipado_enviado;
+        // Verificar se deve enviar o lembrete antecipado (sempre às 11h da manhã)
+        let deveEnviarAntecipado = false;
+        if (diasRestantes === lembrete.dias_antes_avisar && !lembrete.lembrete_antecipado_enviado) {
+          const horaAtual = agora.getHours();
+          // Enviar apenas se já passou das 11h (para evitar múltiplos envios no mesmo dia)
+          if (horaAtual >= 11) {
+            deveEnviarAntecipado = true;
+          }
+        }
 
         // Verificar se deve enviar o lembrete no dia
         const deveEnviarNoDia = 

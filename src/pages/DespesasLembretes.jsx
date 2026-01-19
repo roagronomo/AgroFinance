@@ -1242,7 +1242,7 @@ ${valor}`
                     </div>
 
                     <div>
-                      <Label className="text-xs text-gray-600">Hora</Label>
+                      <Label className="text-xs text-gray-600">Hora (⏰ Aviso 10min antes)</Label>
                       <Input
                         type="time"
                         value={formDataLembrete.hora_evento}
@@ -1262,7 +1262,7 @@ ${valor}`
                       placeholder="https://..."
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      🔗 Será incluído no WhatsApp • ⏰ Aviso enviado 10 minutos antes da hora
+                      🔗 Será incluído no WhatsApp
                     </p>
                   </div>
 

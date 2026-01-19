@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Edit, Trash2, Bell, Calendar, DollarSign, FileText, Upload, Check, X, Undo2, Paperclip, Upload as UploadIcon, Download, ChevronDown, ChevronRight, Send, CreditCard, Copy } from "lucide-react";
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner";
 import { format, differenceInDays } from "date-fns";
 import AutocompleteInput from "../components/common/AutocompleteInput";
 import {
@@ -1230,6 +1230,7 @@ ${valor}`
 
   return (
     <div className="p-6 space-y-4">
+      <Toaster position="top-right" richColors />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Despesas e Lembretes</h1>

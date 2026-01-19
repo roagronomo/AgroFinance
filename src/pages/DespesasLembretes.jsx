@@ -311,6 +311,65 @@ export default function DespesasLembretes() {
     }
   };
 
+  const enviarTesteWhatsAppLembrete = async () => {
+    if (!formDataLembrete.telefone_contato) {
+      toast.error("Digite um número de telefone primeiro");
+      return;
+    }
+
+    if (!formDataLembrete.descricao || !formDataLembrete.data_evento) {
+      toast.error("Preencha pelo menos a descrição e data do evento antes de testar");
+      return;
+    }
+
+    setEnviandoTeste(true);
+    try {
+      const dataEvento = new Date(formDataLembrete.data_evento + 'T00:00:00');
+      const dataFormatada = format(dataEvento, 'dd/MM/yyyy');
+
+      let mensagemTeste = `🔔 *TESTE - Lembrete de Evento*\n\n`;
+      mensagemTeste += `📋 *${formDataLembrete.descricao}*\n\n`;
+      mensagemTeste += `📅 *Data:* ${dataFormatada}\n`;
+      
+      if (formDataLembrete.hora_evento) {
+        mensagemTeste += `⏰ *Horário:* ${formDataLembrete.hora_evento}\n`;
+      }
+
+      if (formDataLembrete.valor) {
+        const valorFormatado = typeof formDataLembrete.valor === 'string' 
+          ? parseFloat(formDataLembrete.valor.replace(/\./g, '').replace(',', '.'))
+          : formDataLembrete.valor;
+        mensagemTeste += `💰 *Valor:* R$ ${valorFormatado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n`;
+      }
+
+      if (formDataLembrete.link_acesso) {
+        mensagemTeste += `\n🔗 *Link de Acesso:*\n${formDataLembrete.link_acesso}\n`;
+      }
+
+      if (formDataLembrete.observacoes) {
+        mensagemTeste += `\n📝 ${formDataLembrete.observacoes}\n`;
+      }
+
+      mensagemTeste += `\n_Mensagem automática - AgroFinance_`;
+
+      const response = await base44.functions.invoke('enviarWhatsAppEvolution', {
+        numero: formDataLembrete.telefone_contato,
+        mensagem: mensagemTeste
+      });
+
+      if (response.success) {
+        toast.success("✅ Mensagem de teste enviada com sucesso!");
+      } else {
+        toast.error(`Erro: ${response.error || 'Falha ao enviar'}`);
+      }
+    } catch (error) {
+      console.error("Erro ao enviar teste:", error);
+      toast.error("Erro ao enviar mensagem de teste");
+    } finally {
+      setEnviandoTeste(false);
+    }
+  };
+
   const handleCorrecaoOrtografica = async (campo, tipo) => {
     const formData = tipo === "conta" ? formDataConta : formDataLembrete;
     const valor = formData[campo];
@@ -1247,18 +1306,27 @@ ${valor}`
                     <Button type="submit" className="bg-green-600 hover:bg-green-700">
                       {editingItem ? "Atualizar" : "Cadastrar"}
                     </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={enviarTesteWhatsAppLembrete}
+                      disabled={!formDataLembrete.telefone_contato || enviandoTeste}
+                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                    >
+                      {enviandoTeste ? "Enviando..." : "📱 Testar"}
+                    </Button>
                     <Button type="button" variant="outline" onClick={handleCancelar}>
                       Cancelar
                     </Button>
                   </div>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    );
-  }
+                  </form>
+                  </CardContent>
+                  </Card>
+                  </TabsContent>
+                  </Tabs>
+                  </div>
+                  );
+                  }
 
   return (
     <div className="p-6 space-y-4">

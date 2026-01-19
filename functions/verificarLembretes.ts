@@ -9,6 +9,7 @@ Deno.serve(async (req) => {
     // Buscar todos os lembretes ativos
     const lembretes = await base44.asServiceRole.entities.Lembrete.filter({ ativo: true }, 'data_evento');
 
+    const agora = new Date();
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
@@ -32,7 +33,23 @@ Deno.serve(async (req) => {
           diasRestantes === 0 && 
           !lembrete.lembrete_enviado;
 
-        if (!deveEnviarAntecipado && !deveEnviarNoDia) {
+        // Verificar se deve enviar 10 minutos antes (se tiver hora definida)
+        let deveEnviar10MinAntes = false;
+        if (lembrete.hora_evento && diasRestantes === 0 && !lembrete.lembrete_10min_enviado) {
+          const [horas, minutos] = lembrete.hora_evento.split(':').map(Number);
+          const horarioEvento = new Date(dataEvento);
+          horarioEvento.setHours(horas, minutos, 0, 0);
+          
+          // Calcular 10 minutos antes
+          const horario10MinAntes = new Date(horarioEvento.getTime() - 10 * 60 * 1000);
+          
+          // Verificar se já passou do horário de enviar (10 min antes) e não ultrapassou o horário do evento
+          if (agora >= horario10MinAntes && agora < horarioEvento) {
+            deveEnviar10MinAntes = true;
+          }
+        }
+
+        if (!deveEnviarAntecipado && !deveEnviarNoDia && !deveEnviar10MinAntes) {
           continue;
         }
 
@@ -42,14 +59,26 @@ Deno.serve(async (req) => {
           : '';
 
         let mensagem;
-        if (deveEnviarNoDia) {
+        if (deveEnviar10MinAntes) {
+          mensagem = `🔔 *LEMBRETE - EVENTO COMEÇANDO EM 10 MINUTOS!*
+
+📋 *${lembrete.descricao}*
+
+📅 *Data:* ${dataFormatada}
+⏰ *Horário:* ${lembrete.hora_evento}
+${valorTexto}
+${lembrete.link_acesso ? `🔗 *Link de Acesso:*\n${lembrete.link_acesso}\n\n` : ''}${lembrete.observacoes ? `📝 ${lembrete.observacoes}\n` : ''}
+⚠️ O evento começa em 10 minutos!
+
+_Lembrete automático - AgroFinance_`;
+        } else if (deveEnviarNoDia) {
           mensagem = `🔔 *LEMBRETE - HOJE!*
 
 📋 *${lembrete.descricao}*
 
 📅 *Data:* ${dataFormatada} (HOJE)
-${valorTexto}
-${lembrete.observacoes ? `📝 ${lembrete.observacoes}\n` : ''}
+${lembrete.hora_evento ? `⏰ *Horário:* ${lembrete.hora_evento}\n` : ''}${valorTexto}
+${lembrete.link_acesso ? `🔗 *Link de Acesso:*\n${lembrete.link_acesso}\n\n` : ''}${lembrete.observacoes ? `📝 ${lembrete.observacoes}\n` : ''}
 ⚠️ O evento que você agendou é HOJE!
 
 _Lembrete automático - AgroFinance_`;
@@ -59,9 +88,9 @@ _Lembrete automático - AgroFinance_`;
 📋 *${lembrete.descricao}*
 
 📅 *Data:* ${dataFormatada}
-⏰ Faltam ${lembrete.dias_antes_avisar} dia(s)
+${lembrete.hora_evento ? `⏰ *Horário:* ${lembrete.hora_evento}\n` : ''}⏰ Faltam ${lembrete.dias_antes_avisar} dia(s)
 ${valorTexto}
-${lembrete.observacoes ? `📝 ${lembrete.observacoes}\n` : ''}
+${lembrete.link_acesso ? `🔗 *Link de Acesso:*\n${lembrete.link_acesso}\n\n` : ''}${lembrete.observacoes ? `📝 ${lembrete.observacoes}\n` : ''}
 _Lembrete automático - AgroFinance_`;
         }
 
@@ -79,6 +108,9 @@ _Lembrete automático - AgroFinance_`;
           }
           if (deveEnviarAntecipado) {
             updateData.lembrete_antecipado_enviado = true;
+          }
+          if (deveEnviar10MinAntes) {
+            updateData.lembrete_10min_enviado = true;
           }
 
           await base44.asServiceRole.entities.Lembrete.update(lembrete.id, updateData);

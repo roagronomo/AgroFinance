@@ -79,6 +79,8 @@ export default function DespesasLembretes() {
     descricao: "",
     valor: "",
     data_evento: "",
+    hora_evento: "",
+    link_acesso: "",
     dias_antes_avisar: 7,
     telefone_contato: "(64) 98147-2081",
     observacoes: "",
@@ -698,6 +700,8 @@ ${valor}`
       descricao: "",
       valor: "",
       data_evento: "",
+      hora_evento: "",
+      link_acesso: "",
       dias_antes_avisar: 7,
       telefone_contato: "(64) 98147-2081",
       observacoes: "",
@@ -1162,6 +1166,34 @@ ${valor}`
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
+                      <Label>Hora do Evento</Label>
+                      <Input
+                        type="time"
+                        value={formDataLembrete.hora_evento}
+                        onChange={(e) => setFormDataLembrete({...formDataLembrete, hora_evento: e.target.value})}
+                        placeholder="HH:MM"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        ⏰ WhatsApp será enviado 10 minutos antes
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label>Link de Acesso da Live/Evento</Label>
+                      <Input
+                        type="url"
+                        value={formDataLembrete.link_acesso}
+                        onChange={(e) => setFormDataLembrete({...formDataLembrete, link_acesso: e.target.value})}
+                        placeholder="https://..."
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        🔗 Será incluído no WhatsApp
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
                       <Label>Avisar quantos dias antes? *</Label>
                       <Input
                         type="number"
@@ -1381,10 +1413,18 @@ ${valor}`
                               <Calendar className="w-4 h-4" />
                               {format(new Date(lembrete.data_evento + 'T00:00:00'), 'dd/MM/yyyy')}
                             </span>
+                            {lembrete.hora_evento && (
+                              <span className="flex items-center gap-1">
+                                ⏰ {lembrete.hora_evento}
+                              </span>
+                            )}
                             {lembrete.valor && (
                               <span className="font-semibold text-green-600">
                                 💰 R$ {lembrete.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                               </span>
+                            )}
+                            {lembrete.link_acesso && (
+                              <span className="text-blue-600">🔗 Link disponível</span>
                             )}
                             <span>🔔 {lembrete.dias_antes_avisar} dia(s) antes</span>
                           </div>

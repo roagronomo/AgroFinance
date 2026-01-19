@@ -81,7 +81,7 @@ export default function DespesasLembretes() {
     data_evento: "",
     hora_evento: "",
     link_acesso: "",
-    dias_antes_avisar: 7,
+    dias_antes_avisar: 1,
     telefone_contato: "(64) 98147-2081",
     observacoes: "",
     ativo: true
@@ -691,6 +691,23 @@ ${valor}`
     setShowForm(true);
   };
 
+  const handleEditarLembrete = (lembrete) => {
+    setEditingItem(lembrete);
+    setTipoForm("lembrete");
+    setFormDataLembrete({
+      descricao: lembrete.descricao || "",
+      valor: lembrete.valor ? formatarMoeda(lembrete.valor) : "",
+      data_evento: lembrete.data_evento || "",
+      hora_evento: lembrete.hora_evento || "",
+      link_acesso: lembrete.link_acesso || "",
+      dias_antes_avisar: lembrete.dias_antes_avisar || 1,
+      telefone_contato: lembrete.telefone_contato || "",
+      observacoes: lembrete.observacoes || "",
+      ativo: lembrete.ativo !== false
+    });
+    setShowForm(true);
+  };
+
   const handleReutilizarConta = (conta) => {
     setEditingItem(null); // Não estamos editando, é uma nova conta
     setTipoForm("conta");
@@ -761,7 +778,7 @@ ${valor}`
       data_evento: "",
       hora_evento: "",
       link_acesso: "",
-      dias_antes_avisar: 7,
+      dias_antes_avisar: 1,
       telefone_contato: "(64) 98147-2081",
       observacoes: "",
       ativo: true
@@ -1251,9 +1268,9 @@ ${valor}`
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>Avisar quantos dias antes? *</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="md:col-span-1">
+                      <Label className="text-xs text-gray-600">Dias antes</Label>
                       <Input
                         type="number"
                         min="1"
@@ -1261,10 +1278,11 @@ ${valor}`
                         value={formDataLembrete.dias_antes_avisar}
                         onChange={(e) => setFormDataLembrete({...formDataLembrete, dias_antes_avisar: e.target.value})}
                         required
+                        className="h-9"
                       />
                     </div>
 
-                    <div>
+                    <div className="md:col-span-2">
                       <Label>Telefone/WhatsApp *</Label>
                       <Input
                         type="tel"
@@ -1501,17 +1519,32 @@ ${valor}`
                           )}
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => setDialogExcluir({ id: lembrete.id, tipo: 'lembrete' })} className="text-red-600">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleEditarLembrete(lembrete)}
+                            className="text-blue-600 hover:text-blue-700"
+                            title="Editar"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => setDialogExcluir({ id: lembrete.id, tipo: 'lembrete' })} 
+                            className="text-red-600"
+                            title="Excluir"
+                          >
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
-            )}
-          </TabsContent>
+                        </div>
+                        </CardContent>
+                        </Card>
+                        );
+                        })
+                        )}
+                        </TabsContent>
 
           <TabsContent value="pagas" className="space-y-4 mt-4">
             {contasPagas.length === 0 ? (

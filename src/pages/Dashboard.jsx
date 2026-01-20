@@ -157,25 +157,13 @@ export default function Dashboard() {
       .filter(s => s.status === 'concluido')
       .reduce((sum, s) => sum + (s.valor_receber || 0), 0);
     
-    // Filtrar projetos pelo ano selecionado para pagamentos ASTEC
-    const projetosFiltradosAno = anoSelecionado === "todos" 
-      ? projetos 
-      : projetos.filter(p => 
-          p.data_protocolo && !isNaN(new Date(p.data_protocolo)) &&
-          new Date(p.data_protocolo).getFullYear().toString() === anoSelecionado
-        );
-    
-    // Calcular valores recebidos ASTEC por data de pagamento dentro do ano/período selecionado
-    const mesAtual = new Date().getMonth() + 1;
-    const anoAtual = new Date().getFullYear();
-    
-    const valorRecebidoASTEC = projetos
+    // Calcular valores recebidos ASTEC por data de pagamento (usar TODOS os projetos, não apenas os filtrados por ano de protocolo)
+    const valorRecebidoASTEC = todosProjetos
       .filter(p => {
         if (!p.data_pagamento_astec) return false;
         
         const dataPagamento = new Date(p.data_pagamento_astec + 'T00:00:00');
         const anoPagamento = dataPagamento.getFullYear();
-        const mesPagamento = dataPagamento.getMonth() + 1;
         
         // Se filtro "todos", considerar todos os pagamentos
         if (anoSelecionado === "todos") return true;

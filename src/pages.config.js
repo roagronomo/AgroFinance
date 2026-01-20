@@ -4,6 +4,7 @@ import AreasFinanciaveis from './pages/AreasFinanciaveis';
 import AtualizacaoDocumentos from './pages/AtualizacaoDocumentos';
 import CadastroClientes from './pages/CadastroClientes';
 import CadastroImoveis from './pages/CadastroImoveis';
+import ConfiguracaoAniversarios from './pages/ConfiguracaoAniversarios';
 import CorrecaoVinculos from './pages/CorrecaoVinculos';
 import Dashboard from './pages/Dashboard';
 import DespesasLembretes from './pages/DespesasLembretes';
@@ -17,7 +18,6 @@ import OutrosServicos from './pages/OutrosServicos';
 import ProducaoAgricola from './pages/ProducaoAgricola';
 import TodosProjetos from './pages/TodosProjetos';
 import Vencimentos from './pages/Vencimentos';
-import ConfiguracaoAniversarios from './pages/ConfiguracaoAniversarios';
 import __Layout from './Layout.jsx';
 
 
@@ -28,6 +28,7 @@ export const PAGES = {
     "AtualizacaoDocumentos": AtualizacaoDocumentos,
     "CadastroClientes": CadastroClientes,
     "CadastroImoveis": CadastroImoveis,
+    "ConfiguracaoAniversarios": ConfiguracaoAniversarios,
     "CorrecaoVinculos": CorrecaoVinculos,
     "Dashboard": Dashboard,
     "DespesasLembretes": DespesasLembretes,
@@ -41,7 +42,6 @@ export const PAGES = {
     "ProducaoAgricola": ProducaoAgricola,
     "TodosProjetos": TodosProjetos,
     "Vencimentos": Vencimentos,
-    "ConfiguracaoAniversarios": ConfiguracaoAniversarios,
 }
 
 export const pagesConfig = {

@@ -2,17 +2,61 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, Trash2, ImageIcon, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Upload, Trash2, ImageIcon, Loader2, Send } from "lucide-react";
 import { toast, Toaster } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function ConfiguracaoAniversarios() {
   const [configuracao, setConfiguracao] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [enviandoTeste, setEnviandoTeste] = useState(false);
+  const [gruposDisponiveis, setGruposDisponiveis] = useState([]);
+  const [telefoneTestе, setTelefoneTestе] = useState("(64) 98147-2081");
+  const [grupoTeste, setGrupoTeste] = useState("");
 
   useEffect(() => {
     carregarConfiguracao();
+    carregarGrupos();
   }, []);
+
+  const carregarGrupos = async () => {
+    try {
+      const EVOLUTION_API_URL = "https://evolution-api-production-4689.up.railway.app";
+      const EVOLUTION_INSTANCE_NAME = "agrofinance-whatsapp";
+      const EVOLUTION_API_KEY = "B6D711FCDE4D4FD5936544120E713976";
+      
+      const response = await fetch(
+        `${EVOLUTION_API_URL}/group/fetchAllGroups/${EVOLUTION_INSTANCE_NAME}?getParticipants=false`,
+        {
+          method: 'GET',
+          headers: {
+            'apikey': EVOLUTION_API_KEY
+          }
+        }
+      );
+      
+      if (response.ok) {
+        const grupos = await response.json();
+        setGruposDisponiveis(Array.isArray(grupos) ? grupos : []);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar grupos:", error);
+    }
+  };
 
   const carregarConfiguracao = async () => {
     try {
@@ -81,6 +125,58 @@ export default function ConfiguracaoAniversarios() {
       console.error("Erro ao remover:", error);
       toast.error("Erro ao remover imagem");
     }
+  };
+
+  const handleEnviarTeste = async () => {
+    const destino = grupoTeste || telefoneTestе;
+    
+    if (!destino) {
+      toast.error("Configure um telefone ou grupo para enviar o teste");
+      return;
+    }
+
+    if (!configuracao?.imagem_cartao_url) {
+      toast.error("Configure uma imagem primeiro");
+      return;
+    }
+
+    setEnviandoTeste(true);
+    try {
+      const mensagem = `🎂 *TESTE - Lembrete de Aniversário*\n\nHoje é aniversário de *João da Silva*!\n\nNão esqueça de parabenizá-lo(a)! 🎉\n\n_Mensagem automática - AgroFinance_`;
+      
+      // Enviar mensagem
+      const response = await base44.functions.invoke('enviarWhatsAppEvolution', {
+        numero: destino,
+        mensagem: mensagem
+      });
+
+      if (response.success) {
+        // Enviar imagem
+        await base44.functions.invoke('enviarWhatsAppEvolution', {
+          numero: destino,
+          mensagem: '',
+          imagem_url: configuracao.imagem_cartao_url
+        });
+        
+        toast.success("✅ Teste enviado com sucesso!");
+      } else {
+        toast.error(`Erro: ${response.error || 'Falha ao enviar'}`);
+      }
+    } catch (error) {
+      console.error("Erro ao enviar teste:", error);
+      toast.error("Erro ao enviar teste");
+    } finally {
+      setEnviandoTeste(false);
+      setShowConfirmDialog(false);
+    }
+  };
+
+  const formatTelefone = (valor) => {
+    const numero = valor.replace(/\D/g, '');
+    if (numero.length <= 10) {
+      return numero.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
+    }
+    return numero.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
   };
 
   if (loading) {
@@ -219,9 +315,79 @@ export default function ConfiguracaoAniversarios() {
                 <li>• Você pode escolher enviar para um grupo ou número individual</li>
               </ul>
             </div>
+
+            {configuracao?.imagem_cartao_url && (
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  🧪 Testar Envio
+                </h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm text-gray-700">Grupo WhatsApp (opcional)</Label>
+                      <Select
+                        value={grupoTeste}
+                        onValueChange={setGrupoTeste}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Enviar para número individual" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={null}>🔹 Número Individual</SelectItem>
+                          {gruposDisponiveis.map((grupo) => (
+                            <SelectItem key={grupo.id} value={grupo.id}>
+                              👥 {grupo.subject}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm text-gray-700">Telefone/WhatsApp {!grupoTeste && "*"}</Label>
+                      <Input
+                        type="tel"
+                        value={telefoneTestе}
+                        onChange={(e) => setTelefoneTestе(formatTelefone(e.target.value))}
+                        placeholder="(00) 00000-0000"
+                        maxLength={15}
+                        required={!grupoTeste}
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={() => setShowConfirmDialog(true)}
+                    disabled={enviandoTeste || (!grupoTeste && !telefoneTestе)}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    {enviandoTeste ? "Enviando..." : "Enviar Teste"}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialog de Confirmação */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Envio de Teste</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja enviar o teste do cartão de aniversário para {grupoTeste ? "o grupo selecionado" : "o número configurado"}?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={enviandoTeste}>Não</AlertDialogCancel>
+            <AlertDialogAction onClick={handleEnviarTeste} disabled={enviandoTeste} className="bg-purple-600 hover:bg-purple-700">
+              {enviandoTeste ? "Enviando..." : "Sim"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

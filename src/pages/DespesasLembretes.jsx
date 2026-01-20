@@ -60,6 +60,7 @@ export default function DespesasLembretes() {
   const [showGruposWhatsApp, setShowGruposWhatsApp] = useState(false);
   const [gruposWhatsApp, setGruposWhatsApp] = useState([]);
   const [carregandoGrupos, setCarregandoGrupos] = useState(false);
+  const [gruposDisponiveis, setGruposDisponiveis] = useState([]);
 
   const [formDataConta, setFormDataConta] = useState({
     descricao: "",
@@ -163,7 +164,9 @@ export default function DespesasLembretes() {
       }
       
       const grupos = await response.json();
-      setGruposWhatsApp(Array.isArray(grupos) ? grupos : []);
+      const gruposArray = Array.isArray(grupos) ? grupos : [];
+      setGruposWhatsApp(gruposArray);
+      setGruposDisponiveis(gruposArray); // Atualiza também os grupos disponíveis nos formulários
       
     } catch (error) {
       console.error("Erro ao buscar grupos:", error);
@@ -1100,8 +1103,11 @@ ${valor}`
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value={null}>🔹 Número Individual</SelectItem>
-                              <SelectItem value="556481472080-1616761032@g.us">👥 Administrativo cerrado</SelectItem>
-                              <SelectItem value="120363303296768654@g.us">👥 Grupo Luiz Renato</SelectItem>
+                              {gruposDisponiveis.map((grupo) => (
+                                <SelectItem key={grupo.id} value={grupo.id}>
+                                  👥 {grupo.subject}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <p className="text-xs text-gray-600 mt-1">
@@ -1384,8 +1390,11 @@ ${valor}`
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value={null}>🔹 Número Individual</SelectItem>
-                              <SelectItem value="556481472080-1616761032@g.us">👥 Administrativo cerrado</SelectItem>
-                              <SelectItem value="120363303296768654@g.us">👥 Grupo Luiz Renato</SelectItem>
+                              {gruposDisponiveis.map((grupo) => (
+                                <SelectItem key={grupo.id} value={grupo.id}>
+                                  👥 {grupo.subject}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <p className="text-xs text-gray-600 mt-1">

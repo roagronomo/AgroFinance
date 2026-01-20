@@ -104,6 +104,7 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
   const [gruposDisponiveis, setGruposDisponiveis] = useState([]);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [enviandoTeste, setEnviandoTeste] = useState(false);
+  const [cadastroSimplificado, setCadastroSimplificado] = useState(false);
   
   // Estado para contas bancárias
   const [contasBancarias, setContasBancarias] = useState([{
@@ -474,11 +475,13 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
       return;
     }
 
-    // Validar que pelo menos uma conta tenha banco selecionado
-    const contasValidas = contasBancarias.filter(conta => conta.banco);
-    if (contasValidas.length === 0) {
-      toast.error('É necessário cadastrar pelo menos uma conta bancária com o banco selecionado.');
-      return;
+    // Validar que pelo menos uma conta tenha banco selecionado (apenas se não for cadastro simplificado)
+    if (!cadastroSimplificado) {
+      const contasValidas = contasBancarias.filter(conta => conta.banco);
+      if (contasValidas.length === 0) {
+        toast.error('É necessário cadastrar pelo menos uma conta bancária com o banco selecionado.');
+        return;
+      }
     }
     
     // Incluir contas bancárias no formData
@@ -497,6 +500,27 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
       </CardHeader>
       <CardContent className="p-8">
         <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Cadastro Simplificado */}
+          {!cliente && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="cadastro_simplificado"
+                  checked={cadastroSimplificado}
+                  onChange={(e) => setCadastroSimplificado(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <Label htmlFor="cadastro_simplificado" className="cursor-pointer font-medium text-blue-900">
+                  📝 Cadastro Simplificado (apenas nome obrigatório)
+                </Label>
+              </div>
+              <p className="text-xs text-blue-700 mt-2 ml-6">
+                Marque esta opção para cadastrar apenas o nome do cliente. Os demais campos serão opcionais.
+              </p>
+            </div>
+          )}
+
           {/* Dados Pessoais */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-green-100">
@@ -518,8 +542,8 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
                 </p>
               </div>
               <div>
-                <Label htmlFor="cpf" className="text-green-700 font-medium">CPF/CNPJ *</Label>
-                <Input id="cpf" value={formatCpfCnpj(formData.cpf || "")} onChange={e => handleInputChange('cpf', e.target.value)} required maxLength={18} />
+                <Label htmlFor="cpf" className="text-green-700 font-medium">CPF/CNPJ {!cadastroSimplificado && "*"}</Label>
+                <Input id="cpf" value={formatCpfCnpj(formData.cpf || "")} onChange={e => handleInputChange('cpf', e.target.value)} required={!cadastroSimplificado} maxLength={18} />
               </div>
               <div>
                 <Label htmlFor="rg" className="text-green-700 font-medium">RG</Label>
@@ -556,13 +580,13 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
                 </Select>
               </div>
               <div> {/* Novo campo: Profissão */}
-                <Label htmlFor="profissao" className="text-green-700 font-medium">Profissão *</Label>
+                <Label htmlFor="profissao" className="text-green-700 font-medium">Profissão {!cadastroSimplificado && "*"}</Label>
                 <Input 
                   id="profissao" 
                   value={formData.profissao || ""} 
                   onChange={e => handleInputChange('profissao', e.target.value)}
                   placeholder="Ex.: Agricultor(a)"
-                  required
+                  required={!cadastroSimplificado}
                 />
               </div>
               <div>
@@ -803,12 +827,12 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
                 <Input id="bairro" value={formData.bairro || ""} onChange={e => handleInputChange('bairro', e.target.value)} />
               </div>
               <div className="md:col-span-3">
-                <Label htmlFor="cidade" className="text-green-700 font-medium">Cidade *</Label>
-                <Input id="cidade" value={formData.cidade || ""} onChange={e => handleInputChange('cidade', e.target.value)} required />
+                <Label htmlFor="cidade" className="text-green-700 font-medium">Cidade {!cadastroSimplificado && "*"}</Label>
+                <Input id="cidade" value={formData.cidade || ""} onChange={e => handleInputChange('cidade', e.target.value)} required={!cadastroSimplificado} />
               </div>
               <div className="md:col-span-1">
-                <Label htmlFor="uf" className="text-green-700 font-medium">UF *</Label>
-                <Input id="uf" value={formData.uf || ""} onChange={e => handleInputChange('uf', e.target.value)} required maxLength={2} />
+                <Label htmlFor="uf" className="text-green-700 font-medium">UF {!cadastroSimplificado && "*"}</Label>
+                <Input id="uf" value={formData.uf || ""} onChange={e => handleInputChange('uf', e.target.value)} required={!cadastroSimplificado} maxLength={2} />
               </div>
             </div>
           </div>

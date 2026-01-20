@@ -144,12 +144,28 @@ export default function DespesasLembretes() {
     setShowGruposWhatsApp(true);
     setCarregandoGrupos(true);
     try {
-      const response = await base44.functions.invoke('listarGruposWhatsApp');
-      if (response.success) {
-        setGruposWhatsApp(response.grupos || []);
-      } else {
-        toast.error(`Erro: ${response.error || 'Falha ao buscar grupos'}`);
+      // ATENÇÃO: Credenciais expostas no frontend - não é seguro!
+      const EVOLUTION_API_URL = "https://evolution-api-production-4689.up.railway.app";
+      const EVOLUTION_INSTANCE_NAME = "agrofinance-whatsapp";
+      const EVOLUTION_API_KEY = "B6628E6D5C8E-435C-4F61-BA2D-A0875ECA97E3"; // Precisa da API key real
+      
+      const response = await fetch(
+        `${EVOLUTION_API_URL}/group/fetchAllGroups/${EVOLUTION_INSTANCE_NAME}?getParticipants=false`,
+        {
+          method: 'GET',
+          headers: {
+            'apikey': EVOLUTION_API_KEY
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
       }
+      
+      const grupos = await response.json();
+      setGruposWhatsApp(Array.isArray(grupos) ? grupos : []);
+      
     } catch (error) {
       console.error("Erro ao buscar grupos:", error);
       toast.error("Erro ao buscar grupos do WhatsApp");

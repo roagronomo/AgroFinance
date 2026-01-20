@@ -187,6 +187,18 @@ export default function Dashboard() {
         .reduce((sum, p) => sum + (p.valor_receber || 0), 0) + valorAReceberServicos,
       valorRecebido: valorRecebidoASTEC + valorRecebidoServicos,
       quantidadeRecebidos: projetosRecebidos.length + servicosFiltrados.filter(s => s.status === 'concluido').length,
+      quantidadeRecebidosTexto: (() => {
+        const qtdProjetos = projetosRecebidos.length;
+        const qtdServicos = servicosFiltrados.filter(s => s.status === 'concluido').length;
+        if (qtdProjetos > 0 && qtdServicos > 0) {
+          return `${qtdProjetos} projeto(s) + ${qtdServicos} serviço(s)`;
+        } else if (qtdProjetos > 0) {
+          return `${qtdProjetos} projeto(s)`;
+        } else if (qtdServicos > 0) {
+          return `${qtdServicos} serviço(s)`;
+        }
+        return '0 itens';
+      })(),
       taxaJurosMedia: taxaMedia,
     };
   };

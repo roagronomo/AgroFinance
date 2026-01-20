@@ -52,7 +52,7 @@ export default function EstatisticasGerais({ stats, isLoading, onCardClick }) {
       bgLight: "bg-green-50",
       iconBg: "bg-green-100",
       iconColor: "text-green-600",
-      mudanca: `${stats.quantidadeRecebidos || 0} projeto(s)`,
+      mudanca: stats.quantidadeRecebidosTexto || `${stats.quantidadeRecebidos || 0} item(s)`,
       onClick: () => onCardClick('recebido'),
       clickable: true,
       isMonetary: true

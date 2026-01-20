@@ -531,6 +531,14 @@ export default function Dashboard() {
                                   </span>
                                 </div>
                               )}
+                              {filtroModal === 'recebido' && projeto.data_pagamento_astec && (
+                                <div>
+                                  <span className="text-gray-600">Pago em: </span>
+                                  <span className="font-bold text-green-700">
+                                    {format(new Date(projeto.data_pagamento_astec), 'dd/MM/yyyy', { locale: ptBR })}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           </div>
                           

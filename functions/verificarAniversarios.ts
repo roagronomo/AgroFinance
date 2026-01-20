@@ -26,10 +26,6 @@ Deno.serve(async (req) => {
     
     console.log(`🎉 ${clientesAniversariantes.length} aniversariante(s) encontrado(s)`);
     
-    // Buscar imagem de cartão configurada
-    const configs = await base44.asServiceRole.entities.ConfiguracaoAniversario.list();
-    const imagemCartao = configs.find(c => c.ativo && c.imagem_cartao_url);
-    
     let enviados = 0;
     const erros = [];
     
@@ -42,7 +38,8 @@ Deno.serve(async (req) => {
           continue;
         }
         
-        const mensagem = `🎂 *Lembrete de Aniversário*\n\nHoje é aniversário de *${cliente.nome}*!\n\nNão esqueça de parabenizá-lo(a)! 🎉`;
+        const primeiroNome = cliente.nome ? cliente.nome.split(' ')[0] : cliente.nome;
+        const mensagem = `🎂 *Lembrete de Aniversário*\n\nHoje é aniversário de *${primeiroNome}*!\n\nNão esqueça de parabenizá-lo(a)! 🎉`;
         
         // Enviar mensagem de texto
         const response = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
@@ -51,16 +48,16 @@ Deno.serve(async (req) => {
         });
         
         if (response.success) {
-          // Se houver imagem configurada, enviar também
-          if (imagemCartao?.imagem_cartao_url) {
+          // Se o cliente tiver cartão personalizado, enviar também
+          if (cliente.cartao_aniversario_url) {
             try {
               await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
                 numero: destino,
-                mensagem: '', // Mensagem vazia, apenas a imagem
-                imagem_url: imagemCartao.imagem_cartao_url
+                mensagem: '',
+                imagem_url: cliente.cartao_aniversario_url
               });
             } catch (imgError) {
-              console.warn(`⚠️ Erro ao enviar imagem para ${cliente.nome}:`, imgError.message);
+              console.warn(`⚠️ Erro ao enviar cartão para ${cliente.nome}:`, imgError.message);
             }
           }
           

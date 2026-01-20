@@ -143,11 +143,6 @@ const navigationSections = [
         url: createPageUrl("DespesasLembretes"),
         icon: Bell,
       },
-      {
-        title: "Config. Aniversários",
-        url: createPageUrl("ConfiguracaoAniversarios"),
-        icon: Bell,
-      },
       ]
       }
 ];

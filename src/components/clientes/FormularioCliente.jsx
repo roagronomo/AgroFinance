@@ -5,9 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Save, X, Search, Loader2, Eye, EyeOff, Copy, Plus, Upload, Image as ImageIcon } from "lucide-react";
+import { Save, X, Search, Loader2, Eye, EyeOff, Copy, Plus, Upload, Image as ImageIcon, Send, Trash2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Componente para uma única conta bancária (anteriormente era um arquivo separado, agora inline para um único output)
 const ContaBancariaCard = ({ conta, index, onUpdate, onRemove, showRemoveButton }) => {
@@ -89,6 +99,10 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState("");
   const [uploadingMarcaGado, setUploadingMarcaGado] = useState(false);
+  const [uploadingCartao, setUploadingCartao] = useState(false);
+  const [gruposDisponiveis, setGruposDisponiveis] = useState([]);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [enviandoTeste, setEnviandoTeste] = useState(false);
   
   // Estado para contas bancárias
   const [contasBancarias, setContasBancarias] = useState([{
@@ -108,6 +122,7 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
   });
 
   useEffect(() => {
+    carregarGrupos();
     if (cliente) {
       setFormData(cliente);
       // Carregar contas bancárias existentes ou criar uma vazia
@@ -156,7 +171,9 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
         data_nascimento: "",
         aniversario_telefone_contato: "",
         aniversario_grupo_whatsapp_id: "",
-        enviar_lembrete_aniversario: false
+        enviar_lembrete_aniversario: false,
+        cartao_aniversario_url: "",
+        cartao_aniversario_nome: ""
         });
       setContasBancarias([{
         banco: "",
@@ -185,6 +202,104 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
 
   const handleRemoverMarcaGado = () => {
     handleInputChange('marca_gado_imagem_url', '');
+  };
+
+  const carregarGrupos = async () => {
+    try {
+      const EVOLUTION_API_URL = "https://evolution-api-production-4689.up.railway.app";
+      const EVOLUTION_INSTANCE_NAME = "agrofinance-whatsapp";
+      const EVOLUTION_API_KEY = "B6D711FCDE4D4FD5936544120E713976";
+      
+      const response = await fetch(
+        `${EVOLUTION_API_URL}/group/fetchAllGroups/${EVOLUTION_INSTANCE_NAME}?getParticipants=false`,
+        {
+          method: 'GET',
+          headers: {
+            'apikey': EVOLUTION_API_KEY
+          }
+        }
+      );
+      
+      if (response.ok) {
+        const grupos = await response.json();
+        setGruposDisponiveis(Array.isArray(grupos) ? grupos : []);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar grupos:", error);
+    }
+  };
+
+  const handleCartaoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error("Por favor, selecione uma imagem");
+      return;
+    }
+
+    try {
+      setUploadingCartao(true);
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      handleInputChange('cartao_aniversario_url', file_url);
+      handleInputChange('cartao_aniversario_nome', file.name);
+      toast.success('Cartão anexado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao fazer upload do cartão:', error);
+      toast.error('Erro ao fazer upload da imagem');
+    } finally {
+      setUploadingCartao(false);
+    }
+  };
+
+  const handleRemoverCartao = () => {
+    handleInputChange('cartao_aniversario_url', '');
+    handleInputChange('cartao_aniversario_nome', '');
+  };
+
+  const handleEnviarTeste = async () => {
+    const destino = formData.aniversario_grupo_whatsapp_id || formData.aniversario_telefone_contato;
+    
+    if (!destino) {
+      toast.error("Configure um telefone ou grupo primeiro");
+      return;
+    }
+
+    if (!formData.cartao_aniversario_url) {
+      toast.error("Configure uma imagem de cartão primeiro");
+      return;
+    }
+
+    setEnviandoTeste(true);
+    try {
+      const primeiroNome = formData.nome ? formData.nome.split(' ')[0] : 'Cliente';
+      const mensagem = `🎂 *TESTE - Lembrete de Aniversário*\n\nHoje é aniversário de *${primeiroNome}*!\n\nNão esqueça de parabenizá-lo(a)! 🎉\n\n_Mensagem automática - AgroFinance_`;
+      
+      // Enviar mensagem
+      const response = await base44.functions.invoke('enviarWhatsAppEvolution', {
+        numero: destino,
+        mensagem: mensagem
+      });
+
+      if (response.success) {
+        // Enviar imagem
+        await base44.functions.invoke('enviarWhatsAppEvolution', {
+          numero: destino,
+          mensagem: '',
+          imagem_url: formData.cartao_aniversario_url
+        });
+        
+        toast.success("✅ Teste enviado com sucesso!");
+      } else {
+        toast.error(`Erro: ${response.error || 'Falha ao enviar'}`);
+      }
+    } catch (error) {
+      console.error("Erro ao enviar teste:", error);
+      toast.error("Erro ao enviar teste");
+    } finally {
+      setEnviandoTeste(false);
+      setShowConfirmDialog(false);
+    }
   };
 
   const handleInputChange = (field, value) => {
@@ -548,7 +663,80 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
                 </div>
               )}
               
-              <p className="text-xs text-gray-500">
+              {formData.enviar_lembrete_aniversario && (
+                <div className="mt-3 pt-3 border-t border-purple-200">
+                  <Label className="text-xs text-gray-600 mb-2 block">Cartão de Aniversário (imagem)</Label>
+                  {formData.cartao_aniversario_url ? (
+                    <div className="flex items-start gap-3">
+                      <div className="w-24 h-24 border-2 border-purple-300 rounded-lg overflow-hidden bg-white flex items-center justify-center">
+                        <img
+                          src={formData.cartao_aniversario_url}
+                          alt="Cartão"
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-600 mb-2">{formData.cartao_aniversario_nome}</p>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(formData.cartao_aniversario_url, '_blank')}
+                            className="text-purple-600 h-8 text-xs"
+                          >
+                            <ImageIcon className="w-3 h-3 mr-1" />
+                            Ver
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleRemoverCartao}
+                            className="text-red-600 h-8 text-xs"
+                          >
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Remover
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowConfirmDialog(true)}
+                            disabled={!formData.aniversario_telefone_contato && !formData.aniversario_grupo_whatsapp_id}
+                            className="text-blue-600 h-8 text-xs"
+                          >
+                            <Send className="w-3 h-3 mr-1" />
+                            Testar
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-purple-300 rounded-lg cursor-pointer hover:border-purple-500 hover:bg-purple-50 transition-colors">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCartaoUpload}
+                        className="hidden"
+                        disabled={uploadingCartao}
+                      />
+                      {uploadingCartao ? (
+                        <Loader2 className="w-6 h-6 text-purple-600 animate-spin" />
+                      ) : (
+                        <>
+                          <Upload className="w-6 h-6 text-purple-600 mb-1" />
+                          <span className="text-xs text-gray-500 text-center px-2">
+                            Enviar cartão
+                          </span>
+                        </>
+                      )}
+                    </label>
+                  )}
+                </div>
+              )}
+              
+              <p className="text-xs text-gray-500 mt-2">
                 ℹ️ Lembretes são enviados às 7h da manhã no dia do aniversário
               </p>
             </div>
@@ -1048,6 +1236,24 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
           </div>
         </form>
       </CardContent>
+
+      {/* Dialog de Confirmação */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Envio de Teste</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja enviar o teste do cartão de aniversário?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={enviandoTeste}>Não</AlertDialogCancel>
+            <AlertDialogAction onClick={handleEnviarTeste} disabled={enviandoTeste} className="bg-purple-600 hover:bg-purple-700">
+              {enviandoTeste ? "Enviando..." : "Sim"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

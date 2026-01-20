@@ -15,7 +15,8 @@ import {
   Plus,
   Building2,
   Calendar,
-  Bell
+  Bell,
+  Cake
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, differenceInDays } from "date-fns";
@@ -35,11 +36,13 @@ export default function Dashboard() {
 
   const [outrosServicos, setOutrosServicos] = useState([]);
   const [contasPagar, setContasPagar] = useState([]);
+  const [aniversariantes, setAniversariantes] = useState([]);
 
   useEffect(() => {
     carregarTodosProjetos();
     carregarOutrosServicos();
     carregarContasPagar();
+    carregarAniversariantes();
   }, []);
 
   useEffect(() => {
@@ -82,6 +85,31 @@ export default function Dashboard() {
       setContasPagar(data || []);
     } catch (error) {
       console.error("Erro ao carregar contas a pagar:", error);
+    }
+  };
+
+  const carregarAniversariantes = async () => {
+    try {
+      const clientes = await base44.entities.Cliente.list();
+      const mesAtual = new Date().getMonth() + 1;
+      
+      const aniversariantesMes = clientes
+        .filter(c => c.data_nascimento)
+        .map(c => {
+          const dataNasc = new Date(c.data_nascimento + 'T00:00:00');
+          return {
+            nome: c.nome,
+            dia: dataNasc.getDate(),
+            mes: dataNasc.getMonth() + 1,
+            dataNasc: dataNasc
+          };
+        })
+        .filter(a => a.mes === mesAtual)
+        .sort((a, b) => a.dia - b.dia);
+      
+      setAniversariantes(aniversariantesMes);
+    } catch (error) {
+      console.error("Erro ao carregar aniversariantes:", error);
     }
   };
 
@@ -253,6 +281,53 @@ export default function Dashboard() {
           </div>
           <div className="space-y-6">
             <StatusDistribuicao stats={stats} isLoading={isLoading} todosProjetos={todosProjetos} outrosServicos={outrosServicos} />
+            
+            {/* Card de Aniversariantes do Mês */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Cake className="w-5 h-5 text-pink-600" />
+                  Aniversariantes do Mês
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {aniversariantes.length === 0 ? (
+                  <p className="text-center text-gray-500 py-4">Nenhum aniversariante este mês</p>
+                ) : (
+                  <div className="space-y-2">
+                    {aniversariantes.map((aniv, index) => {
+                      const hoje = new Date().getDate();
+                      const isHoje = aniv.dia === hoje;
+                      
+                      return (
+                        <div 
+                          key={index} 
+                          className={`flex justify-between items-center p-3 rounded-lg ${
+                            isHoje ? 'bg-pink-50 border-2 border-pink-300' : 'bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex-1">
+                            <p className="font-medium text-sm text-gray-900">
+                              {aniv.nome}
+                            </p>
+                            {isHoje && (
+                              <p className="text-xs text-pink-600 font-semibold">
+                                🎉 Aniversário HOJE!
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-sm text-pink-600">
+                              Dia {aniv.dia}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
             
             {/* Card de Contas a Pagar */}
             <Card>

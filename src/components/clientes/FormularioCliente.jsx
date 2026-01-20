@@ -37,12 +37,13 @@ const ContaBancariaCard = ({ conta, index, onUpdate, onRemove, showRemoveButton 
           {showRemoveButton && (
             <Button
               type="button"
-              variant="destructive"
-              size="sm"
+              variant="outline"
+              size="icon"
               onClick={handleRemoveClick}
-              className="text-red-600 hover:bg-red-50"
+              className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
+              title="Remover conta"
             >
-              <X className="w-4 h-4 mr-1" /> Remover
+              <Trash2 className="w-4 h-4" />
             </Button>
           )}
         </div>

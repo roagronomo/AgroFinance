@@ -47,19 +47,24 @@ Deno.serve(async (req) => {
       }
     );
 
-    const resultado = await response.json();
-
     if (!response.ok) {
-      console.error('❌ Erro ao buscar grupos:', resultado);
+      const erro = await response.text();
+      console.error('❌ Erro ao buscar grupos:', erro);
       return Response.json({ 
         success: false, 
-        error: resultado.message || 'Erro ao buscar grupos',
-        detalhes: resultado
+        error: 'Erro ao buscar grupos da Evolution API',
+        detalhes: erro
       }, { status: response.status });
     }
 
+    const resultado = await response.json();
+    console.log('📋 Resposta da API:', resultado);
+
+    // A resposta pode ser um array direto ou um objeto com propriedades
+    let gruposArray = Array.isArray(resultado) ? resultado : (resultado.groups || resultado.data || []);
+
     // Processar e formatar a lista de grupos
-    const grupos = resultado.map(grupo => ({
+    const grupos = gruposArray.map(grupo => ({
       id: grupo.id,
       subject: grupo.subject || grupo.name || 'Sem nome',
       pictureUrl: grupo.pictureUrl || null

@@ -17,6 +17,7 @@ import OutrosServicos from './pages/OutrosServicos';
 import ProducaoAgricola from './pages/ProducaoAgricola';
 import TodosProjetos from './pages/TodosProjetos';
 import Vencimentos from './pages/Vencimentos';
+import ConfiguracaoAniversarios from './pages/ConfiguracaoAniversarios';
 import __Layout from './Layout.jsx';
 
 
@@ -40,6 +41,7 @@ export const PAGES = {
     "ProducaoAgricola": ProducaoAgricola,
     "TodosProjetos": TodosProjetos,
     "Vencimentos": Vencimentos,
+    "ConfiguracaoAniversarios": ConfiguracaoAniversarios,
 }
 
 export const pagesConfig = {

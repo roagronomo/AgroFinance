@@ -152,7 +152,11 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
         login_govbr: "",
         senha_govbr: "",
         marca_gado_imagem_url: "",
-        marca_gado_texto: ""
+        marca_gado_texto: "",
+        data_nascimento: "",
+        aniversario_telefone_contato: "",
+        aniversario_grupo_whatsapp_id: "",
+        enviar_lembrete_aniversario: false
         });
       setContasBancarias([{
         banco: "",
@@ -479,6 +483,74 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
                 <Label htmlFor="email" className="text-green-700 font-medium">E-mail</Label>
                 <Input id="email" type="email" value={formData.email || ""} onChange={e => handleInputChange('email', e.target.value)} />
               </div>
+            </div>
+          </div>
+
+          {/* Lembrete de Aniversário */}
+          <div className="border-l-4 border-purple-300 pl-4 bg-purple-50 p-4 rounded-r-lg">
+            <h3 className="text-sm font-semibold text-purple-900 mb-3">
+              🎂 Lembrete de Aniversário
+            </h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="enviar_lembrete_aniversario"
+                  checked={formData.enviar_lembrete_aniversario || false}
+                  onChange={(e) => handleInputChange('enviar_lembrete_aniversario', e.target.checked)}
+                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                />
+                <Label htmlFor="enviar_lembrete_aniversario" className="cursor-pointer text-sm text-gray-700">
+                  Enviar lembrete de aniversário
+                </Label>
+              </div>
+              
+              {formData.enviar_lembrete_aniversario && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 pt-3 border-t border-purple-200">
+                  <div>
+                    <Label htmlFor="data_nascimento" className="text-xs text-gray-600">Data de Nascimento</Label>
+                    <Input
+                      id="data_nascimento"
+                      type="date"
+                      value={formData.data_nascimento || ""}
+                      onChange={(e) => handleInputChange('data_nascimento', e.target.value)}
+                      className="h-9 text-sm"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label className="text-xs text-gray-600">Grupo WhatsApp</Label>
+                    <Select
+                      value={formData.aniversario_grupo_whatsapp_id || ""}
+                      onValueChange={(value) => handleInputChange('aniversario_grupo_whatsapp_id', value)}
+                    >
+                      <SelectTrigger className="h-9 text-sm">
+                        <SelectValue placeholder="Opcional" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={null}>Número Individual</SelectItem>
+                        <SelectItem value="556481472080-1616761032@g.us">👥 Administrativo cerrado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-xs text-gray-600">Telefone/WhatsApp</Label>
+                    <Input
+                      type="tel"
+                      value={formatCelular(formData.aniversario_telefone_contato || "")}
+                      onChange={(e) => handleInputChange('aniversario_telefone_contato', e.target.value)}
+                      placeholder="(00) 00000-0000"
+                      maxLength={15}
+                      className="h-9 text-sm"
+                    />
+                  </div>
+                </div>
+              )}
+              
+              <p className="text-xs text-gray-500">
+                ℹ️ Lembretes são enviados às 7h da manhã no dia do aniversário
+              </p>
             </div>
           </div>
 

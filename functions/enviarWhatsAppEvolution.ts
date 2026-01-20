@@ -6,12 +6,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
  * Payload esperado:
  * {
  *   numero: "5562999999999" ou "556481472080-1616761032@g.us", // Número individual ou ID de grupo
- *   mensagem: "Texto da mensagem"
+ *   mensagem: "Texto da mensagem",
+ *   imagem_url: "https://..." // Opcional: URL da imagem para enviar
  * }
  * 
  * Suporta:
  * - Números individuais: 5562999999999 (com DDI/DDD)
  * - Grupos WhatsApp: 556481472080-1616761032@g.us
+ * - Envio de texto e/ou imagem
  */
 Deno.serve(async (req) => {
   try {
@@ -24,11 +26,17 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
-    const { numero, mensagem } = payload;
+    const { numero, mensagem, imagem_url } = payload;
 
-    if (!numero || !mensagem) {
+    if (!numero) {
       return Response.json({ 
-        error: 'Parâmetros obrigatórios: numero, mensagem' 
+        error: 'Parâmetro obrigatório: numero' 
+      }, { status: 400 });
+    }
+
+    if (!mensagem && !imagem_url) {
+      return Response.json({ 
+        error: 'É necessário fornecer mensagem ou imagem_url' 
       }, { status: 400 });
     }
 
@@ -58,9 +66,49 @@ Deno.serve(async (req) => {
       console.log(`📱 Enviando WhatsApp para número: ${numeroFormatado}`);
     }
     
+    // Se tiver imagem, enviar imagem (com ou sem legenda)
+    if (imagem_url) {
+      console.log(`📍 Endpoint: ${EVOLUTION_API_URL}/message/sendMedia/${EVOLUTION_INSTANCE_NAME}`);
+      console.log(`🖼️ Enviando imagem: ${imagem_url}`);
+
+      const response = await fetch(`${EVOLUTION_API_URL}/message/sendMedia/${EVOLUTION_INSTANCE_NAME}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': EVOLUTION_API_KEY
+        },
+        body: JSON.stringify({
+          number: numeroFormatado,
+          mediatype: 'image',
+          media: imagem_url,
+          caption: mensagem || '' // Legenda opcional (pode ser vazio)
+        })
+      });
+
+      const resultado = await response.json();
+
+      if (!response.ok) {
+        console.error('❌ Erro ao enviar imagem:', resultado);
+        return Response.json({ 
+          success: false, 
+          error: resultado.message || 'Erro ao enviar imagem',
+          detalhes: resultado
+        }, { status: response.status });
+      }
+
+      console.log('✅ Imagem enviada com sucesso');
+
+      return Response.json({ 
+        success: true,
+        numero: numeroFormatado,
+        message_id: resultado.key?.id || resultado.messageId,
+        tipo: 'imagem'
+      });
+    }
+
+    // Caso contrário, enviar apenas texto
     console.log(`📍 Endpoint: ${EVOLUTION_API_URL}/message/sendText/${EVOLUTION_INSTANCE_NAME}`);
 
-    // Enviar mensagem via Evolution API
     const response = await fetch(`${EVOLUTION_API_URL}/message/sendText/${EVOLUTION_INSTANCE_NAME}`, {
       method: 'POST',
       headers: {
@@ -89,7 +137,8 @@ Deno.serve(async (req) => {
     return Response.json({ 
       success: true,
       numero: numeroFormatado,
-      message_id: resultado.key?.id || resultado.messageId
+      message_id: resultado.key?.id || resultado.messageId,
+      tipo: 'texto'
     });
 
   } catch (error) {

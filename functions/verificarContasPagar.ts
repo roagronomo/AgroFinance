@@ -76,9 +76,10 @@ ${conta.codigo_barras && !conta.recorrente ? `\n🔢 *Código de Barras:*\n\`${c
 _Lembrete automático - AgroFinance_`;
         }
 
-        // Enviar WhatsApp - usando o mesmo padrão que funciona no teste
+        // Enviar WhatsApp - usar grupo se preenchido, senão usar telefone individual
+        const destino = conta.grupo_whatsapp_id || conta.telefone_contato;
         const response = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
-          numero: conta.telefone_contato,
+          numero: destino,
           mensagem: mensagem
         });
 
@@ -102,6 +103,7 @@ _Lembrete automático - AgroFinance_`;
                 data_vencimento: proximaData.toISOString().split('T')[0],
                 dias_antes_avisar: conta.dias_antes_avisar,
                 telefone_contato: conta.telefone_contato,
+                grupo_whatsapp_id: conta.grupo_whatsapp_id,
                 chave_pix: conta.chave_pix,
                 fornecedor: conta.fornecedor,
                 categoria: conta.categoria,
@@ -132,15 +134,15 @@ _Lembrete automático - AgroFinance_`;
           lembretesEnviados++;
           console.log(`Lembrete enviado: ${conta.descricao}`);
 
-          // Acumular valor para resumo
-          if (!resumoPorTelefone[conta.telefone_contato]) {
-            resumoPorTelefone[conta.telefone_contato] = {
+          // Acumular valor para resumo (usar o destino que foi enviado)
+          if (!resumoPorTelefone[destino]) {
+            resumoPorTelefone[destino] = {
               total: 0,
               quantidade: 0
             };
           }
-          resumoPorTelefone[conta.telefone_contato].total += conta.valor;
-          resumoPorTelefone[conta.telefone_contato].quantidade += 1;
+          resumoPorTelefone[destino].total += conta.valor;
+          resumoPorTelefone[destino].quantidade += 1;
         } else {
           erros.push({
             conta: conta.descricao,
@@ -160,14 +162,15 @@ _Lembrete automático - AgroFinance_`;
 
     console.log(`Verificação concluída. ${lembretesEnviados} lembrete(s) enviado(s).`);
 
-    // Enviar mensagem de resumo para cada telefone
-    for (const [telefone, dados] of Object.entries(resumoPorTelefone)) {
+    // Enviar mensagem de resumo para cada destino (telefone ou grupo)
+    for (const [destino, dados] of Object.entries(resumoPorTelefone)) {
       if (dados.quantidade > 0) {
         const totalFormatado = dados.total.toLocaleString('pt-BR', {
           style: 'currency',
           currency: 'BRL'
         });
 
+        const tipoDestino = destino.includes('@g.us') ? 'grupo' : 'número';
         const mensagemResumo = `📊 *RESUMO - CONTAS A PAGAR*
 
 Total de contas notificadas: ${dados.quantidade}
@@ -177,12 +180,12 @@ _Resumo automático - AgroFinance_`;
 
         try {
           await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
-            numero: telefone,
+            numero: destino,
             mensagem: mensagemResumo
           });
-          console.log(`Resumo enviado para ${telefone}: ${dados.quantidade} contas, total ${totalFormatado}`);
+          console.log(`Resumo enviado para ${tipoDestino} ${destino}: ${dados.quantidade} contas, total ${totalFormatado}`);
         } catch (error) {
-          console.error(`Erro ao enviar resumo para ${telefone}:`, error);
+          console.error(`Erro ao enviar resumo para ${destino}:`, error);
         }
       }
     }

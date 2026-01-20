@@ -57,6 +57,9 @@ export default function DespesasLembretes() {
   const [showGerenciarPix, setShowGerenciarPix] = useState(false);
   const [formChavePix, setFormChavePix] = useState({ descricao: "", chave: "", tipo: "cpf" });
   const [editingChavePix, setEditingChavePix] = useState(null);
+  const [showGruposWhatsApp, setShowGruposWhatsApp] = useState(false);
+  const [gruposWhatsApp, setGruposWhatsApp] = useState([]);
+  const [carregandoGrupos, setCarregandoGrupos] = useState(false);
 
   const [formDataConta, setFormDataConta] = useState({
     descricao: "",
@@ -134,6 +137,24 @@ export default function DespesasLembretes() {
     } catch (error) {
       console.error("Erro ao excluir:", error);
       toast.error("Erro ao excluir chave PIX");
+    }
+  };
+
+  const handleVerGruposWhatsApp = async () => {
+    setShowGruposWhatsApp(true);
+    setCarregandoGrupos(true);
+    try {
+      const response = await base44.functions.invoke('listarGruposWhatsApp');
+      if (response.success) {
+        setGruposWhatsApp(response.grupos || []);
+      } else {
+        toast.error(`Erro: ${response.error || 'Falha ao buscar grupos'}`);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar grupos:", error);
+      toast.error("Erro ao buscar grupos do WhatsApp");
+    } finally {
+      setCarregandoGrupos(false);
     }
   };
 
@@ -1446,6 +1467,9 @@ ${valor}`
             <CreditCard className="w-4 h-4 mr-2" />
             Chaves PIX
           </Button>
+          <Button onClick={handleVerGruposWhatsApp} variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
+            👥 Ver Grupos WhatsApp
+          </Button>
           <Button onClick={() => { setShowForm(true); setTipoForm("conta"); }} className="bg-green-600 hover:bg-green-700">
             <Plus className="w-4 h-4 mr-2" />
             Nova Conta
@@ -1845,6 +1869,60 @@ ${valor}`
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={uploadingReciboRapido}>Cancelar</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog Ver Grupos WhatsApp */}
+      <AlertDialog open={showGruposWhatsApp} onOpenChange={(open) => !open && setShowGruposWhatsApp(false)}>
+        <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              👥 Grupos do WhatsApp Disponíveis
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              IDs dos grupos para usar nas configurações de lembretes e contas
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-3">
+            {carregandoGrupos ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+                <p className="text-sm text-gray-500 mt-2">Carregando grupos...</p>
+              </div>
+            ) : gruposWhatsApp.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">Nenhum grupo encontrado</p>
+              </div>
+            ) : (
+              gruposWhatsApp.map((grupo) => (
+                <div key={grupo.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900">{grupo.subject}</h3>
+                      <p className="text-xs text-gray-500 mt-1 font-mono break-all">{grupo.id}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(grupo.id);
+                        toast.success("ID copiado!");
+                      }}
+                      className="shrink-0"
+                    >
+                      <Copy className="w-3 h-3 mr-1" />
+                      Copiar ID
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Fechar</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

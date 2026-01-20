@@ -105,6 +105,7 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [enviandoTeste, setEnviandoTeste] = useState(false);
   const [cadastroSimplificado, setCadastroSimplificado] = useState(false);
+  const [carregandoGrupos, setCarregandoGrupos] = useState(false);
   
   // Estado para contas bancárias
   const [contasBancarias, setContasBancarias] = useState([{

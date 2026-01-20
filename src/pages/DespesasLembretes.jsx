@@ -141,14 +141,13 @@ export default function DespesasLembretes() {
     }
   };
 
-  const handleVerGruposWhatsApp = async () => {
-    setShowGruposWhatsApp(true);
+  const carregarGruposWhatsApp = async () => {
     setCarregandoGrupos(true);
     try {
       const EVOLUTION_API_URL = "https://evolution-api-production-4689.up.railway.app";
       const EVOLUTION_INSTANCE_NAME = "agrofinance-whatsapp";
       const EVOLUTION_API_KEY = "B6D711FCDE4D4FD5936544120E713976";
-      
+
       const response = await fetch(
         `${EVOLUTION_API_URL}/group/fetchAllGroups/${EVOLUTION_INSTANCE_NAME}?getParticipants=false`,
         {
@@ -158,23 +157,36 @@ export default function DespesasLembretes() {
           }
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`Erro HTTP: ${response.status}`);
       }
-      
+
       const grupos = await response.json();
       const gruposArray = Array.isArray(grupos) ? grupos : [];
       setGruposWhatsApp(gruposArray);
-      setGruposDisponiveis(gruposArray); // Atualiza também os grupos disponíveis nos formulários
-      
+      setGruposDisponiveis(gruposArray);
+      return gruposArray;
     } catch (error) {
       console.error("Erro ao buscar grupos:", error);
       toast.error("Erro ao buscar grupos do WhatsApp");
+      return [];
     } finally {
       setCarregandoGrupos(false);
     }
   };
+
+  const handleVerGruposWhatsApp = async () => {
+    setShowGruposWhatsApp(true);
+    await carregarGruposWhatsApp();
+  };
+
+  // Carregar grupos automaticamente ao abrir o formulário
+  useEffect(() => {
+    if (showForm) {
+      carregarGruposWhatsApp();
+    }
+  }, [showForm]);
 
   useEffect(() => {
     // Extrair sugestões únicas dos dados existentes
@@ -1093,7 +1105,19 @@ ${valor}`
 
                       <div className="space-y-3">
                         <div>
-                          <Label>Grupo WhatsApp (opcional)</Label>
+                          <div className="flex items-center justify-between mb-1">
+                            <Label>Grupo WhatsApp (opcional)</Label>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={carregarGruposWhatsApp}
+                              disabled={carregandoGrupos}
+                              className="h-6 text-xs"
+                            >
+                              {carregandoGrupos ? "🔄 Atualizando..." : "🔄 Atualizar"}
+                            </Button>
+                          </div>
                           <Select
                             value={formDataConta.grupo_whatsapp_id || ""}
                             onValueChange={(value) => setFormDataConta({...formDataConta, grupo_whatsapp_id: value === "" ? "" : value})}
@@ -1380,7 +1404,19 @@ ${valor}`
 
                       <div className="space-y-3">
                         <div>
-                          <Label className="text-xs text-gray-600">Grupo WhatsApp (opcional)</Label>
+                          <div className="flex items-center justify-between mb-1">
+                            <Label className="text-xs text-gray-600">Grupo WhatsApp (opcional)</Label>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={carregarGruposWhatsApp}
+                              disabled={carregandoGrupos}
+                              className="h-6 text-xs"
+                            >
+                              {carregandoGrupos ? "🔄 Atualizando..." : "🔄 Atualizar"}
+                            </Button>
+                          </div>
                           <Select
                             value={formDataLembrete.grupo_whatsapp_id || ""}
                             onValueChange={(value) => setFormDataLembrete({...formDataLembrete, grupo_whatsapp_id: value === "" ? "" : value})}

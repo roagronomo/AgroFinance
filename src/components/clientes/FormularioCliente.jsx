@@ -209,6 +209,7 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
   };
 
   const carregarGrupos = async () => {
+    setCarregandoGrupos(true);
     try {
       const EVOLUTION_API_URL = "https://evolution-api-production-4689.up.railway.app";
       const EVOLUTION_INSTANCE_NAME = "agrofinance-whatsapp";
@@ -230,6 +231,8 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
       }
     } catch (error) {
       console.error("Erro ao carregar grupos:", error);
+    } finally {
+      setCarregandoGrupos(false);
     }
   };
 
@@ -651,17 +654,33 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
                     </div>
                     
                     <div>
-                      <Label className="text-xs text-gray-600">Grupo WhatsApp (para você)</Label>
+                      <div className="flex items-center justify-between mb-1">
+                        <Label className="text-xs text-gray-600">Grupo WhatsApp (para você)</Label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={carregarGrupos}
+                          disabled={carregandoGrupos}
+                          className="h-6 text-xs"
+                        >
+                          {carregandoGrupos ? "🔄 Atualizando..." : "🔄 Atualizar"}
+                        </Button>
+                      </div>
                       <Select
                         value={formData.aniversario_grupo_whatsapp_id || ""}
-                        onValueChange={(value) => handleInputChange('aniversario_grupo_whatsapp_id', value)}
+                        onValueChange={(value) => handleInputChange('aniversario_grupo_whatsapp_id', value === "" ? "" : value)}
                       >
                         <SelectTrigger className="h-9 text-sm">
                           <SelectValue placeholder="Opcional" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value={null}>Número Individual</SelectItem>
-                          <SelectItem value="556481472080-1616761032@g.us">👥 Administrativo cerrado</SelectItem>
+                          <SelectItem value={null}>🔹 Número Individual</SelectItem>
+                          {gruposDisponiveis.map((grupo) => (
+                            <SelectItem key={grupo.id} value={grupo.id}>
+                              👥 {grupo.subject}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>

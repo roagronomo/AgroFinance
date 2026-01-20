@@ -64,6 +64,7 @@ export default function DespesasLembretes() {
     data_vencimento: "",
     dias_antes_avisar: 3,
     telefone_contato: "(64) 98147-2081",
+    grupo_whatsapp_id: "",
     chave_pix: "",
     codigo_barras: "",
     fornecedor: "",
@@ -83,6 +84,7 @@ export default function DespesasLembretes() {
     link_acesso: "",
     dias_antes_avisar: 1,
     telefone_contato: "(64) 98147-2081",
+    grupo_whatsapp_id: "",
     observacoes: "",
     ativo: true
   });
@@ -258,8 +260,9 @@ export default function DespesasLembretes() {
   };
 
   const enviarTesteWhatsApp = async () => {
-    if (!formDataConta.telefone_contato) {
-      toast.error("Digite um número de telefone primeiro");
+    // Validar se tem telefone OU grupo
+    if (!formDataConta.telefone_contato && !formDataConta.grupo_whatsapp_id) {
+      toast.error("Digite um número de telefone ou selecione um grupo");
       return;
     }
 
@@ -292,13 +295,17 @@ export default function DespesasLembretes() {
 
       mensagemTeste += `\n\n_Mensagem automática - AgroFinance_`;
 
+      // Usar grupo se preenchido, senão usar telefone individual
+      const destino = formDataConta.grupo_whatsapp_id || formDataConta.telefone_contato;
+
       const response = await base44.functions.invoke('enviarWhatsAppEvolution', {
-        numero: formDataConta.telefone_contato,
+        numero: destino,
         mensagem: mensagemTeste
       });
 
       if (response.success) {
-        toast.success("✅ Mensagem de teste enviada com sucesso!");
+        const tipoDestino = formDataConta.grupo_whatsapp_id ? "grupo" : "número";
+        toast.success(`✅ Mensagem de teste enviada para ${tipoDestino} com sucesso!`);
         setDialogTesteWhatsApp(false);
       } else {
         toast.error(`Erro: ${response.error || 'Falha ao enviar'}`);
@@ -312,8 +319,9 @@ export default function DespesasLembretes() {
   };
 
   const enviarTesteWhatsAppLembrete = async () => {
-    if (!formDataLembrete.telefone_contato) {
-      toast.error("Digite um número de telefone primeiro");
+    // Validar se tem telefone OU grupo
+    if (!formDataLembrete.telefone_contato && !formDataLembrete.grupo_whatsapp_id) {
+      toast.error("Digite um número de telefone ou selecione um grupo");
       return;
     }
 
@@ -352,13 +360,17 @@ export default function DespesasLembretes() {
 
       mensagemTeste += `\n_Mensagem automática - AgroFinance_`;
 
+      // Usar grupo se preenchido, senão usar telefone individual
+      const destino = formDataLembrete.grupo_whatsapp_id || formDataLembrete.telefone_contato;
+
       const response = await base44.functions.invoke('enviarWhatsAppEvolution', {
-        numero: formDataLembrete.telefone_contato,
+        numero: destino,
         mensagem: mensagemTeste
       });
 
       if (response.success) {
-        toast.success("✅ Mensagem de teste enviada com sucesso!");
+        const tipoDestino = formDataLembrete.grupo_whatsapp_id ? "grupo" : "número";
+        toast.success(`✅ Mensagem de teste enviada para ${tipoDestino} com sucesso!`);
       } else {
         toast.error(`Erro: ${response.error || 'Falha ao enviar'}`);
       }
@@ -675,6 +687,7 @@ ${valor}`
       data_vencimento: conta.data_vencimento || "",
       dias_antes_avisar: conta.dias_antes_avisar || 3,
       telefone_contato: conta.telefone_contato || "",
+      grupo_whatsapp_id: conta.grupo_whatsapp_id || "",
       chave_pix: conta.chave_pix || "",
       codigo_barras: conta.codigo_barras || "",
       fornecedor: conta.fornecedor || "",
@@ -702,6 +715,7 @@ ${valor}`
       link_acesso: lembrete.link_acesso || "",
       dias_antes_avisar: lembrete.dias_antes_avisar || 1,
       telefone_contato: lembrete.telefone_contato || "",
+      grupo_whatsapp_id: lembrete.grupo_whatsapp_id || "",
       observacoes: lembrete.observacoes || "",
       ativo: lembrete.ativo !== false
     });
@@ -717,6 +731,7 @@ ${valor}`
       data_vencimento: "", // Deixar vazio para o usuário preencher
       dias_antes_avisar: conta.dias_antes_avisar || 3,
       telefone_contato: conta.telefone_contato || "",
+      grupo_whatsapp_id: conta.grupo_whatsapp_id || "",
       chave_pix: conta.chave_pix || "",
       codigo_barras: "", // Não copiar código de barras
       fornecedor: conta.fornecedor || "",
@@ -762,6 +777,7 @@ ${valor}`
       data_vencimento: "",
       dias_antes_avisar: 3,
       telefone_contato: "(64) 98147-2081",
+      grupo_whatsapp_id: "",
       chave_pix: "",
       codigo_barras: "",
       fornecedor: "",
@@ -780,6 +796,7 @@ ${valor}`
       link_acesso: "",
       dias_antes_avisar: 1,
       telefone_contato: "(64) 98147-2081",
+      grupo_whatsapp_id: "",
       observacoes: "",
       ativo: true
     });
@@ -1016,7 +1033,7 @@ ${valor}`
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     <div>
                       <Label>Avisar quantos dias antes? *</Label>
                       <Input
@@ -1028,20 +1045,53 @@ ${valor}`
                         required
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        Aviso X dias antes + no dia do vencimento
+                        Aviso X dias antes (11h) + no dia do vencimento
                       </p>
                     </div>
 
-                    <div>
-                      <Label>Telefone/WhatsApp *</Label>
-                      <Input
-                        type="tel"
-                        value={formDataConta.telefone_contato}
-                        onChange={(e) => handleTelefoneChange(e.target.value, 'conta')}
-                        placeholder="(62) 99999-9999"
-                        maxLength={15}
-                        required
-                      />
+                    <div className="border rounded-lg p-3 bg-blue-50">
+                      <h3 className="text-sm font-semibold mb-3 text-blue-900">📱 Destino da Notificação</h3>
+
+                      <div className="space-y-3">
+                        <div>
+                          <Label>Grupo WhatsApp (opcional)</Label>
+                          <Select
+                            value={formDataConta.grupo_whatsapp_id || ""}
+                            onValueChange={(value) => setFormDataConta({...formDataConta, grupo_whatsapp_id: value === "" ? "" : value})}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Enviar para número individual" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={null}>🔹 Número Individual</SelectItem>
+                              <SelectItem value="556481472080-1616761032@g.us">👥 Administrativo cerrado</SelectItem>
+                              <SelectItem value="120363303296768654@g.us">👥 Grupo Luiz Renato</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {formDataConta.grupo_whatsapp_id 
+                              ? "👥 Será enviado para o grupo selecionado" 
+                              : "📱 Se não selecionar grupo, envia para número individual"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <Label>Telefone/WhatsApp {!formDataConta.grupo_whatsapp_id && "*"}</Label>
+                          <Input
+                            type="tel"
+                            value={formDataConta.telefone_contato}
+                            onChange={(e) => handleTelefoneChange(e.target.value, 'conta')}
+                            placeholder="(62) 99999-9999"
+                            maxLength={15}
+                            required={!formDataConta.grupo_whatsapp_id}
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            {formDataConta.grupo_whatsapp_id 
+                              ? "Número alternativo (opcional quando grupo selecionado)" 
+                              : "Número para receber as notificações"}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -1266,9 +1316,9 @@ ${valor}`
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="md:col-span-1">
-                      <Label className="text-xs text-gray-600">Dias antes</Label>
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs text-gray-600">Avisar quantos dias antes? *</Label>
                       <Input
                         type="number"
                         min="1"
@@ -1278,19 +1328,55 @@ ${valor}`
                         required
                         className="h-9"
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Aviso X dias antes (11h) + no dia + 10min antes (se tiver hora)
+                      </p>
                     </div>
 
-                    <div className="md:col-span-3">
-                      <Label className="text-xs text-gray-600">Telefone/WhatsApp *</Label>
-                      <Input
-                        type="tel"
-                        value={formDataLembrete.telefone_contato}
-                        onChange={(e) => handleTelefoneChange(e.target.value, 'lembrete')}
-                        placeholder="(62) 99999-9999"
-                        maxLength={15}
-                        required
-                        className="h-9"
-                      />
+                    <div className="border rounded-lg p-3 bg-blue-50">
+                      <h3 className="text-sm font-semibold mb-3 text-blue-900">📱 Destino da Notificação</h3>
+
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-xs text-gray-600">Grupo WhatsApp (opcional)</Label>
+                          <Select
+                            value={formDataLembrete.grupo_whatsapp_id || ""}
+                            onValueChange={(value) => setFormDataLembrete({...formDataLembrete, grupo_whatsapp_id: value === "" ? "" : value})}
+                          >
+                            <SelectTrigger className="h-9">
+                              <SelectValue placeholder="Enviar para número individual" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={null}>🔹 Número Individual</SelectItem>
+                              <SelectItem value="556481472080-1616761032@g.us">👥 Administrativo cerrado</SelectItem>
+                              <SelectItem value="120363303296768654@g.us">👥 Grupo Luiz Renato</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {formDataLembrete.grupo_whatsapp_id 
+                              ? "👥 Será enviado para o grupo selecionado" 
+                              : "📱 Se não selecionar grupo, envia para número individual"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <Label className="text-xs text-gray-600">Telefone/WhatsApp {!formDataLembrete.grupo_whatsapp_id && "*"}</Label>
+                          <Input
+                            type="tel"
+                            value={formDataLembrete.telefone_contato}
+                            onChange={(e) => handleTelefoneChange(e.target.value, 'lembrete')}
+                            placeholder="(62) 99999-9999"
+                            maxLength={15}
+                            required={!formDataLembrete.grupo_whatsapp_id}
+                            className="h-9"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            {formDataLembrete.grupo_whatsapp_id 
+                              ? "Número alternativo (opcional quando grupo selecionado)" 
+                              : "Número para receber as notificações"}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 

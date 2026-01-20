@@ -5,9 +5,13 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
  * 
  * Payload esperado:
  * {
- *   numero: "5562999999999", // Número com DDI e DDD, sem símbolos
+ *   numero: "5562999999999" ou "556481472080-1616761032@g.us", // Número individual ou ID de grupo
  *   mensagem: "Texto da mensagem"
  * }
+ * 
+ * Suporta:
+ * - Números individuais: 5562999999999 (com DDI/DDD)
+ * - Grupos WhatsApp: 556481472080-1616761032@g.us
  */
 Deno.serve(async (req) => {
   try {
@@ -39,13 +43,21 @@ Deno.serve(async (req) => {
       }, { status: 500 });
     }
 
-    // Formatar número para WhatsApp (remover caracteres especiais)
-    const numeroLimpo = numero.replace(/\D/g, '');
+    // Detectar se é grupo (contém @g.us) ou número individual
+    const isGrupo = numero.includes('@g.us');
     
-    // Garantir que tem DDI (adicionar 55 se não tiver)
-    const numeroFormatado = numeroLimpo.length === 11 ? `55${numeroLimpo}` : numeroLimpo;
-
-    console.log(`📱 Enviando WhatsApp para: ${numeroFormatado}`);
+    let numeroFormatado;
+    if (isGrupo) {
+      // Para grupos, usar o ID completo sem modificações
+      numeroFormatado = numero;
+      console.log(`👥 Enviando WhatsApp para GRUPO: ${numeroFormatado}`);
+    } else {
+      // Para números individuais, formatar normalmente
+      const numeroLimpo = numero.replace(/\D/g, '');
+      numeroFormatado = numeroLimpo.length === 11 ? `55${numeroLimpo}` : numeroLimpo;
+      console.log(`📱 Enviando WhatsApp para número: ${numeroFormatado}`);
+    }
+    
     console.log(`📍 Endpoint: ${EVOLUTION_API_URL}/message/sendText/${EVOLUTION_INSTANCE_NAME}`);
 
     // Enviar mensagem via Evolution API

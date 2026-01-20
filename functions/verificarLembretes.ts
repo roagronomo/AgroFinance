@@ -99,9 +99,10 @@ ${lembrete.link_acesso ? `🔗 *Link de Acesso:*\n${lembrete.link_acesso}\n\n` :
 _Lembrete automático - AgroFinance_`;
         }
 
-        // Enviar WhatsApp
+        // Enviar WhatsApp - usar grupo se preenchido, senão usar telefone individual
+        const destino = lembrete.grupo_whatsapp_id || lembrete.telefone_contato;
         const response = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
-          numero: lembrete.telefone_contato,
+          numero: destino,
           mensagem: mensagem
         });
 

@@ -45,15 +45,15 @@ export default function EstatisticasGerais({ stats, isLoading, onCardClick }) {
     },
     {
       titulo: "Recebido",
-      subtitulo: "Concluído",
+      subtitulo: "Pagamentos ASTEC",
       valor: stats.valorRecebido,
       icone: Wallet,
       gradiente: "from-green-500 to-emerald-600",
       bgLight: "bg-green-50",
       iconBg: "bg-green-100",
       iconColor: "text-green-600",
-      mudanca: `${stats.concluidos} projeto(s)`,
-      onClick: () => onCardClick('concluido'),
+      mudanca: `${stats.quantidadeRecebidos || 0} projeto(s)`,
+      onClick: () => onCardClick('recebido'),
       clickable: true,
       isMonetary: true
     },

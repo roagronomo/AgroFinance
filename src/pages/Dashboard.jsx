@@ -158,20 +158,20 @@ export default function Dashboard() {
       .reduce((sum, s) => sum + (s.valor_receber || 0), 0);
     
     // Calcular valores recebidos ASTEC por data de pagamento (usar TODOS os projetos, não apenas os filtrados por ano de protocolo)
-    const valorRecebidoASTEC = todosProjetos
-      .filter(p => {
-        if (!p.data_pagamento_astec) return false;
-        
-        const dataPagamento = new Date(p.data_pagamento_astec + 'T00:00:00');
-        const anoPagamento = dataPagamento.getFullYear();
-        
-        // Se filtro "todos", considerar todos os pagamentos
-        if (anoSelecionado === "todos") return true;
-        
-        // Se filtro por ano específico, considerar apenas pagamentos daquele ano
-        return anoPagamento.toString() === anoSelecionado;
-      })
-      .reduce((sum, p) => sum + (p.valor_receber || 0), 0);
+    const projetosRecebidos = todosProjetos.filter(p => {
+      if (!p.data_pagamento_astec) return false;
+      
+      const dataPagamento = new Date(p.data_pagamento_astec + 'T00:00:00');
+      const anoPagamento = dataPagamento.getFullYear();
+      
+      // Se filtro "todos", considerar todos os pagamentos
+      if (anoSelecionado === "todos") return true;
+      
+      // Se filtro por ano específico, considerar apenas pagamentos daquele ano
+      return anoPagamento.toString() === anoSelecionado;
+    });
+    
+    const valorRecebidoASTEC = projetosRecebidos.reduce((sum, p) => sum + (p.valor_receber || 0), 0);
 
     return {
       total: projetos.length,
@@ -186,6 +186,7 @@ export default function Dashboard() {
         .filter(p => p.status === 'em_analise')
         .reduce((sum, p) => sum + (p.valor_receber || 0), 0) + valorAReceberServicos,
       valorRecebido: valorRecebidoASTEC + valorRecebidoServicos,
+      quantidadeRecebidos: projetosRecebidos.length + servicosFiltrados.filter(s => s.status === 'concluido').length,
       taxaJurosMedia: taxaMedia,
     };
   };
@@ -213,6 +214,22 @@ export default function Dashboard() {
           projetos: projetos.filter(p => p.status === 'em_analise'),
           servicos: servicosFiltrados.filter(s => s.status === 'em_analise')
         };
+      case 'recebido':
+        // Filtrar projetos que tiveram pagamento ASTEC no período selecionado
+        const projetosComPagamento = todosProjetos.filter(p => {
+          if (!p.data_pagamento_astec) return false;
+          
+          const dataPagamento = new Date(p.data_pagamento_astec + 'T00:00:00');
+          const anoPagamento = dataPagamento.getFullYear();
+          
+          if (anoSelecionado === "todos") return true;
+          return anoPagamento.toString() === anoSelecionado;
+        });
+        
+        return {
+          projetos: projetosComPagamento,
+          servicos: servicosFiltrados.filter(s => s.status === 'concluido')
+        };
       case 'concluido':
         return {
           projetos: projetos.filter(p => p.status === 'concluido'),
@@ -226,7 +243,7 @@ export default function Dashboard() {
       default:
         return { projetos: [], servicos: [] };
     }
-  }, [filtroModal, projetos, outrosServicos, anoSelecionado]);
+  }, [filtroModal, projetos, todosProjetos, outrosServicos, anoSelecionado]);
 
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen">
@@ -422,6 +439,7 @@ export default function Dashboard() {
                 <div>
                   <h2 className="text-2xl font-bold mb-1">
                     {filtroModal === 'em_analise' && 'Projetos em Análise'}
+                    {filtroModal === 'recebido' && 'Projetos Recebidos (Pagamento ASTEC)'}
                     {filtroModal === 'concluido' && 'Projetos Concluídos'}
                     {filtroModal === 'todos' && 'Todos os Projetos'}
                   </h2>

@@ -38,31 +38,37 @@ Deno.serve(async (req) => {
           continue;
         }
         
-        const primeiroNome = cliente.nome ? cliente.nome.split(' ')[0] : cliente.nome;
-        const mensagem = `🎂 *Lembrete de Aniversário*\n\nHoje é aniversário de *${primeiroNome}*!\n\nNão esqueça de parabenizá-lo(a)! 🎉`;
+        // Extrair primeiro e segundo nome
+        const partesNome = cliente.nome ? cliente.nome.split(' ') : ['Cliente'];
+        const primeiroSegundoNome = partesNome.length >= 2 
+          ? `${partesNome[0]} ${partesNome[1]}` 
+          : partesNome[0];
         
-        // Enviar mensagem de texto
+        const mensagem = `🎂 *Lembrete de Aniversário*\n\nHoje é aniversário de *${primeiroSegundoNome}*!\n\nNão esqueça de parabenizá-lo(a)! 🎉`;
+        
+        // Enviar mensagem de texto para você (grupo ou telefone de contato)
         const response = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
           numero: destino,
           mensagem: mensagem
         });
         
         if (response.success) {
-          // Se o cliente tiver cartão personalizado, enviar também
-          if (cliente.cartao_aniversario_url) {
+          enviados++;
+          console.log(`✅ Lembrete enviado para ${cliente.nome}`);
+          
+          // Enviar SOMENTE o cartão para o WhatsApp do cliente (se configurado)
+          if (cliente.whatsapp_cliente && cliente.cartao_aniversario_url) {
             try {
               await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
-                numero: destino,
+                numero: cliente.whatsapp_cliente,
                 mensagem: '',
                 imagem_url: cliente.cartao_aniversario_url
               });
+              console.log(`🎂 Cartão enviado para o cliente ${cliente.nome}`);
             } catch (imgError) {
-              console.warn(`⚠️ Erro ao enviar cartão para ${cliente.nome}:`, imgError.message);
+              console.warn(`⚠️ Erro ao enviar cartão para o cliente ${cliente.nome}:`, imgError.message);
             }
           }
-          
-          enviados++;
-          console.log(`✅ Lembrete enviado para ${cliente.nome}`);
         } else {
           erros.push({ cliente: cliente.nome, erro: response.error });
           console.error(`❌ Erro ao enviar para ${cliente.nome}:`, response.error);

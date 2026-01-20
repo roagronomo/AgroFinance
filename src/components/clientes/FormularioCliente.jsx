@@ -171,6 +171,7 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
         data_nascimento: "",
         aniversario_telefone_contato: "",
         aniversario_grupo_whatsapp_id: "",
+        whatsapp_cliente: "",
         enviar_lembrete_aniversario: false,
         cartao_aniversario_url: "",
         cartao_aniversario_nome: ""
@@ -258,10 +259,8 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
   };
 
   const handleEnviarTeste = async () => {
-    const destino = formData.aniversario_grupo_whatsapp_id || formData.aniversario_telefone_contato;
-    
-    if (!destino) {
-      toast.error("Configure um telefone ou grupo primeiro");
+    if (!formData.whatsapp_cliente) {
+      toast.error("Configure o WhatsApp do Cliente primeiro");
       return;
     }
 
@@ -272,24 +271,15 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
 
     setEnviandoTeste(true);
     try {
-      const primeiroNome = formData.nome ? formData.nome.split(' ')[0] : 'Cliente';
-      const mensagem = `🎂 *TESTE - Lembrete de Aniversário*\n\nHoje é aniversário de *${primeiroNome}*!\n\nNão esqueça de parabenizá-lo(a)! 🎉\n\n_Mensagem automática - AgroFinance_`;
-      
-      // Enviar mensagem
+      // Enviar SOMENTE a imagem para o cliente
       const response = await base44.functions.invoke('enviarWhatsAppEvolution', {
-        numero: destino,
-        mensagem: mensagem
+        numero: formData.whatsapp_cliente,
+        mensagem: '',
+        imagem_url: formData.cartao_aniversario_url
       });
 
       if (response.success) {
-        // Enviar imagem
-        await base44.functions.invoke('enviarWhatsAppEvolution', {
-          numero: destino,
-          mensagem: '',
-          imagem_url: formData.cartao_aniversario_url
-        });
-        
-        toast.success("✅ Teste enviado com sucesso!");
+        toast.success("✅ Cartão de teste enviado para o cliente!");
       } else {
         toast.error(`Erro: ${response.error || 'Falha ao enviar'}`);
       }
@@ -621,44 +611,61 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
               </div>
               
               {formData.enviar_lembrete_aniversario && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3 pt-3 border-t border-purple-200">
-                  <div>
-                    <Label htmlFor="data_nascimento" className="text-xs text-gray-600">Data de Nascimento</Label>
-                    <Input
-                      id="data_nascimento"
-                      type="date"
-                      value={formData.data_nascimento || ""}
-                      onChange={(e) => handleInputChange('data_nascimento', e.target.value)}
-                      className="h-9 text-sm"
-                    />
+                <div className="space-y-3 mt-3 pt-3 border-t border-purple-200">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <Label htmlFor="data_nascimento" className="text-xs text-gray-600">Data de Nascimento</Label>
+                      <Input
+                        id="data_nascimento"
+                        type="date"
+                        value={formData.data_nascimento || ""}
+                        onChange={(e) => handleInputChange('data_nascimento', e.target.value)}
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs text-gray-600">Grupo WhatsApp (para você)</Label>
+                      <Select
+                        value={formData.aniversario_grupo_whatsapp_id || ""}
+                        onValueChange={(value) => handleInputChange('aniversario_grupo_whatsapp_id', value)}
+                      >
+                        <SelectTrigger className="h-9 text-sm">
+                          <SelectValue placeholder="Opcional" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={null}>Número Individual</SelectItem>
+                          <SelectItem value="556481472080-1616761032@g.us">👥 Administrativo cerrado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs text-gray-600">Telefone/WhatsApp (para você)</Label>
+                      <Input
+                        type="tel"
+                        value={formatCelular(formData.aniversario_telefone_contato || "")}
+                        onChange={(e) => handleInputChange('aniversario_telefone_contato', e.target.value)}
+                        placeholder="(00) 00000-0000"
+                        maxLength={15}
+                        className="h-9 text-sm"
+                      />
+                    </div>
                   </div>
-                  
-                  <div>
-                    <Label className="text-xs text-gray-600">Grupo WhatsApp</Label>
-                    <Select
-                      value={formData.aniversario_grupo_whatsapp_id || ""}
-                      onValueChange={(value) => handleInputChange('aniversario_grupo_whatsapp_id', value)}
-                    >
-                      <SelectTrigger className="h-9 text-sm">
-                        <SelectValue placeholder="Opcional" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={null}>Número Individual</SelectItem>
-                        <SelectItem value="556481472080-1616761032@g.us">👥 Administrativo cerrado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <Label className="text-xs text-gray-600">Telefone/WhatsApp</Label>
+
+                  <div className="pt-2 border-t border-purple-200">
+                    <Label className="text-xs text-gray-600">WhatsApp do Cliente (para enviar o cartão)</Label>
                     <Input
                       type="tel"
-                      value={formatCelular(formData.aniversario_telefone_contato || "")}
-                      onChange={(e) => handleInputChange('aniversario_telefone_contato', e.target.value)}
+                      value={formatCelular(formData.whatsapp_cliente || "")}
+                      onChange={(e) => handleInputChange('whatsapp_cliente', e.target.value)}
                       placeholder="(00) 00000-0000"
                       maxLength={15}
                       className="h-9 text-sm"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      📱 Número para enviar o cartão diretamente ao cliente
+                    </p>
                   </div>
                 </div>
               )}
@@ -703,11 +710,11 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
                             variant="outline"
                             size="sm"
                             onClick={() => setShowConfirmDialog(true)}
-                            disabled={!formData.aniversario_telefone_contato && !formData.aniversario_grupo_whatsapp_id}
+                            disabled={!formData.whatsapp_cliente}
                             className="text-blue-600 h-8 text-xs"
                           >
                             <Send className="w-3 h-3 mr-1" />
-                            Testar
+                            Testar Cartão
                           </Button>
                         </div>
                       </div>
@@ -1243,13 +1250,15 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Envio de Teste</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja enviar o teste do cartão de aniversário?
+              Tem certeza que deseja enviar o cartão de aniversário para o WhatsApp do cliente?
+              <br /><br />
+              <strong>Número do cliente:</strong> {formatCelular(formData.whatsapp_cliente || "")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={enviandoTeste}>Não</AlertDialogCancel>
             <AlertDialogAction onClick={handleEnviarTeste} disabled={enviandoTeste} className="bg-purple-600 hover:bg-purple-700">
-              {enviandoTeste ? "Enviando..." : "Sim"}
+              {enviandoTeste ? "Enviando..." : "Sim, Enviar"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

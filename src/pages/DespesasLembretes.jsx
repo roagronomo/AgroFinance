@@ -143,39 +143,43 @@ export default function DespesasLembretes() {
   };
 
   const carregarGruposWhatsApp = async (forcar = false) => {
-    // Cache de 5 minutos para evitar rate limit
-    const agora = Date.now();
-    if (!forcar && ultimaAtualizacaoGrupos && (agora - ultimaAtualizacaoGrupos) < 300000) {
-      console.log('Usando grupos em cache');
-      return gruposDisponiveis;
-    }
-
     setCarregandoGrupos(true);
     try {
-      const response = await base44.functions.invoke('buscarGruposWhatsApp', {});
-
-      if (response.error) {
-        throw new Error(response.error);
-      }
-
-      const gruposArray = response.grupos || [];
-      setGruposWhatsApp(gruposArray);
-      setGruposDisponiveis(gruposArray);
+      // Sempre buscar grupos do banco de dados primeiro
+      const gruposBD = await base44.entities.GrupoWhatsApp.list('-ultima_atualizacao');
+      const gruposFormatados = gruposBD.map(g => ({ id: g.grupo_id, subject: g.nome }));
+      
+      // Atualizar interface imediatamente com grupos do banco
+      setGruposWhatsApp(gruposFormatados);
+      setGruposDisponiveis(gruposFormatados);
       setUltimaAtualizacaoGrupos(Date.now());
       
-      if (response.aviso) {
-        toast.info(response.aviso, { duration: 5000 });
-      } else if (forcar) {
-        const mensagem = response.fonte === 'cache' 
-          ? `${gruposArray.length} grupos (salvos)` 
-          : `${gruposArray.length} grupos (atualizados)`;
-        toast.success(mensagem);
+      // Se forçar atualização, tentar sincronizar com API em background
+      if (forcar) {
+        try {
+          const response = await base44.functions.invoke('buscarGruposWhatsApp', {});
+          
+          if (!response.error && response.grupos && response.grupos.length > 0) {
+            setGruposWhatsApp(response.grupos);
+            setGruposDisponiveis(response.grupos);
+            
+            const mensagem = response.fonte === 'cache' 
+              ? `${response.grupos.length} grupos (salvos)` 
+              : `${response.grupos.length} grupos (sincronizados)`;
+            toast.success(mensagem);
+          } else if (response.aviso) {
+            toast.info(response.aviso);
+          }
+        } catch (apiError) {
+          console.log('Mantendo grupos do banco (API indisponível)');
+          toast.info(`${gruposFormatados.length} grupos carregados (banco de dados)`);
+        }
       }
       
-      return gruposArray;
+      return gruposFormatados;
     } catch (error) {
       console.error("Erro ao buscar grupos:", error);
-      toast.error("Erro ao buscar grupos. Tente novamente em alguns minutos.");
+      toast.error("Erro ao carregar grupos do banco de dados");
       return [];
     } finally {
       setCarregandoGrupos(false);

@@ -145,42 +145,34 @@ export default function DespesasLembretes() {
   const carregarGruposWhatsApp = async (forcar = false) => {
     setCarregandoGrupos(true);
     try {
-      // Sempre buscar grupos do banco de dados primeiro
-      const gruposBD = await base44.entities.GrupoWhatsApp.list('-ultima_atualizacao');
-      const gruposFormatados = gruposBD.map(g => ({ id: g.grupo_id, subject: g.nome }));
-      
-      // Atualizar interface imediatamente com grupos do banco
-      setGruposWhatsApp(gruposFormatados);
-      setGruposDisponiveis(gruposFormatados);
-      setUltimaAtualizacaoGrupos(Date.now());
-      
-      // Se forçar atualização, tentar sincronizar com API em background
       if (forcar) {
-        try {
-          const response = await base44.functions.invoke('buscarGruposWhatsApp', {});
-          
-          if (!response.error && response.grupos && response.grupos.length > 0) {
-            setGruposWhatsApp(response.grupos);
-            setGruposDisponiveis(response.grupos);
-            
-            const mensagem = response.fonte === 'cache' 
-              ? `${response.grupos.length} grupos (salvos)` 
-              : `${response.grupos.length} grupos (sincronizados)`;
-            toast.success(mensagem);
-          } else if (response.aviso) {
-            toast.info(response.aviso);
-          }
-        } catch (apiError) {
-          console.log('Mantendo grupos do banco (API indisponível)');
-          toast.info(`${gruposFormatados.length} grupos carregados (banco de dados)`);
+        // Forçar atualização: limpar banco e buscar da API
+        const todosGrupos = await base44.entities.GrupoWhatsApp.list();
+        for (const grupo of todosGrupos) {
+          await base44.entities.GrupoWhatsApp.delete(grupo.id);
         }
+        
+        const response = await base44.functions.invoke('buscarGruposWhatsApp', {});
+        
+        if (!response.error && response.grupos && response.grupos.length > 0) {
+          setGruposWhatsApp(response.grupos);
+          setGruposDisponiveis(response.grupos);
+          toast.success(`${response.grupos.length} grupos atualizados`);
+        } else {
+          setGruposWhatsApp([]);
+          setGruposDisponiveis([]);
+          toast.warning('Nenhum grupo encontrado');
+        }
+      } else {
+        // Carregar do banco normalmente
+        const gruposBD = await base44.entities.GrupoWhatsApp.list('-ultima_atualizacao');
+        const gruposFormatados = gruposBD.map(g => ({ id: g.grupo_id, subject: g.nome }));
+        setGruposWhatsApp(gruposFormatados);
+        setGruposDisponiveis(gruposFormatados);
       }
-      
-      return gruposFormatados;
     } catch (error) {
-      console.error("Erro ao buscar grupos:", error);
-      toast.error("Erro ao carregar grupos do banco de dados");
-      return [];
+      console.error("Erro ao carregar grupos:", error);
+      toast.error("Erro ao processar grupos");
     } finally {
       setCarregandoGrupos(false);
     }
@@ -1151,7 +1143,7 @@ ${valor}`
                               type="button"
                               variant="ghost"
                               size="sm"
-                              onClick={carregarGruposWhatsApp}
+                              onClick={() => carregarGruposWhatsApp(true)}
                               disabled={carregandoGrupos}
                               className="h-6 text-xs"
                             >
@@ -1450,10 +1442,10 @@ ${valor}`
                               type="button"
                               variant="ghost"
                               size="sm"
-                              onClick={carregarGruposWhatsApp}
+                              onClick={() => carregarGruposWhatsApp(true)}
                               disabled={carregandoGrupos}
                               className="h-6 text-xs"
-                            >
+                              >
                               {carregandoGrupos ? "🔄 Atualizando..." : "🔄 Atualizar"}
                             </Button>
                           </div>

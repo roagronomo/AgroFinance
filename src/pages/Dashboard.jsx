@@ -263,7 +263,7 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-green-900 mb-2">
-              Dashboard de Projetos
+              Painel de Projetos
             </h1>
             <p className="text-green-600 text-lg">
               {anoSelecionado === 'todos' ? 'Visão geral de todos os anos' : `Resumo do ano de ${anoSelecionado}`}
@@ -335,7 +335,10 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 {aniversariantes.length === 0 ? (
-                  <p className="text-center text-gray-500 py-4">Nenhum aniversariante este mês</p>
+                  <div className="text-center py-6">
+                    <Cake className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                    <p className="text-gray-500 text-sm">Nenhum aniversariante este mês</p>
+                  </div>
                 ) : (
                   <div className="space-y-2">
                     {aniversariantes.map((aniv, index) => {

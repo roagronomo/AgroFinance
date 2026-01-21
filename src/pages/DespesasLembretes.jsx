@@ -61,6 +61,7 @@ export default function DespesasLembretes() {
   const [gruposWhatsApp, setGruposWhatsApp] = useState([]);
   const [carregandoGrupos, setCarregandoGrupos] = useState(false);
   const [gruposDisponiveis, setGruposDisponiveis] = useState([]);
+  const [ultimaAtualizacaoGrupos, setUltimaAtualizacaoGrupos] = useState(null);
 
   const [formDataConta, setFormDataConta] = useState({
     descricao: "",
@@ -141,7 +142,14 @@ export default function DespesasLembretes() {
     }
   };
 
-  const carregarGruposWhatsApp = async () => {
+  const carregarGruposWhatsApp = async (forcar = false) => {
+    // Cache de 5 minutos para evitar rate limit
+    const agora = Date.now();
+    if (!forcar && ultimaAtualizacaoGrupos && (agora - ultimaAtualizacaoGrupos) < 300000) {
+      console.log('Usando grupos em cache');
+      return gruposDisponiveis;
+    }
+
     setCarregandoGrupos(true);
     try {
       const response = await base44.functions.invoke('buscarGruposWhatsApp', {});
@@ -153,10 +161,12 @@ export default function DespesasLembretes() {
       const gruposArray = response.grupos || [];
       setGruposWhatsApp(gruposArray);
       setGruposDisponiveis(gruposArray);
+      setUltimaAtualizacaoGrupos(Date.now());
+      toast.success(`${gruposArray.length} grupos carregados`);
       return gruposArray;
     } catch (error) {
       console.error("Erro ao buscar grupos:", error);
-      toast.error("Erro ao buscar grupos do WhatsApp");
+      toast.error("Erro ao buscar grupos. Tente novamente em alguns minutos.");
       return [];
     } finally {
       setCarregandoGrupos(false);
@@ -168,10 +178,10 @@ export default function DespesasLembretes() {
     await carregarGruposWhatsApp();
   };
 
-  // Carregar grupos automaticamente ao abrir o formulário
+  // Carregar grupos automaticamente ao abrir o formulário (com cache)
   useEffect(() => {
     if (showForm) {
-      carregarGruposWhatsApp();
+      carregarGruposWhatsApp(false);
     }
   }, [showForm]);
 

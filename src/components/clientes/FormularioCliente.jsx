@@ -106,6 +106,7 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
   const [enviandoTeste, setEnviandoTeste] = useState(false);
   const [cadastroSimplificado, setCadastroSimplificado] = useState(false);
   const [carregandoGrupos, setCarregandoGrupos] = useState(false);
+  const [ultimaAtualizacaoGrupos, setUltimaAtualizacaoGrupos] = useState(null);
   
   // Estado para contas bancárias
   const [contasBancarias, setContasBancarias] = useState([{
@@ -125,7 +126,7 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
   });
 
   useEffect(() => {
-    carregarGrupos();
+    carregarGrupos(false);
     if (cliente) {
       setFormData(cliente);
       // Carregar contas bancárias existentes ou criar uma vazia
@@ -208,22 +209,33 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
     handleInputChange('marca_gado_imagem_url', '');
   };
 
-  const carregarGrupos = async () => {
+  const carregarGrupos = async (forcar = false) => {
+    // Cache de 5 minutos para evitar rate limit
+    const agora = Date.now();
+    if (!forcar && ultimaAtualizacaoGrupos && (agora - ultimaAtualizacaoGrupos) < 300000) {
+      console.log('Usando grupos em cache');
+      return;
+    }
+
     setCarregandoGrupos(true);
     try {
       const response = await base44.functions.invoke('buscarGruposWhatsApp', {});
       
       if (response.error) {
         console.error("Erro ao buscar grupos:", response.error);
-        toast.error("Erro ao buscar grupos do WhatsApp");
+        toast.error("Erro ao buscar grupos. Tente novamente em alguns minutos.");
         setGruposDisponiveis([]);
       } else {
         const gruposArray = response.grupos || [];
         setGruposDisponiveis(gruposArray);
+        setUltimaAtualizacaoGrupos(Date.now());
+        if (forcar) {
+          toast.success(`${gruposArray.length} grupos carregados`);
+        }
       }
     } catch (error) {
       console.error("Erro ao carregar grupos:", error);
-      toast.error("Erro ao buscar grupos do WhatsApp");
+      toast.error("Erro ao buscar grupos. Tente novamente em alguns minutos.");
       setGruposDisponiveis([]);
     } finally {
       setCarregandoGrupos(false);
@@ -664,7 +676,7 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            onClick={carregarGrupos}
+                            onClick={() => carregarGrupos(true)}
                             disabled={carregandoGrupos}
                             className="h-6 text-xs"
                           >

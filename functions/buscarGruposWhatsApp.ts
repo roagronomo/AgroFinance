@@ -30,12 +30,16 @@ Deno.serve(async (req) => {
     );
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Erro da API Evolution:', response.status, errorText);
       return Response.json({ 
-        error: `Erro ao buscar grupos: HTTP ${response.status}` 
-      }, { status: response.status });
+        error: `Erro ao buscar grupos: HTTP ${response.status}`,
+        detalhes: errorText 
+      }, { status: 500 });
     }
 
     const grupos = await response.json();
+    console.log('Grupos recebidos:', grupos);
     const gruposArray = Array.isArray(grupos) ? grupos : [];
 
     return Response.json({ grupos: gruposArray });

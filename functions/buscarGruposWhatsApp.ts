@@ -32,15 +32,34 @@ Deno.serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Erro da API Evolution:', response.status, errorText);
+      
+      // Se for rate limit, retornar array vazio ao invés de erro
+      if (errorText.includes('rate-overlimit')) {
+        console.warn('Rate limit da API Evolution - retornando cache vazio');
+        return Response.json({ 
+          grupos: [],
+          aviso: 'API temporariamente indisponível (rate limit). Os grupos serão carregados quando possível.'
+        });
+      }
+      
       return Response.json({ 
         error: `Erro ao buscar grupos: HTTP ${response.status}`,
         detalhes: errorText 
       }, { status: 500 });
     }
 
-    const grupos = await response.json();
-    console.log('Grupos recebidos:', grupos);
-    const gruposArray = Array.isArray(grupos) ? grupos : [];
+    const data = await response.json();
+    console.log('Resposta da API:', data);
+    
+    // A API pode retornar { groups: [...] } ou diretamente um array
+    let gruposArray = [];
+    if (Array.isArray(data)) {
+      gruposArray = data;
+    } else if (data && Array.isArray(data.groups)) {
+      gruposArray = data.groups;
+    } else if (data && data.data && Array.isArray(data.data)) {
+      gruposArray = data.data;
+    }
 
     return Response.json({ grupos: gruposArray });
   } catch (error) {

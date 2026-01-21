@@ -162,7 +162,13 @@ export default function DespesasLembretes() {
       setGruposWhatsApp(gruposArray);
       setGruposDisponiveis(gruposArray);
       setUltimaAtualizacaoGrupos(Date.now());
-      toast.success(`${gruposArray.length} grupos carregados`);
+      
+      if (response.aviso) {
+        toast.warning(response.aviso, { duration: 5000 });
+      } else if (forcar) {
+        toast.success(`${gruposArray.length} grupos carregados`);
+      }
+      
       return gruposArray;
     } catch (error) {
       console.error("Erro ao buscar grupos:", error);

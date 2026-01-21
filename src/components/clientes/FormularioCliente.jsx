@@ -229,7 +229,10 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
         const gruposArray = response.grupos || [];
         setGruposDisponiveis(gruposArray);
         setUltimaAtualizacaoGrupos(Date.now());
-        if (forcar) {
+        
+        if (response.aviso) {
+          toast.warning(response.aviso, { duration: 5000 });
+        } else if (forcar) {
           toast.success(`${gruposArray.length} grupos carregados`);
         }
       }

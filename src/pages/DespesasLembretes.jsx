@@ -164,9 +164,12 @@ export default function DespesasLembretes() {
       setUltimaAtualizacaoGrupos(Date.now());
       
       if (response.aviso) {
-        toast.warning(response.aviso, { duration: 5000 });
+        toast.info(response.aviso, { duration: 5000 });
       } else if (forcar) {
-        toast.success(`${gruposArray.length} grupos carregados`);
+        const mensagem = response.fonte === 'cache' 
+          ? `${gruposArray.length} grupos (salvos)` 
+          : `${gruposArray.length} grupos (atualizados)`;
+        toast.success(mensagem);
       }
       
       return gruposArray;

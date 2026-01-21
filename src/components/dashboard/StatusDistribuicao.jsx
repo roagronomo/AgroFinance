@@ -127,49 +127,49 @@ export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [
   };
 
   return (
-    <Card className="border-0 shadow-sm bg-white overflow-hidden h-full">
-      <div className="px-5 py-4 border-b border-gray-100">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-lg bg-violet-50">
+    <Card className="border-0 shadow-sm bg-white overflow-hidden">
+      <div className="px-4 py-3 border-b border-gray-100">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-violet-50">
             <BarChart3 className="w-4 h-4 text-violet-600" />
           </div>
-          <h2 className="text-base font-semibold text-gray-800">Crescimento</h2>
+          <h2 className="text-sm font-semibold text-gray-800">Crescimento</h2>
         </div>
       </div>
 
-      <CardContent className="p-5">
+      <CardContent className="p-4">
         {isLoading ? (
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-12 w-full rounded-lg" />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-10 w-full rounded-lg" />
             </div>
-            <div className="space-y-3">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-12 w-full rounded-lg" />
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-10 w-full rounded-lg" />
             </div>
           </div>
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-4">
             {/* Comparação Anual */}
             <div>
-              <div className="flex items-center gap-1.5 mb-3">
-                <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <div className="flex items-center gap-1 mb-2">
+                <Calendar className="w-3 h-3 text-gray-400" />
+                <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">
                   Comparação Anual
                 </span>
               </div>
               
-              <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-100">
-                <div className="flex items-center justify-between mb-3">
+              <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg p-3 border border-gray-100">
+                <div className="flex items-center justify-between mb-2">
                   <div className="flex flex-col">
-                    <span className="text-base font-bold text-gray-800">{formatarMoeda(totalAnoAtual)}</span>
-                    <span className="text-xs text-gray-400">em {anoAtual}</span>
+                    <span className="text-sm font-bold text-gray-800">{formatarMoeda(totalAnoAtual)}</span>
+                    <span className="text-[10px] text-gray-400">em {anoAtual}</span>
                   </div>
                   {renderIndicador(diferencaAnual, percentualAnual)}
                 </div>
                 
-                <div className="flex items-center gap-3 text-xs">
+                <div className="flex items-center gap-2 text-[10px]">
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-emerald-500" />
                     <span className="text-gray-600">{anoAtual}: <strong>{formatarMoeda(totalAnoAtual)}</strong></span>
@@ -189,23 +189,23 @@ export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [
 
             {/* Comparação Mensal */}
             <div>
-              <div className="flex items-center gap-1.5 mb-3">
-                <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <div className="flex items-center gap-1 mb-2">
+                <Calendar className="w-3 h-3 text-gray-400" />
+                <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wide">
                   {mesNome}/{anoAnterior} vs {mesNome}/{anoAtual}
                 </span>
               </div>
               
-              <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-100">
-                <div className="flex items-center justify-between mb-3">
+              <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg p-3 border border-emerald-100">
+                <div className="flex items-center justify-between mb-2">
                   <div className="flex flex-col">
-                    <span className="text-base font-bold text-gray-800">{formatarMoeda(totalMesAnoAtual)}</span>
-                    <span className="text-xs text-gray-500">em {mesNome}/{anoAtual}</span>
+                    <span className="text-sm font-bold text-gray-800">{formatarMoeda(totalMesAnoAtual)}</span>
+                    <span className="text-[10px] text-gray-500">em {mesNome}/{anoAtual}</span>
                   </div>
                   {renderIndicador(diferencaMensal, percentualMensal)}
                 </div>
                 
-                <div className="flex items-center gap-3 text-xs">
+                <div className="flex items-center gap-2 text-[10px]">
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-emerald-500" />
                     <span className="text-gray-600">{mesNome}/{anoAtual}: <strong>{formatarMoeda(totalMesAnoAtual)}</strong></span>
@@ -224,17 +224,15 @@ export default function StatusDistribuicao({ stats, isLoading, todosProjetos = [
             </div>
 
             {/* Total geral */}
-            <div className="pt-3 mt-2 border-t border-gray-100">
-              <div className="flex items-center justify-center gap-2">
-                <div className="text-center">
-                  <p className="text-sm text-gray-600">
-                    {formatarMoeda(
-                      todosProjetos.filter(p => p.status !== 'cancelado').reduce((sum, p) => sum + (p.valor_financiado || 0), 0) +
-                      outrosServicos.filter(s => s.status !== 'cancelado').reduce((sum, s) => sum + (s.valor_receber || 0), 0)
-                    )}
-                  </p>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-wide">Total Geral</p>
-                </div>
+            <div className="pt-2 mt-1 border-t border-gray-100">
+              <div className="text-center">
+                <p className="text-xs font-semibold text-gray-700">
+                  {formatarMoeda(
+                    todosProjetos.filter(p => p.status !== 'cancelado').reduce((sum, p) => sum + (p.valor_financiado || 0), 0) +
+                    outrosServicos.filter(s => s.status !== 'cancelado').reduce((sum, s) => sum + (s.valor_receber || 0), 0)
+                  )}
+                </p>
+                <p className="text-[9px] text-gray-400 uppercase tracking-wide">Total Geral</p>
               </div>
             </div>
           </div>

@@ -505,25 +505,23 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
       <CardContent className="p-8">
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Cadastro Simplificado */}
-          {!cliente && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="cadastro_simplificado"
-                  checked={cadastroSimplificado}
-                  onChange={(e) => setCadastroSimplificado(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <Label htmlFor="cadastro_simplificado" className="cursor-pointer font-medium text-blue-900">
-                  📝 Cadastro Simplificado (apenas nome obrigatório)
-                </Label>
-              </div>
-              <p className="text-xs text-blue-700 mt-2 ml-6">
-                Marque esta opção para cadastrar apenas o nome do cliente. Os demais campos serão opcionais.
-              </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="cadastro_simplificado"
+                checked={cadastroSimplificado}
+                onChange={(e) => setCadastroSimplificado(e.target.checked)}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <Label htmlFor="cadastro_simplificado" className="cursor-pointer font-medium text-blue-900">
+                📝 Cadastro Simplificado (apenas nome obrigatório)
+              </Label>
             </div>
-          )}
+            <p className="text-xs text-blue-700 mt-2 ml-6">
+              Marque esta opção para cadastrar apenas o nome do cliente. Os demais campos serão opcionais.
+            </p>
+          </div>
 
           {/* Dados Pessoais */}
           <div>

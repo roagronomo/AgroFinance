@@ -188,7 +188,37 @@ export default function DespesasLembretes() {
 
   const handleVerGruposWhatsApp = async () => {
     setShowGruposWhatsApp(true);
-    await carregarGruposWhatsApp();
+    setCarregandoGrupos(true);
+    
+    try {
+      // 1. Limpar todos os grupos do banco
+      const todosGrupos = await base44.entities.GrupoWhatsApp.list();
+      for (const grupo of todosGrupos) {
+        await base44.entities.GrupoWhatsApp.delete(grupo.id);
+      }
+      
+      // 2. Limpar estado local
+      setGruposWhatsApp([]);
+      setGruposDisponiveis([]);
+      
+      // 3. Buscar apenas grupos atuais da API
+      const response = await base44.functions.invoke('buscarGruposWhatsApp', {});
+      
+      if (!response.error && response.grupos && response.grupos.length > 0) {
+        setGruposWhatsApp(response.grupos);
+        setGruposDisponiveis(response.grupos);
+        toast.success(`${response.grupos.length} grupos atualizados`);
+      } else if (response.aviso) {
+        toast.info(response.aviso);
+      } else {
+        toast.warning('Nenhum grupo encontrado');
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar grupos:', error);
+      toast.error('Erro ao buscar grupos da API');
+    } finally {
+      setCarregandoGrupos(false);
+    }
   };
 
   // Carregar grupos automaticamente ao abrir o formulário (com cache)

@@ -619,18 +619,18 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
           </div>
 
           {/* Lembrete de Aniversário */}
-          <div className="border-l-4 border-purple-300 pl-4 bg-purple-50 p-4 rounded-r-lg">
-            <h3 className="text-sm font-semibold text-purple-900 mb-3">
+          <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+            <h3 className="text-sm font-semibold text-gray-800 mb-3">
               🎂 Lembrete de Aniversário
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="enviar_lembrete_aniversario"
                   checked={formData.enviar_lembrete_aniversario || false}
                   onChange={(e) => handleInputChange('enviar_lembrete_aniversario', e.target.checked)}
-                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
                 />
                 <Label htmlFor="enviar_lembrete_aniversario" className="cursor-pointer text-sm text-gray-700">
                   Enviar lembrete de aniversário
@@ -638,45 +638,50 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
               </div>
               
               {formData.enviar_lembrete_aniversario && (
-                <div className="space-y-3 mt-3 pt-3 border-t border-purple-200">
+                <div className="space-y-4 mt-4">
                   {/* Data de Nascimento */}
-                  <div>
-                    <Label htmlFor="data_nascimento" className="text-xs text-gray-600">Data de Nascimento</Label>
+                  <div className="bg-white rounded-lg p-3 border border-gray-200">
+                    <Label htmlFor="data_nascimento" className="text-xs text-gray-700 font-medium">Data de Nascimento</Label>
                     <Input
                       id="data_nascimento"
                       type="date"
                       value={formData.data_nascimento || ""}
                       onChange={(e) => handleInputChange('data_nascimento', e.target.value)}
-                      className="h-9 text-sm max-w-xs"
+                      className="h-9 text-sm max-w-xs mt-1"
                     />
                   </div>
 
                   {/* Seção 1: Lembrete para o Escritório */}
-                  <div className="border-2 border-blue-300 rounded-lg p-3 bg-blue-50">
-                    <h4 className="text-xs font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                      🔔 Aviso para o Escritório
-                      <span className="text-xs font-normal text-blue-700">(recebe o lembrete no dia)</span>
-                    </h4>
+                  <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500 shadow-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm">🔔</span>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-800">Aviso para o Escritório</h4>
+                        <p className="text-xs text-gray-500">Lembrete enviado às 7h da manhã</p>
+                      </div>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <Label className="text-xs text-blue-800">Grupo WhatsApp</Label>
+                          <Label className="text-xs text-gray-700 font-medium">Grupo WhatsApp</Label>
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
                             onClick={carregarGrupos}
                             disabled={carregandoGrupos}
-                            className="h-6 text-xs text-blue-700 hover:bg-blue-100"
+                            className="h-6 text-xs"
                           >
-                            {carregandoGrupos ? "🔄 Atualizando..." : "🔄 Atualizar"}
+                            {carregandoGrupos ? "🔄" : "🔄 Atualizar"}
                           </Button>
                         </div>
                         <Select
                           value={formData.aniversario_grupo_whatsapp_id || ""}
                           onValueChange={(value) => handleInputChange('aniversario_grupo_whatsapp_id', value === "" ? "" : value)}
                         >
-                          <SelectTrigger className="h-9 text-sm bg-white">
+                          <SelectTrigger className="h-9 text-sm">
                             <SelectValue placeholder="Opcional" />
                           </SelectTrigger>
                           <SelectContent>
@@ -691,119 +696,119 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
                       </div>
                       
                       <div>
-                        <Label className="text-xs text-blue-800">Telefone/WhatsApp</Label>
+                        <Label className="text-xs text-gray-700 font-medium">Telefone/WhatsApp</Label>
                         <Input
                           type="tel"
                           value={formatCelular(formData.aniversario_telefone_contato || "")}
                           onChange={(e) => handleInputChange('aniversario_telefone_contato', e.target.value)}
                           placeholder="(00) 00000-0000"
                           maxLength={15}
-                          className="h-9 text-sm bg-white"
+                          className="h-9 text-sm"
                         />
                       </div>
                     </div>
                   </div>
 
                   {/* Seção 2: Envio do Cartão para o Cliente */}
-                  <div className="border-2 border-pink-300 rounded-lg p-3 bg-pink-50">
-                    <h4 className="text-xs font-semibold text-pink-900 mb-3 flex items-center gap-2">
-                      🎂 Envio do Cartão para o Cliente
-                      <span className="text-xs font-normal text-pink-700">(recebe o cartão no dia)</span>
-                    </h4>
-                    <div>
-                      <Label className="text-xs text-pink-800">WhatsApp do Cliente</Label>
-                      <Input
-                        type="tel"
-                        value={formatCelular(formData.whatsapp_cliente || "")}
-                        onChange={(e) => handleInputChange('whatsapp_cliente', e.target.value)}
-                        placeholder="(00) 00000-0000"
-                        maxLength={15}
-                        className="h-9 text-sm bg-white"
-                      />
-                      <p className="text-xs text-pink-700 mt-1">
-                        📱 Número para enviar o cartão de aniversário diretamente ao cliente
-                      </p>
+                  <div className="bg-white rounded-lg p-4 border-l-4 border-green-500 shadow-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm">🎁</span>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-800">Envio do Cartão para o Cliente</h4>
+                        <p className="text-xs text-gray-500">Apenas a imagem do cartão, sem texto adicional</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-xs text-gray-700 font-medium">WhatsApp do Cliente</Label>
+                        <Input
+                          type="tel"
+                          value={formatCelular(formData.whatsapp_cliente || "")}
+                          onChange={(e) => handleInputChange('whatsapp_cliente', e.target.value)}
+                          placeholder="(00) 00000-0000"
+                          maxLength={15}
+                          className="h-9 text-sm"
+                        />
+                      </div>
+
+                      {/* Cartão de Aniversário */}
+                      <div className="pt-3 border-t border-gray-200">
+                        <Label className="text-xs text-gray-700 font-medium mb-2 block">Cartão de Aniversário</Label>
+                        {formData.cartao_aniversario_url ? (
+                          <div className="flex items-start gap-3">
+                            <div className="w-24 h-24 border-2 border-gray-200 rounded-lg overflow-hidden bg-white flex items-center justify-center">
+                              <img
+                                src={formData.cartao_aniversario_url}
+                                alt="Cartão"
+                                className="max-w-full max-h-full object-contain"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-xs text-gray-600 mb-2">{formData.cartao_aniversario_nome}</p>
+                              <div className="flex gap-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => window.open(formData.cartao_aniversario_url, '_blank')}
+                                  className="h-8 text-xs"
+                                >
+                                  <ImageIcon className="w-3 h-3 mr-1" />
+                                  Ver
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={handleRemoverCartao}
+                                  className="text-red-600 h-8 text-xs"
+                                >
+                                  <Trash2 className="w-3 h-3 mr-1" />
+                                  Remover
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setShowConfirmDialog(true)}
+                                  disabled={!formData.whatsapp_cliente}
+                                  className="text-green-600 h-8 text-xs"
+                                >
+                                  <Send className="w-3 h-3 mr-1" />
+                                  Testar
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 hover:bg-gray-50 transition-colors">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleCartaoUpload}
+                              className="hidden"
+                              disabled={uploadingCartao}
+                            />
+                            {uploadingCartao ? (
+                              <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
+                            ) : (
+                              <>
+                                <Upload className="w-6 h-6 text-gray-400 mb-1" />
+                                <span className="text-xs text-gray-500 text-center px-2">
+                                  Enviar cartão
+                                </span>
+                              </>
+                            )}
+                          </label>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
-              
-              {formData.enviar_lembrete_aniversario && (
-                <div className="mt-3 pt-3 border-t border-purple-200">
-                  <Label className="text-xs text-gray-600 mb-2 block">Cartão de Aniversário (imagem)</Label>
-                  {formData.cartao_aniversario_url ? (
-                    <div className="flex items-start gap-3">
-                      <div className="w-24 h-24 border-2 border-purple-300 rounded-lg overflow-hidden bg-white flex items-center justify-center">
-                        <img
-                          src={formData.cartao_aniversario_url}
-                          alt="Cartão"
-                          className="max-w-full max-h-full object-contain"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-xs text-gray-600 mb-2">{formData.cartao_aniversario_nome}</p>
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => window.open(formData.cartao_aniversario_url, '_blank')}
-                            className="text-purple-600 h-8 text-xs"
-                          >
-                            <ImageIcon className="w-3 h-3 mr-1" />
-                            Ver
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={handleRemoverCartao}
-                            className="text-red-600 h-8 text-xs"
-                          >
-                            <Trash2 className="w-3 h-3 mr-1" />
-                            Remover
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setShowConfirmDialog(true)}
-                            disabled={!formData.whatsapp_cliente}
-                            className="text-blue-600 h-8 text-xs"
-                          >
-                            <Send className="w-3 h-3 mr-1" />
-                            Testar Cartão
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <label className="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-purple-300 rounded-lg cursor-pointer hover:border-purple-500 hover:bg-purple-50 transition-colors">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleCartaoUpload}
-                        className="hidden"
-                        disabled={uploadingCartao}
-                      />
-                      {uploadingCartao ? (
-                        <Loader2 className="w-6 h-6 text-purple-600 animate-spin" />
-                      ) : (
-                        <>
-                          <Upload className="w-6 h-6 text-purple-600 mb-1" />
-                          <span className="text-xs text-gray-500 text-center px-2">
-                            Enviar cartão
-                          </span>
-                        </>
-                      )}
-                    </label>
-                  )}
-                </div>
-              )}
-              
-              <p className="text-xs text-gray-500 mt-2">
-                ℹ️ Lembretes são enviados às 7h da manhã no dia do aniversário
-              </p>
             </div>
           </div>
 

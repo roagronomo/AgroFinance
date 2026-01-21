@@ -639,76 +639,91 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
               
               {formData.enviar_lembrete_aniversario && (
                 <div className="space-y-3 mt-3 pt-3 border-t border-purple-200">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                      <Label htmlFor="data_nascimento" className="text-xs text-gray-600">Data de Nascimento</Label>
-                      <Input
-                        id="data_nascimento"
-                        type="date"
-                        value={formData.data_nascimento || ""}
-                        onChange={(e) => handleInputChange('data_nascimento', e.target.value)}
-                        className="h-9 text-sm"
-                      />
-                    </div>
-                    
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <Label className="text-xs text-gray-600">Grupo WhatsApp (para você)</Label>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={carregarGrupos}
-                          disabled={carregandoGrupos}
-                          className="h-6 text-xs"
+                  {/* Data de Nascimento */}
+                  <div>
+                    <Label htmlFor="data_nascimento" className="text-xs text-gray-600">Data de Nascimento</Label>
+                    <Input
+                      id="data_nascimento"
+                      type="date"
+                      value={formData.data_nascimento || ""}
+                      onChange={(e) => handleInputChange('data_nascimento', e.target.value)}
+                      className="h-9 text-sm max-w-xs"
+                    />
+                  </div>
+
+                  {/* Seção 1: Lembrete para o Escritório */}
+                  <div className="border-2 border-blue-300 rounded-lg p-3 bg-blue-50">
+                    <h4 className="text-xs font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                      🔔 Aviso para o Escritório
+                      <span className="text-xs font-normal text-blue-700">(recebe o lembrete no dia)</span>
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <Label className="text-xs text-blue-800">Grupo WhatsApp</Label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={carregarGrupos}
+                            disabled={carregandoGrupos}
+                            className="h-6 text-xs text-blue-700 hover:bg-blue-100"
+                          >
+                            {carregandoGrupos ? "🔄 Atualizando..." : "🔄 Atualizar"}
+                          </Button>
+                        </div>
+                        <Select
+                          value={formData.aniversario_grupo_whatsapp_id || ""}
+                          onValueChange={(value) => handleInputChange('aniversario_grupo_whatsapp_id', value === "" ? "" : value)}
                         >
-                          {carregandoGrupos ? "🔄 Atualizando..." : "🔄 Atualizar"}
-                        </Button>
+                          <SelectTrigger className="h-9 text-sm bg-white">
+                            <SelectValue placeholder="Opcional" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={null}>🔹 Número Individual</SelectItem>
+                            {gruposDisponiveis.map((grupo) => (
+                              <SelectItem key={grupo.id} value={grupo.id}>
+                                👥 {grupo.subject}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
-                      <Select
-                        value={formData.aniversario_grupo_whatsapp_id || ""}
-                        onValueChange={(value) => handleInputChange('aniversario_grupo_whatsapp_id', value === "" ? "" : value)}
-                      >
-                        <SelectTrigger className="h-9 text-sm">
-                          <SelectValue placeholder="Opcional" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={null}>🔹 Número Individual</SelectItem>
-                          {gruposDisponiveis.map((grupo) => (
-                            <SelectItem key={grupo.id} value={grupo.id}>
-                              👥 {grupo.subject}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <Label className="text-xs text-gray-600">Telefone/WhatsApp (para você)</Label>
-                      <Input
-                        type="tel"
-                        value={formatCelular(formData.aniversario_telefone_contato || "")}
-                        onChange={(e) => handleInputChange('aniversario_telefone_contato', e.target.value)}
-                        placeholder="(00) 00000-0000"
-                        maxLength={15}
-                        className="h-9 text-sm"
-                      />
+                      
+                      <div>
+                        <Label className="text-xs text-blue-800">Telefone/WhatsApp</Label>
+                        <Input
+                          type="tel"
+                          value={formatCelular(formData.aniversario_telefone_contato || "")}
+                          onChange={(e) => handleInputChange('aniversario_telefone_contato', e.target.value)}
+                          placeholder="(00) 00000-0000"
+                          maxLength={15}
+                          className="h-9 text-sm bg-white"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-purple-200">
-                    <Label className="text-xs text-gray-600">WhatsApp do Cliente (para enviar o cartão)</Label>
-                    <Input
-                      type="tel"
-                      value={formatCelular(formData.whatsapp_cliente || "")}
-                      onChange={(e) => handleInputChange('whatsapp_cliente', e.target.value)}
-                      placeholder="(00) 00000-0000"
-                      maxLength={15}
-                      className="h-9 text-sm"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      📱 Número para enviar o cartão diretamente ao cliente
-                    </p>
+                  {/* Seção 2: Envio do Cartão para o Cliente */}
+                  <div className="border-2 border-pink-300 rounded-lg p-3 bg-pink-50">
+                    <h4 className="text-xs font-semibold text-pink-900 mb-3 flex items-center gap-2">
+                      🎂 Envio do Cartão para o Cliente
+                      <span className="text-xs font-normal text-pink-700">(recebe o cartão no dia)</span>
+                    </h4>
+                    <div>
+                      <Label className="text-xs text-pink-800">WhatsApp do Cliente</Label>
+                      <Input
+                        type="tel"
+                        value={formatCelular(formData.whatsapp_cliente || "")}
+                        onChange={(e) => handleInputChange('whatsapp_cliente', e.target.value)}
+                        placeholder="(00) 00000-0000"
+                        maxLength={15}
+                        className="h-9 text-sm bg-white"
+                      />
+                      <p className="text-xs text-pink-700 mt-1">
+                        📱 Número para enviar o cartão de aniversário diretamente ao cliente
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}

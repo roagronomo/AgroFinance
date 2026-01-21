@@ -104,7 +104,7 @@ const navigationSections = [
     icon: Wallet,
     items: [
       {
-        title: "Dashboard",
+        title: "Painel",
         url: createPageUrl("Dashboard"),
         icon: LayoutDashboard,
       },

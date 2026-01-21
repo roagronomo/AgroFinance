@@ -94,7 +94,7 @@ export default function Dashboard() {
       const mesAtual = new Date().getMonth() + 1;
       
       const aniversariantesMes = clientes
-        .filter(c => c.data_nascimento)
+        .filter(c => c.data_nascimento && c.enviar_lembrete_aniversario === true)
         .map(c => {
           const dataNasc = new Date(c.data_nascimento + 'T00:00:00');
           return {
@@ -110,6 +110,7 @@ export default function Dashboard() {
       setAniversariantes(aniversariantesMes);
     } catch (error) {
       console.error("Erro ao carregar aniversariantes:", error);
+      setAniversariantes([]);
     }
   };
 

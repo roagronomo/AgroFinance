@@ -144,26 +144,13 @@ export default function DespesasLembretes() {
   const carregarGruposWhatsApp = async () => {
     setCarregandoGrupos(true);
     try {
-      const EVOLUTION_API_URL = "https://evolution-api-production-4689.up.railway.app";
-      const EVOLUTION_INSTANCE_NAME = "agrofinance-whatsapp";
-      const EVOLUTION_API_KEY = "B6D711FCDE4D4FD5936544120E713976";
+      const response = await base44.functions.invoke('buscarGruposWhatsApp', {});
 
-      const response = await fetch(
-        `${EVOLUTION_API_URL}/group/fetchAllGroups/${EVOLUTION_INSTANCE_NAME}?getParticipants=false`,
-        {
-          method: 'GET',
-          headers: {
-            'apikey': EVOLUTION_API_KEY
-          }
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Erro HTTP: ${response.status}`);
+      if (response.error) {
+        throw new Error(response.error);
       }
 
-      const grupos = await response.json();
-      const gruposArray = Array.isArray(grupos) ? grupos : [];
+      const gruposArray = response.grupos || [];
       setGruposWhatsApp(gruposArray);
       setGruposDisponiveis(gruposArray);
       return gruposArray;

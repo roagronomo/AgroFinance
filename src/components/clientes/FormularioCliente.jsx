@@ -211,26 +211,20 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
   const carregarGrupos = async () => {
     setCarregandoGrupos(true);
     try {
-      const EVOLUTION_API_URL = "https://evolution-api-production-4689.up.railway.app";
-      const EVOLUTION_INSTANCE_NAME = "agrofinance-whatsapp";
-      const EVOLUTION_API_KEY = "B6D711FCDE4D4FD5936544120E713976";
+      const response = await base44.functions.invoke('buscarGruposWhatsApp', {});
       
-      const response = await fetch(
-        `${EVOLUTION_API_URL}/group/fetchAllGroups/${EVOLUTION_INSTANCE_NAME}?getParticipants=false`,
-        {
-          method: 'GET',
-          headers: {
-            'apikey': EVOLUTION_API_KEY
-          }
-        }
-      );
-      
-      if (response.ok) {
-        const grupos = await response.json();
-        setGruposDisponiveis(Array.isArray(grupos) ? grupos : []);
+      if (response.error) {
+        console.error("Erro ao buscar grupos:", response.error);
+        toast.error("Erro ao buscar grupos do WhatsApp");
+        setGruposDisponiveis([]);
+      } else {
+        const gruposArray = response.grupos || [];
+        setGruposDisponiveis(gruposArray);
       }
     } catch (error) {
       console.error("Erro ao carregar grupos:", error);
+      toast.error("Erro ao buscar grupos do WhatsApp");
+      setGruposDisponiveis([]);
     } finally {
       setCarregandoGrupos(false);
     }

@@ -146,22 +146,26 @@ export default function DespesasLembretes() {
     setCarregandoGrupos(true);
     try {
       if (forcar) {
-        // Forçar atualização: limpar banco e buscar da API
-        const todosGrupos = await base44.entities.GrupoWhatsApp.list();
-        for (const grupo of todosGrupos) {
-          await base44.entities.GrupoWhatsApp.delete(grupo.id);
-        }
-        
+        // Buscar da API primeiro
         const response = await base44.functions.invoke('buscarGruposWhatsApp', {});
         
         if (!response.error && response.grupos && response.grupos.length > 0) {
+          // Só limpar o banco depois de confirmar que a API funcionou
+          const todosGrupos = await base44.entities.GrupoWhatsApp.list();
+          for (const grupo of todosGrupos) {
+            await base44.entities.GrupoWhatsApp.delete(grupo.id);
+          }
+          
           setGruposWhatsApp(response.grupos);
           setGruposDisponiveis(response.grupos);
           toast.success(`${response.grupos.length} grupos atualizados`);
         } else {
-          setGruposWhatsApp([]);
-          setGruposDisponiveis([]);
-          toast.warning('Nenhum grupo encontrado');
+          // Se API falhar, manter grupos do banco
+          const gruposBD = await base44.entities.GrupoWhatsApp.list('-ultima_atualizacao');
+          const gruposFormatados = gruposBD.map(g => ({ id: g.grupo_id, subject: g.nome }));
+          setGruposWhatsApp(gruposFormatados);
+          setGruposDisponiveis(gruposFormatados);
+          toast.warning('API indisponível. Usando grupos salvos.');
         }
       } else {
         // Carregar do banco normalmente
@@ -183,31 +187,47 @@ export default function DespesasLembretes() {
     setCarregandoGrupos(true);
     
     try {
-      // 1. Limpar todos os grupos do banco
-      const todosGrupos = await base44.entities.GrupoWhatsApp.list();
-      for (const grupo of todosGrupos) {
-        await base44.entities.GrupoWhatsApp.delete(grupo.id);
-      }
-      
-      // 2. Limpar estado local
-      setGruposWhatsApp([]);
-      setGruposDisponiveis([]);
-      
-      // 3. Buscar apenas grupos atuais da API
+      // 1. Buscar grupos da API primeiro
       const response = await base44.functions.invoke('buscarGruposWhatsApp', {});
       
       if (!response.error && response.grupos && response.grupos.length > 0) {
+        // 2. Só limpar o banco DEPOIS de confirmar que a API retornou grupos
+        const todosGrupos = await base44.entities.GrupoWhatsApp.list();
+        for (const grupo of todosGrupos) {
+          await base44.entities.GrupoWhatsApp.delete(grupo.id);
+        }
+        
+        // 3. Atualizar interface com novos grupos (que já foram salvos pela API)
         setGruposWhatsApp(response.grupos);
         setGruposDisponiveis(response.grupos);
         toast.success(`${response.grupos.length} grupos atualizados`);
-      } else if (response.aviso) {
-        toast.info(response.aviso);
       } else {
-        toast.warning('Nenhum grupo encontrado');
+        // Se API falhar, manter grupos do banco
+        const gruposBD = await base44.entities.GrupoWhatsApp.list('-ultima_atualizacao');
+        const gruposFormatados = gruposBD.map(g => ({ id: g.grupo_id, subject: g.nome }));
+        setGruposWhatsApp(gruposFormatados);
+        setGruposDisponiveis(gruposFormatados);
+        
+        if (response.aviso) {
+          toast.info(response.aviso);
+        } else {
+          toast.warning('API indisponível. Usando grupos salvos.');
+        }
       }
     } catch (error) {
       console.error('Erro ao atualizar grupos:', error);
-      toast.error('Erro ao buscar grupos da API');
+      // Em caso de erro, tentar carregar do banco
+      try {
+        const gruposBD = await base44.entities.GrupoWhatsApp.list('-ultima_atualizacao');
+        const gruposFormatados = gruposBD.map(g => ({ id: g.grupo_id, subject: g.nome }));
+        setGruposWhatsApp(gruposFormatados);
+        setGruposDisponiveis(gruposFormatados);
+        toast.error('Erro ao buscar API. Usando grupos salvos.');
+      } catch {
+        setGruposWhatsApp([]);
+        setGruposDisponiveis([]);
+        toast.error('Erro ao carregar grupos');
+      }
     } finally {
       setCarregandoGrupos(false);
     }

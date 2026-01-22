@@ -97,7 +97,33 @@ export default function DespesasLembretes() {
   useEffect(() => {
     carregarDados();
     carregarChavesPix();
+    moverLembretesVencidosAutomaticamente();
   }, []);
+
+  const moverLembretesVencidosAutomaticamente = async () => {
+    try {
+      const dataHoje = new Date().toISOString().split('T')[0];
+      const lembretesVencidos = lembretes.filter(l => 
+        l.ativo && 
+        !l.concluido && 
+        l.data_evento < dataHoje
+      );
+
+      for (const lembrete of lembretesVencidos) {
+        await base44.entities.Lembrete.update(lembrete.id, {
+          concluido: true,
+          ativo: false,
+          data_conclusao: new Date().toISOString()
+        });
+      }
+
+      if (lembretesVencidos.length > 0) {
+        await carregarDados();
+      }
+    } catch (error) {
+      console.error("Erro ao mover lembretes vencidos:", error);
+    }
+  };
 
   const carregarChavesPix = async () => {
     try {
@@ -263,6 +289,27 @@ export default function DespesasLembretes() {
       ]);
       setContas(contasData || []);
       setLembretes(lembretesData || []);
+
+      // Mover automaticamente lembretes vencidos
+      const dataHoje = new Date().toISOString().split('T')[0];
+      const lembretesVencidos = (lembretesData || []).filter(l => 
+        l.ativo && 
+        !l.concluido && 
+        l.data_evento < dataHoje
+      );
+
+      if (lembretesVencidos.length > 0) {
+        for (const lembrete of lembretesVencidos) {
+          await base44.entities.Lembrete.update(lembrete.id, {
+            concluido: true,
+            ativo: false,
+            data_conclusao: new Date().toISOString()
+          });
+        }
+        // Recarregar dados após mover
+        const lembretesAtualizados = await base44.entities.Lembrete.list("data_evento");
+        setLembretes(lembretesAtualizados || []);
+      }
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
       toast.error("Erro ao carregar dados");

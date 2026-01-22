@@ -1148,7 +1148,7 @@ ${valor}`
                         required
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        Aviso X dias antes (11h) + no dia do vencimento
+                        Aviso X dias antes (11h) + no dia do vencimento (06:30h)
                       </p>
                     </div>
 

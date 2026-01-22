@@ -930,7 +930,8 @@ ${valor}`
 
   const contasAtivas = contas.filter(c => !c.pago && c.ativo !== false);
   const contasPagas = contas.filter(c => c.pago);
-  const lembretesAtivos = lembretes.filter(l => l.ativo !== false);
+  const lembretesAtivos = lembretes.filter(l => l.ativo !== false && !l.concluido);
+  const lembretesConcluidos = lembretes.filter(l => l.concluido);
 
   // Agrupar contas pagas por descrição
   const contasPagasAgrupadas = contasPagas.reduce((grupos, conta) => {
@@ -1605,6 +1606,7 @@ ${valor}`
             <TabsTrigger value="contas">Contas a Pagar ({contasAtivas.length})</TabsTrigger>
             <TabsTrigger value="lembretes">Lembretes ({lembretesAtivos.length})</TabsTrigger>
             <TabsTrigger value="pagas">Pagas ({contasPagas.length})</TabsTrigger>
+            <TabsTrigger value="lembretes-concluidos">Lembretes Concluídos ({lembretes.filter(l => l.concluido).length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="contas" className="space-y-4 mt-4">
@@ -1888,10 +1890,76 @@ ${valor}`
               ))
             )}
           </TabsContent>
-        </Tabs>
-      )}
 
-      {/* Dialog Marcar como Pago */}
+          <TabsContent value="lembretes-concluidos" className="space-y-4 mt-4">
+            {lembretesConcluidos.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center text-gray-500">
+                  <Bell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p>Nenhum lembrete concluído</p>
+                </CardContent>
+              </Card>
+            ) : (
+              lembretesConcluidos.map((lembrete) => {
+                const diasRestantes = calcularDiasRestantes(lembrete.data_evento);
+                return (
+                  <Card key={lembrete.id} className="hover:shadow-md transition-shadow bg-gray-50">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-semibold text-gray-500 line-through">{lembrete.descricao}</h3>
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-600">
+                              Concluído
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+                              {format(new Date(lembrete.data_evento + 'T00:00:00'), 'dd/MM/yyyy')}
+                            </span>
+                            {lembrete.hora_evento && (
+                              <span className="flex items-center gap-1">
+                                ⏰ {lembrete.hora_evento}
+                              </span>
+                            )}
+                            {lembrete.valor && (
+                              <span className="font-semibold text-gray-600">
+                                💰 R$ {lembrete.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </span>
+                            )}
+                          </div>
+                          {lembrete.observacoes && (
+                            <p className="text-sm text-gray-400 mt-2">{lembrete.observacoes}</p>
+                          )}
+                          {lembrete.data_conclusao && (
+                            <p className="text-xs text-gray-400 mt-2">
+                              Concluído em: {format(new Date(lembrete.data_conclusao), 'dd/MM/yyyy HH:mm')}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => setDialogExcluir({ id: lembrete.id, tipo: 'lembrete' })} 
+                            className="text-red-600"
+                            title="Excluir"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </TabsContent>
+          </Tabs>
+          )}
+
+          {/* Dialog Marcar como Pago */}
       <AlertDialog open={!!dialogMarcarPago} onOpenChange={(open) => !open && setDialogMarcarPago(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

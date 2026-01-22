@@ -1447,7 +1447,7 @@ ${valor}`
                         className="h-9"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        Aviso X dias antes (11h) + no dia + 10min antes (se tiver hora)
+                        Aviso X dias antes (09h) + 10min antes do horário do evento
                       </p>
                     </div>
 

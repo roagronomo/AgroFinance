@@ -1210,9 +1210,10 @@ ${valor}`
                         value={formDataConta.dias_antes_avisar}
                         onChange={(e) => setFormDataConta({...formDataConta, dias_antes_avisar: e.target.value})}
                         required
+                        className="w-20"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        Aviso X dias antes (11h) + no dia do vencimento (06:30h)
+                        Avisos enviados às 6:30h da manhã (X dias antes + no dia do vencimento)
                       </p>
                     </div>
 
@@ -1508,7 +1509,7 @@ ${valor}`
                         value={formDataLembrete.dias_antes_avisar}
                         onChange={(e) => setFormDataLembrete({...formDataLembrete, dias_antes_avisar: e.target.value})}
                         required
-                        className="h-9"
+                        className="h-9 w-20"
                       />
                       <p className="text-xs text-gray-500 mt-1">
                         Aviso X dias antes (09h) + 10min antes do horário do evento

@@ -76,32 +76,11 @@ export default function AreasFinanciaveis() {
     setMunicipioFiltro("todos");
   };
 
-  // Calcular área financiável (excluindo pastagens)
+  // Calcular área financiável (sempre usar área agricultável)
   const calcularAreaFinanciavel = (imovel) => {
-    const tipo = imovel.tipo_propriedade || "proprio";
-    
-    // Descontar área de pastagens da área agricultável
+    // SEMPRE usar área agricultável do cadastro de imóveis
     const areaAgricultavel = parseFloat(imovel.area_agricultavel) || 0;
-    const areaPastagens = parseFloat(imovel.area_pastagens) || 0;
-    const areaFinanciavelReal = Math.max(0, areaAgricultavel - areaPastagens);
-    
-    if (tipo === "terceiros") {
-      const areaCedida = parseFloat(imovel.area_cedida) || 0;
-      // Aplicar a mesma proporção de desconto de pastagens na área cedida
-      const proporcaoPastagens = areaAgricultavel > 0 ? areaPastagens / areaAgricultavel : 0;
-      return Math.max(0, areaCedida * (1 - proporcaoPastagens));
-    } else if (tipo === "proprio_condominio") {
-      // Se for condomínio, usar área cedida se houver, senão usar agricultável (ambos descontando pastagens)
-      const areaCedida = parseFloat(imovel.area_cedida) || 0;
-      if (areaCedida > 0) {
-        const proporcaoPastagens = areaAgricultavel > 0 ? areaPastagens / areaAgricultavel : 0;
-        return Math.max(0, areaCedida * (1 - proporcaoPastagens));
-      }
-      return areaFinanciavelReal;
-    } else {
-      // Próprio
-      return areaFinanciavelReal;
-    }
+    return areaAgricultavel;
   };
 
   // Calcular área financiada (com filtros de safra e cultura)
@@ -293,7 +272,7 @@ export default function AreasFinanciaveis() {
     // Tabela de imóveis - Desenhada manualmente
     let currentY = 56;
     const colWidths = [26, 40, 18, 24, 22, 22, 19, 21];
-    const headers = ['Município', 'Imóvel', 'Matrícula', 'Venc. Contrato', 'Área Financ.', 'Financiada', 'Saldo', 'Status'];
+    const headers = ['Município', 'Imóvel', 'Matrícula', 'Venc. Contrato', 'Área Financiável', 'Financiada', 'Saldo', 'Status'];
     let startX = 10;
     
     // Cabeçalho da tabela
@@ -721,7 +700,7 @@ export default function AreasFinanciaveis() {
                         <th className="px-4 py-3 text-left font-medium text-gray-700">Imóvel</th>
                         <th className="px-4 py-3 text-left font-medium text-gray-700">Matrícula</th>
                         <th className="px-4 py-3 text-center font-medium text-gray-700">Venc. Contrato</th>
-                        <th className="px-4 py-3 text-right font-medium text-gray-700">Área Financ. (ha)</th>
+                        <th className="px-4 py-3 text-right font-medium text-gray-700">Área Financiável (ha)</th>
                         <th className="px-4 py-3 text-right font-medium text-gray-700">Financiada (ha)</th>
                         <th className="px-4 py-3 text-right font-medium text-gray-700">Saldo (ha)</th>
                         <th className="px-4 py-3 text-center font-medium text-gray-700">Status</th>

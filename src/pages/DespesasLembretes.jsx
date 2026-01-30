@@ -1092,21 +1092,37 @@ ${valor}`
                         type="date"
                         value={formDataConta.data_vencimento}
                         onChange={(e) => {
-                          setFormDataConta({...formDataConta, data_vencimento: e.target.value});
+                          const dataSelecionada = e.target.value;
+
+                          // Verificar se é fim de semana
+                          if (dataSelecionada) {
+                            const data = new Date(dataSelecionada + 'T00:00:00');
+                            const diaSemana = data.getDay();
+
+                            if (diaSemana === 0 || diaSemana === 6) {
+                              toast.error("❌ Vencimento não pode ser em final de semana! Por favor, selecione uma sexta-feira ou dia útil anterior.");
+                              return;
+                            }
+                          }
+
+                          setFormDataConta({...formDataConta, data_vencimento: dataSelecionada});
                           // Recalcular data final se for recorrente
                           if (formDataConta.recorrente && formDataConta.parcelas_total) {
-                            const dataInicial = new Date(e.target.value + 'T00:00:00');
+                            const dataInicial = new Date(dataSelecionada + 'T00:00:00');
                             const dataFinal = new Date(dataInicial);
                             dataFinal.setMonth(dataFinal.getMonth() + parseInt(formDataConta.parcelas_total) - 1);
                             setFormDataConta(prev => ({
                               ...prev,
-                              data_vencimento: e.target.value,
+                              data_vencimento: dataSelecionada,
                               data_vencimento_final: dataFinal.toISOString().split('T')[0]
                             }));
                           }
                         }}
                         required
                       />
+                      <p className="text-xs text-amber-600 mt-1">
+                        ⚠️ Vencimentos em sábado ou domingo não são permitidos
+                      </p>
                     </div>
                   </div>
 

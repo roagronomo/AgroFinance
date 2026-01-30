@@ -59,12 +59,17 @@ Deno.serve(async (req) => {
           // Enviar SOMENTE o cartão para o WhatsApp do cliente (se configurado)
           if (cliente.whatsapp_cliente && cliente.cartao_aniversario_url) {
             try {
-              await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
+              const cartaoResponse = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
                 numero: cliente.whatsapp_cliente,
-                mensagem: '',
-                imagem_url: cliente.cartao_aniversario_url
+                mensagem: '🎉 Feliz Aniversário! 🎂',
+                mediaUrl: cliente.cartao_aniversario_url
               });
-              console.log(`🎂 Cartão enviado para o cliente ${cliente.nome}`);
+              
+              if (cartaoResponse.success) {
+                console.log(`🎂 Cartão enviado para o cliente ${cliente.nome}`);
+              } else {
+                console.warn(`⚠️ Erro ao enviar cartão: ${cartaoResponse.error}`);
+              }
             } catch (imgError) {
               console.warn(`⚠️ Erro ao enviar cartão para o cliente ${cliente.nome}:`, imgError.message);
             }

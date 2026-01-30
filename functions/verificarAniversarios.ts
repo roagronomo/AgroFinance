@@ -56,12 +56,11 @@ Deno.serve(async (req) => {
           enviados++;
           console.log(`✅ Lembrete enviado para ${cliente.nome}`);
           
-          // Enviar SOMENTE o cartão para o WhatsApp do cliente (se configurado)
+          // Enviar SOMENTE o cartão (imagem) para o WhatsApp do cliente (sem mensagem)
           if (cliente.whatsapp_cliente && cliente.cartao_aniversario_url) {
             try {
               const cartaoResponse = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
                 numero: cliente.whatsapp_cliente,
-                mensagem: '🎉 Feliz Aniversário! 🎂',
                 mediaUrl: cliente.cartao_aniversario_url
               });
               

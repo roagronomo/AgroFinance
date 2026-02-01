@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
             try {
               const cartaoResponse = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
                 numero: cliente.whatsapp_cliente,
-                mediaUrl: cliente.cartao_aniversario_url
+                imagem_url: cliente.cartao_aniversario_url
               });
               
               if (cartaoResponse.success) {

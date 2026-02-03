@@ -62,8 +62,16 @@ Deno.serve(async (req) => {
     } else {
       // Para números individuais, formatar normalmente
       const numeroLimpo = numero.replace(/\D/g, '');
-      numeroFormatado = numeroLimpo.length === 11 ? `55${numeroLimpo}` : numeroLimpo;
-      console.log(`📱 Enviando WhatsApp para número: ${numeroFormatado}`);
+      // Se tem 11 dígitos (DDD + 9 dígitos), adicionar 55 na frente
+      // Se já tem mais, usar como está
+      if (numeroLimpo.length === 11) {
+        numeroFormatado = `55${numeroLimpo}`;
+      } else if (numeroLimpo.length === 13 && numeroLimpo.startsWith('55')) {
+        numeroFormatado = numeroLimpo;
+      } else {
+        numeroFormatado = numeroLimpo;
+      }
+      console.log(`📱 Enviando WhatsApp para número: ${numeroFormatado} (original: ${numero})`);
     }
     
     // Se tiver imagem, enviar imagem (com ou sem legenda)

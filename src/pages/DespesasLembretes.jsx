@@ -957,15 +957,29 @@ ${valor}`
   };
 
   const calcularDiasRestantes = (data) => {
-    if (!data) return -999; // Data inválida
+    if (!data) return -999;
     try {
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
       const evento = new Date(data + 'T00:00:00');
       if (isNaN(evento.getTime())) return -999;
+      // Validar ano razoável (entre 2020 e 2100)
+      if (evento.getFullYear() < 2020 || evento.getFullYear() > 2100) return -999;
       return differenceInDays(evento, hoje);
     } catch {
       return -999;
+    }
+  };
+
+  const formatarDataSegura = (data) => {
+    if (!data) return '⚠️ SEM DATA';
+    try {
+      const evento = new Date(data + 'T00:00:00');
+      if (isNaN(evento.getTime())) return '⚠️ DATA INVÁLIDA';
+      if (evento.getFullYear() < 2020 || evento.getFullYear() > 2100) return '⚠️ DATA INVÁLIDA';
+      return format(evento, 'dd/MM/yyyy');
+    } catch {
+      return '⚠️ DATA INVÁLIDA';
     }
   };
 
@@ -1745,7 +1759,7 @@ ${valor}`
                           <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                            <span className="flex items-center gap-1">
                              <CalendarIcon className="w-4 h-4" />
-                             {conta.data_vencimento ? format(new Date(conta.data_vencimento + 'T00:00:00'), 'dd/MM/yyyy') : '⚠️ SEM DATA'}
+                             {formatarDataSegura(conta.data_vencimento)}
                            </span>
                            <span className="font-semibold text-red-600">
                              💰 R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -1931,9 +1945,9 @@ ${valor}`
                                   </span>
                                 </div>
                                 <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                                 <span>📅 Vencimento: {conta.data_vencimento ? format(new Date(conta.data_vencimento + 'T00:00:00'), 'dd/MM/yyyy') : '⚠️ SEM DATA'}</span>
+                                 <span>📅 Vencimento: {formatarDataSegura(conta.data_vencimento)}</span>
                                   {conta.data_pagamento && (
-                                          <span>✅ Pago em: {conta.data_pagamento ? format(new Date(conta.data_pagamento + 'T00:00:00'), 'dd/MM/yyyy') : '⚠️ SEM DATA'}</span>
+                                          <span>✅ Pago em: {formatarDataSegura(conta.data_pagamento)}</span>
                                         )}
                                   <span className="font-semibold text-green-700">💰 R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                                   {conta.fornecedor && <span>🏢 {conta.fornecedor}</span>}
@@ -2045,7 +2059,15 @@ ${valor}`
                           )}
                           {lembrete.data_conclusao && (
                             <p className="text-xs text-gray-400 mt-2">
-                              Concluído em: {lembrete.data_conclusao ? format(new Date(lembrete.data_conclusao), 'dd/MM/yyyy HH:mm') : 'Data não definida'}
+                              Concluído em: {(() => {
+                                try {
+                                  const data = new Date(lembrete.data_conclusao);
+                                  if (isNaN(data.getTime())) return '⚠️ DATA INVÁLIDA';
+                                  return format(data, 'dd/MM/yyyy HH:mm');
+                                } catch {
+                                  return '⚠️ DATA INVÁLIDA';
+                                }
+                              })()}
                             </p>
                           )}
                         </div>

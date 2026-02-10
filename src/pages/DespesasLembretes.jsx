@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Bell, Calendar, DollarSign, FileText, Upload, Check, X, Undo2, Paperclip, Upload as UploadIcon, Download, ChevronDown, ChevronRight, Send, CreditCard, Copy } from "lucide-react";
+import { Plus, Edit, Trash2, Bell, Calendar as CalendarIcon, DollarSign, FileText, Upload, Check, X, Undo2, Paperclip, Upload as UploadIcon, Download, ChevronDown, ChevronRight, Send, CreditCard, Copy } from "lucide-react";
 import { toast, Toaster } from "sonner";
-import { format, differenceInDays } from "date-fns";
+import { format, differenceInDays, isValid, parseISO } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import AutocompleteInput from "../components/common/AutocompleteInput";
 import {
   AlertDialog,
@@ -1098,39 +1100,52 @@ ${valor}`
 
                     <div>
                       <Label>Vencimento *</Label>
-                      <Input
-                        type="date"
-                        value={formDataConta.data_vencimento}
-                        onChange={(e) => {
-                          const dataSelecionada = e.target.value;
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={`w-full justify-start text-left font-normal ${!formDataConta.data_vencimento && "text-muted-foreground"}`}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {formDataConta.data_vencimento ? format(new Date(formDataConta.data_vencimento + 'T00:00:00'), 'dd/MM/yyyy') : "Selecione a data"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={formDataConta.data_vencimento ? new Date(formDataConta.data_vencimento + 'T00:00:00') : undefined}
+                            onSelect={(date) => {
+                              if (!date) return;
+                              
+                              const diaSemana = date.getDay();
+                              if (diaSemana === 0 || diaSemana === 6) {
+                                toast.error("❌ Vencimento não pode ser em final de semana!");
+                                return;
+                              }
 
-                          // Verificar se é fim de semana
-                          if (dataSelecionada) {
-                            const data = new Date(dataSelecionada + 'T00:00:00');
-                            const diaSemana = data.getDay();
-
-                            if (diaSemana === 0 || diaSemana === 6) {
-                              toast.error("❌ Vencimento não pode ser em final de semana! Por favor, selecione uma sexta-feira ou dia útil anterior.");
-                              return;
-                            }
-                          }
-
-                          setFormDataConta({...formDataConta, data_vencimento: dataSelecionada});
-                          // Recalcular data final se for recorrente
-                          if (formDataConta.recorrente && formDataConta.parcelas_total) {
-                            const dataInicial = new Date(dataSelecionada + 'T00:00:00');
-                            const dataFinal = new Date(dataInicial);
-                            dataFinal.setMonth(dataFinal.getMonth() + parseInt(formDataConta.parcelas_total) - 1);
-                            setFormDataConta(prev => ({
-                              ...prev,
-                              data_vencimento: dataSelecionada,
-                              data_vencimento_final: dataFinal.toISOString().split('T')[0]
-                            }));
-                          }
-                        }}
-                        required
-                        min={new Date().toISOString().split('T')[0]}
-                      />
+                              const dataFormatada = format(date, 'yyyy-MM-dd');
+                              setFormDataConta({...formDataConta, data_vencimento: dataFormatada});
+                              
+                              // Recalcular data final se for recorrente
+                              if (formDataConta.recorrente && formDataConta.parcelas_total) {
+                                const dataFinal = new Date(date);
+                                dataFinal.setMonth(dataFinal.getMonth() + parseInt(formDataConta.parcelas_total) - 1);
+                                setFormDataConta(prev => ({
+                                  ...prev,
+                                  data_vencimento: dataFormatada,
+                                  data_vencimento_final: format(dataFinal, 'yyyy-MM-dd')
+                                }));
+                              }
+                            }}
+                            disabled={(date) => {
+                              const hoje = new Date();
+                              hoje.setHours(0, 0, 0, 0);
+                              return date < hoje;
+                            }}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <p className="text-xs text-amber-600 mt-1">
                         ⚠️ Vencimentos em sábado ou domingo não são permitidos
                       </p>
@@ -1476,14 +1491,34 @@ ${valor}`
 
                     <div>
                       <Label className="text-xs text-gray-600">Data do Evento *</Label>
-                      <Input
-                        type="date"
-                        value={formDataLembrete.data_evento}
-                        onChange={(e) => setFormDataLembrete({...formDataLembrete, data_evento: e.target.value})}
-                        required
-                        min={new Date().toISOString().split('T')[0]}
-                        className="h-9"
-                      />
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={`w-full justify-start text-left font-normal h-9 ${!formDataLembrete.data_evento && "text-muted-foreground"}`}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {formDataLembrete.data_evento ? format(new Date(formDataLembrete.data_evento + 'T00:00:00'), 'dd/MM/yyyy') : "Selecione a data"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={formDataLembrete.data_evento ? new Date(formDataLembrete.data_evento + 'T00:00:00') : undefined}
+                            onSelect={(date) => {
+                              if (!date) return;
+                              const dataFormatada = format(date, 'yyyy-MM-dd');
+                              setFormDataLembrete({...formDataLembrete, data_evento: dataFormatada});
+                            }}
+                            disabled={(date) => {
+                              const hoje = new Date();
+                              hoje.setHours(0, 0, 0, 0);
+                              return date < hoje;
+                            }}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
 
                     <div>
@@ -1709,7 +1744,7 @@ ${valor}`
                           </div>
                           <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                            <span className="flex items-center gap-1">
-                             <Calendar className="w-4 h-4" />
+                             <CalendarIcon className="w-4 h-4" />
                              {conta.data_vencimento ? format(new Date(conta.data_vencimento + 'T00:00:00'), 'dd/MM/yyyy') : '⚠️ SEM DATA'}
                            </span>
                            <span className="font-semibold text-red-600">

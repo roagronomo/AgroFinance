@@ -92,7 +92,7 @@ export default function DespesasLembretes() {
     hora_evento: "",
     link_acesso: "",
     dias_antes_avisar: 1,
-    minutos_antes_aviso: 10,
+    aviso_extra_minutos: null,
     telefone_contato: "(64) 98147-2081",
     grupo_whatsapp_id: "",
     observacoes: "",
@@ -887,7 +887,7 @@ ${valor}`
       hora_evento: lembrete.hora_evento || "",
       link_acesso: lembrete.link_acesso || "",
       dias_antes_avisar: lembrete.dias_antes_avisar || 1,
-      minutos_antes_aviso: lembrete.minutos_antes_aviso || 10,
+      aviso_extra_minutos: lembrete.aviso_extra_minutos || null,
       telefone_contato: lembrete.telefone_contato || "",
       grupo_whatsapp_id: lembrete.grupo_whatsapp_id || "",
       observacoes: lembrete.observacoes || "",
@@ -969,7 +969,7 @@ ${valor}`
       hora_evento: "",
       link_acesso: "",
       dias_antes_avisar: 1,
-      minutos_antes_aviso: 10,
+      aviso_extra_minutos: null,
       telefone_contato: "(64) 98147-2081",
       grupo_whatsapp_id: "",
       observacoes: "",
@@ -1559,23 +1559,7 @@ ${valor}`
                     </div>
 
                     <div>
-                      <Label className="text-xs text-gray-600 flex items-center gap-2">
-                        Hora do Evento
-                        <Select
-                          value={String(formDataLembrete.minutos_antes_aviso)}
-                          onValueChange={(value) => setFormDataLembrete({...formDataLembrete, minutos_antes_aviso: parseInt(value)})}
-                        >
-                          <SelectTrigger className="h-5 w-auto text-xs border-0 bg-blue-50 text-blue-700 font-medium px-2 inline-flex">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="10">⏰ 10min antes</SelectItem>
-                            <SelectItem value="15">⏰ 15min antes</SelectItem>
-                            <SelectItem value="30">⏰ 30min antes</SelectItem>
-                            <SelectItem value="60">⏰ 1h antes</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </Label>
+                      <Label className="text-xs text-gray-600">Hora (⏰ Aviso 10min antes)</Label>
                       <Input
                         type="time"
                         value={formDataLembrete.hora_evento}
@@ -1599,6 +1583,29 @@ ${valor}`
                     </p>
                   </div>
 
+                  <div className="border rounded-lg p-3 bg-purple-50">
+                    <Label className="text-sm font-semibold text-purple-900 mb-2 block">⏰ Aviso Extra (Opcional)</Label>
+                    <Select
+                      value={formDataLembrete.aviso_extra_minutos ? String(formDataLembrete.aviso_extra_minutos) : "nenhum"}
+                      onValueChange={(value) => setFormDataLembrete({
+                        ...formDataLembrete, 
+                        aviso_extra_minutos: value === "nenhum" ? null : parseInt(value)
+                      })}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Nenhum aviso extra" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="nenhum">Nenhum (só 10min antes)</SelectItem>
+                        <SelectItem value="30">⏰ 30 minutos antes</SelectItem>
+                        <SelectItem value="60">⏰ 1 hora antes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-600 mt-2">
+                      💡 Além do aviso fixo de 10 minutos antes, você pode configurar um aviso extra
+                    </p>
+                  </div>
+
                   <div className="space-y-3">
                     <div>
                       <Label className="text-xs text-gray-600">Avisar quantos dias antes? *</Label>
@@ -1612,7 +1619,7 @@ ${valor}`
                         className="h-9 w-20"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        Aviso X dias antes (09h) + {formDataLembrete.minutos_antes_aviso >= 60 ? '1h' : `${formDataLembrete.minutos_antes_aviso}min`} antes do horário
+                        Aviso X dias antes (09h) + 10min antes + {formDataLembrete.aviso_extra_minutos ? (formDataLembrete.aviso_extra_minutos >= 60 ? '1h antes' : `${formDataLembrete.aviso_extra_minutos}min antes`) : 'nenhum extra'}
                       </p>
                     </div>
 

@@ -38,24 +38,35 @@ Deno.serve(async (req) => {
           diasRestantes === 0 && 
           !lembrete.lembrete_enviado;
 
-        // Verificar se deve enviar X minutos antes (se tiver hora definida)
-        let deveEnviarMinutosAntes = false;
-        if (lembrete.hora_evento && diasRestantes === 0 && !lembrete.lembrete_antes_evento_enviado) {
+        // Verificar se deve enviar 10 minutos antes (FIXO)
+        let deveEnviar10MinAntes = false;
+        if (lembrete.hora_evento && diasRestantes === 0 && !lembrete.lembrete_10min_enviado) {
           const [horas, minutos] = lembrete.hora_evento.split(':').map(Number);
           const horarioEvento = new Date(dataEvento);
           horarioEvento.setHours(horas, minutos, 0, 0);
           
-          // Usar configuração do usuário (10, 15, 30 ou 60 minutos)
-          const minutosAntes = lembrete.minutos_antes_aviso || 10;
-          const horarioMinutosAntes = new Date(horarioEvento.getTime() - minutosAntes * 60 * 1000);
+          const horario10MinAntes = new Date(horarioEvento.getTime() - 10 * 60 * 1000);
           
-          // Verificar se já passou do horário de enviar e não ultrapassou o horário do evento
-          if (agora >= horarioMinutosAntes && agora < horarioEvento) {
-            deveEnviarMinutosAntes = true;
+          if (agora >= horario10MinAntes && agora < horarioEvento) {
+            deveEnviar10MinAntes = true;
           }
         }
 
-        if (!deveEnviarAntecipado && !deveEnviarNoDia && !deveEnviarMinutosAntes) {
+        // Verificar se deve enviar aviso extra (30min ou 1h antes)
+        let deveEnviarExtra = false;
+        if (lembrete.hora_evento && lembrete.aviso_extra_minutos && diasRestantes === 0 && !lembrete.lembrete_extra_enviado) {
+          const [horas, minutos] = lembrete.hora_evento.split(':').map(Number);
+          const horarioEvento = new Date(dataEvento);
+          horarioEvento.setHours(horas, minutos, 0, 0);
+          
+          const horarioExtra = new Date(horarioEvento.getTime() - lembrete.aviso_extra_minutos * 60 * 1000);
+          
+          if (agora >= horarioExtra && agora < horarioEvento) {
+            deveEnviarExtra = true;
+          }
+        }
+
+        if (!deveEnviarAntecipado && !deveEnviarNoDia && !deveEnviar10MinAntes && !deveEnviarExtra) {
           continue;
         }
 
@@ -65,9 +76,20 @@ Deno.serve(async (req) => {
           : '';
 
         let mensagem;
-        if (deveEnviarMinutosAntes) {
-          const minutosAntes = lembrete.minutos_antes_aviso || 10;
-          const textoTempo = minutosAntes >= 60 ? '1 HORA' : `${minutosAntes} MINUTOS`;
+        if (deveEnviar10MinAntes) {
+          mensagem = `🔔 *LEMBRETE - EVENTO COMEÇANDO EM 10 MINUTOS!*
+
+📋 *${lembrete.descricao}*
+
+📅 *Data:* ${dataFormatada}
+⏰ *Horário:* ${lembrete.hora_evento}
+${valorTexto}
+${lembrete.link_acesso ? `🔗 *Link de Acesso:*\n${lembrete.link_acesso}\n\n` : ''}${lembrete.observacoes ? `📝 ${lembrete.observacoes}\n` : ''}
+⚠️ O evento começa em 10 minutos!
+
+_Lembrete automático - AgroFinance_`;
+        } else if (deveEnviarExtra) {
+          const textoTempo = lembrete.aviso_extra_minutos >= 60 ? '1 HORA' : `${lembrete.aviso_extra_minutos} MINUTOS`;
           mensagem = `🔔 *LEMBRETE - EVENTO COMEÇANDO EM ${textoTempo}!*
 
 📋 *${lembrete.descricao}*
@@ -118,8 +140,11 @@ _Lembrete automático - AgroFinance_`;
           if (deveEnviarAntecipado) {
             updateData.lembrete_antecipado_enviado = true;
           }
-          if (deveEnviarMinutosAntes) {
-            updateData.lembrete_antes_evento_enviado = true;
+          if (deveEnviar10MinAntes) {
+            updateData.lembrete_10min_enviado = true;
+          }
+          if (deveEnviarExtra) {
+            updateData.lembrete_extra_enviado = true;
           }
 
           await base44.asServiceRole.entities.Lembrete.update(lembrete.id, updateData);

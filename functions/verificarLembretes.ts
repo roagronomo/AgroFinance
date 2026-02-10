@@ -127,6 +127,8 @@ _Lembrete automático - AgroFinance_`;
         // Enviar WhatsApp - SEMPRE enviar para telefone individual primeiro
         // Se também tiver grupo configurado, enviar para o grupo depois
         
+        let enviouComSucesso = false;
+        
         // 1. Enviar para telefone individual (obrigatório)
         if (lembrete.telefone_contato) {
           const responseTelefone = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
@@ -143,6 +145,7 @@ _Lembrete automático - AgroFinance_`;
           } else {
             console.log(`Lembrete enviado para telefone: ${lembrete.descricao}`);
             lembretesEnviados++;
+            enviouComSucesso = true;
           }
 
           // Aguardar 1 segundo antes de enviar para o grupo
@@ -150,9 +153,8 @@ _Lembrete automático - AgroFinance_`;
         }
 
         // 2. Enviar para grupo (se configurado)
-        let responseGrupo = { success: true };
         if (lembrete.grupo_whatsapp_id && lembrete.grupo_whatsapp_id.trim() !== '') {
-          responseGrupo = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
+          const responseGrupo = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
             numero: lembrete.grupo_whatsapp_id,
             mensagem: mensagem
           });
@@ -165,12 +167,12 @@ _Lembrete automático - AgroFinance_`;
             console.error(`Erro ao enviar para grupo ${lembrete.descricao}:`, responseGrupo.error);
           } else {
             console.log(`Lembrete enviado para grupo: ${lembrete.descricao}`);
+            enviouComSucesso = true;
           }
         }
 
-        const response = { success: responseGrupo.success };
-
-        if (response.success) {
+        // Marcar como enviado se PELO MENOS um destino teve sucesso
+        if (enviouComSucesso) {
           // Atualizar o status do lembrete
           const updateData = {};
           if (deveEnviarNoDia) {

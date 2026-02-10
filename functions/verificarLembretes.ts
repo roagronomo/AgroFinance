@@ -9,8 +9,14 @@ Deno.serve(async (req) => {
     // Buscar todos os lembretes ativos
     const lembretes = await base44.asServiceRole.entities.Lembrete.filter({ ativo: true }, 'data_evento');
 
+    // Horário de Brasília (UTC-3)
     const agora = new Date();
-    const hoje = new Date();
+    const offsetBrasilia = -3 * 60; // UTC-3 em minutos
+    const offsetAtual = agora.getTimezoneOffset(); // offset do servidor em minutos
+    const diferencaMinutos = offsetBrasilia - offsetAtual;
+    const agoraBrasilia = new Date(agora.getTime() + diferencaMinutos * 60 * 1000);
+    
+    const hoje = new Date(agoraBrasilia);
     hoje.setHours(0, 0, 0, 0);
 
     let lembretesEnviados = 0;
@@ -26,7 +32,7 @@ Deno.serve(async (req) => {
         // Verificar se deve enviar o lembrete antecipado (sempre às 11h da manhã)
         let deveEnviarAntecipado = false;
         if (diasRestantes === lembrete.dias_antes_avisar && !lembrete.lembrete_antecipado_enviado) {
-          const horaAtual = agora.getHours();
+          const horaAtual = agoraBrasilia.getHours();
           // Enviar apenas se já passou das 11h (para evitar múltiplos envios no mesmo dia)
           if (horaAtual >= 11) {
             deveEnviarAntecipado = true;
@@ -49,7 +55,7 @@ Deno.serve(async (req) => {
           const tolerancia = 120 * 60 * 1000; // 2 horas de tolerância após o horário planejado
           
           // Enviar se passou do horário mas ainda está dentro da tolerância
-          if (agora >= horario10MinAntes && (agora - horario10MinAntes) < tolerancia) {
+          if (agoraBrasilia >= horario10MinAntes && (agoraBrasilia - horario10MinAntes) < tolerancia) {
             deveEnviar10MinAntes = true;
           }
         }
@@ -65,7 +71,7 @@ Deno.serve(async (req) => {
           const tolerancia = 120 * 60 * 1000; // 2 horas de tolerância após o horário planejado
           
           // Enviar se passou do horário mas ainda está dentro da tolerância
-          if (agora >= horarioExtra && (agora - horarioExtra) < tolerancia) {
+          if (agoraBrasilia >= horarioExtra && (agoraBrasilia - horarioExtra) < tolerancia) {
             deveEnviarExtra = true;
           }
         }

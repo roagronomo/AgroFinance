@@ -736,10 +736,10 @@ ${valor}`
 
       if (editingItem) {
         await base44.entities.Lembrete.update(editingItem.id, dados);
-        toast.success("Lembrete atualizado com sucesso!");
+        toast.success("Lembrete atualizado com sucesso!", { duration: 3000 });
       } else {
         await base44.entities.Lembrete.create(dados);
-        toast.success("Lembrete cadastrado com sucesso!");
+        toast.success("Lembrete cadastrado com sucesso!", { duration: 3000 });
       }
 
       await carregarDados();

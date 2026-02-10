@@ -106,6 +106,7 @@ export default function DespesasLembretes() {
       const lembretesVencidos = lembretes.filter(l => 
         l.ativo && 
         !l.concluido && 
+        l.data_evento &&
         l.data_evento < dataHoje
       );
 
@@ -295,6 +296,7 @@ export default function DespesasLembretes() {
       const lembretesVencidos = (lembretesData || []).filter(l => 
         l.ativo && 
         !l.concluido && 
+        l.data_evento &&
         l.data_evento < dataHoje
       );
 
@@ -1894,7 +1896,7 @@ ${valor}`
                                   </span>
                                 </div>
                                 <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                                  <span>📅 Vencimento: {format(new Date(conta.data_vencimento + 'T00:00:00'), 'dd/MM/yyyy')}</span>
+                                 <span>📅 Vencimento: {conta.data_vencimento ? format(new Date(conta.data_vencimento + 'T00:00:00'), 'dd/MM/yyyy') : '⚠️ SEM DATA'}</span>
                                   {conta.data_pagamento && (
                                           <span>✅ Pago em: {conta.data_pagamento ? format(new Date(conta.data_pagamento + 'T00:00:00'), 'dd/MM/yyyy') : '⚠️ SEM DATA'}</span>
                                         )}

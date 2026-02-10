@@ -65,6 +65,7 @@ export default function DespesasLembretes() {
   const [carregandoGrupos, setCarregandoGrupos] = useState(false);
   const [gruposDisponiveis, setGruposDisponiveis] = useState([]);
   const [ultimaAtualizacaoGrupos, setUltimaAtualizacaoGrupos] = useState(null);
+  const [lembreteConflitante, setLembreteConflitante] = useState(null);
 
   const [formDataConta, setFormDataConta] = useState({
     descricao: "",
@@ -709,6 +710,22 @@ ${valor}`
   const handleSubmitLembrete = async (e) => {
     e.preventDefault();
     try {
+      // Verificar duplicata apenas se NÃO estiver editando
+      if (!editingItem && formDataLembrete.data_evento && formDataLembrete.hora_evento) {
+        const conflito = lembretes.find(l => 
+          l.id !== editingItem?.id &&
+          l.ativo &&
+          !l.concluido &&
+          l.data_evento === formDataLembrete.data_evento &&
+          l.hora_evento === formDataLembrete.hora_evento
+        );
+
+        if (conflito) {
+          setLembreteConflitante(conflito);
+          return;
+        }
+      }
+
       const valorLimpo = formDataLembrete.valor ? parseFloat(formDataLembrete.valor.replace(/\./g, '').replace(',', '.')) : null;
       const dados = {
         ...formDataLembrete,
@@ -2239,6 +2256,61 @@ ${valor}`
 
           <AlertDialogFooter>
             <AlertDialogCancel>Fechar</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog Lembrete Conflitante */}
+      <AlertDialog open={!!lembreteConflitante} onOpenChange={(open) => !open && setLembreteConflitante(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-amber-600">
+              ⚠️ Lembrete Já Existe
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Já existe um lembrete cadastrado para esta mesma data e horário.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {lembreteConflitante && (
+            <Card className="border-amber-200 bg-amber-50">
+              <CardContent className="p-4 space-y-2">
+                <h3 className="font-semibold text-gray-900">{lembreteConflitante.descricao}</h3>
+                <div className="flex flex-wrap gap-3 text-sm text-gray-600">
+                  <span className="flex items-center gap-1">
+                    <CalendarIcon className="w-4 h-4" />
+                    {formatarDataSegura(lembreteConflitante.data_evento)}
+                  </span>
+                  {lembreteConflitante.hora_evento && (
+                    <span className="flex items-center gap-1">
+                      ⏰ {lembreteConflitante.hora_evento}
+                    </span>
+                  )}
+                  {lembreteConflitante.valor && (
+                    <span className="font-semibold text-green-600">
+                      💰 R$ {lembreteConflitante.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </span>
+                  )}
+                </div>
+                {lembreteConflitante.observacoes && (
+                  <p className="text-sm text-gray-600 mt-2">{lembreteConflitante.observacoes}</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                handleEditarLembrete(lembreteConflitante);
+                setLembreteConflitante(null);
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Editar Este Lembrete
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

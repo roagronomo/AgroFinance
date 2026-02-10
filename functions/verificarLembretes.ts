@@ -124,12 +124,51 @@ ${lembrete.link_acesso ? `🔗 *Link de Acesso:*\n${lembrete.link_acesso}\n\n` :
 _Lembrete automático - AgroFinance_`;
         }
 
-        // Enviar WhatsApp - usar grupo se preenchido, senão usar telefone individual
-        const destino = lembrete.grupo_whatsapp_id || lembrete.telefone_contato;
-        const response = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
-          numero: destino,
-          mensagem: mensagem
-        });
+        // Enviar WhatsApp - SEMPRE enviar para telefone individual primeiro
+        // Se também tiver grupo configurado, enviar para o grupo depois
+        
+        // 1. Enviar para telefone individual (obrigatório)
+        if (lembrete.telefone_contato) {
+          const responseTelefone = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
+            numero: lembrete.telefone_contato,
+            mensagem: mensagem
+          });
+
+          if (!responseTelefone.success) {
+            erros.push({
+              lembrete: lembrete.descricao,
+              erro: `Telefone: ${responseTelefone.error || 'Erro desconhecido'}`
+            });
+            console.error(`Erro ao enviar para telefone ${lembrete.descricao}:`, responseTelefone.error);
+          } else {
+            console.log(`Lembrete enviado para telefone: ${lembrete.descricao}`);
+            lembretesEnviados++;
+          }
+
+          // Aguardar 1 segundo antes de enviar para o grupo
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        // 2. Enviar para grupo (se configurado)
+        let responseGrupo = { success: true };
+        if (lembrete.grupo_whatsapp_id && lembrete.grupo_whatsapp_id.trim() !== '') {
+          responseGrupo = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
+            numero: lembrete.grupo_whatsapp_id,
+            mensagem: mensagem
+          });
+
+          if (!responseGrupo.success) {
+            erros.push({
+              lembrete: lembrete.descricao,
+              erro: `Grupo: ${responseGrupo.error || 'Erro desconhecido'}`
+            });
+            console.error(`Erro ao enviar para grupo ${lembrete.descricao}:`, responseGrupo.error);
+          } else {
+            console.log(`Lembrete enviado para grupo: ${lembrete.descricao}`);
+          }
+        }
+
+        const response = { success: responseGrupo.success };
 
         if (response.success) {
           // Atualizar o status do lembrete
@@ -148,8 +187,6 @@ _Lembrete automático - AgroFinance_`;
           }
 
           await base44.asServiceRole.entities.Lembrete.update(lembrete.id, updateData);
-          lembretesEnviados++;
-          console.log(`Lembrete enviado: ${lembrete.descricao}`);
         } else {
           erros.push({
             lembrete: lembrete.descricao,

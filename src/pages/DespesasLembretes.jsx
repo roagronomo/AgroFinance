@@ -1980,7 +1980,7 @@ ${valor}`
                           <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                             <span className="flex items-center gap-1">
                               <Calendar className="w-4 h-4" />
-                              {format(new Date(lembrete.data_evento + 'T00:00:00'), 'dd/MM/yyyy')}
+                              {lembrete.data_evento ? format(new Date(lembrete.data_evento + 'T00:00:00'), 'dd/MM/yyyy') : 'Data não definida'}
                             </span>
                             {lembrete.hora_evento && (
                               <span className="flex items-center gap-1">

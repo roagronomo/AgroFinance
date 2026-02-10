@@ -1119,6 +1119,7 @@ ${valor}`
                           }
                         }}
                         required
+                        min={new Date().toISOString().split('T')[0]}
                       />
                       <p className="text-xs text-amber-600 mt-1">
                         ⚠️ Vencimentos em sábado ou domingo não são permitidos
@@ -1470,6 +1471,7 @@ ${valor}`
                         value={formDataLembrete.data_evento}
                         onChange={(e) => setFormDataLembrete({...formDataLembrete, data_evento: e.target.value})}
                         required
+                        min={new Date().toISOString().split('T')[0]}
                         className="h-9"
                       />
                     </div>

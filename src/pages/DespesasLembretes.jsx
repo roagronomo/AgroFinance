@@ -953,13 +953,20 @@ ${valor}`
   };
 
   const calcularDiasRestantes = (data) => {
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    const evento = new Date(data + 'T00:00:00');
-    return differenceInDays(evento, hoje);
+    if (!data) return -999; // Data inválida
+    try {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const evento = new Date(data + 'T00:00:00');
+      if (isNaN(evento.getTime())) return -999;
+      return differenceInDays(evento, hoje);
+    } catch {
+      return -999;
+    }
   };
 
   const getStatusCor = (diasRestantes, pago = false) => {
+    if (diasRestantes === -999) return "bg-red-500 text-white animate-pulse";
     if (pago) return "bg-green-100 text-green-800";
     if (diasRestantes < 0) return "bg-red-100 text-red-800";
     if (diasRestantes === 0) return "bg-orange-100 text-orange-800";
@@ -969,6 +976,7 @@ ${valor}`
 
   const getStatusTexto = (diasRestantes, pago = false) => {
     if (pago) return "Pago";
+    if (diasRestantes === -999) return "⚠️ DATA INVÁLIDA";
     if (diasRestantes < 0) return `Vencido há ${Math.abs(diasRestantes)} dia(s)`;
     if (diasRestantes === 0) return "Vence Hoje!";
     if (diasRestantes === 1) return "Vence Amanhã";
@@ -1700,7 +1708,7 @@ ${valor}`
                           <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                            <span className="flex items-center gap-1">
                              <Calendar className="w-4 h-4" />
-                             {format(new Date(conta.data_vencimento + 'T00:00:00'), 'dd/MM/yyyy')}
+                             {conta.data_vencimento ? format(new Date(conta.data_vencimento + 'T00:00:00'), 'dd/MM/yyyy') : '⚠️ SEM DATA'}
                            </span>
                            <span className="font-semibold text-red-600">
                              💰 R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -1888,8 +1896,8 @@ ${valor}`
                                 <div className="flex flex-wrap gap-4 text-sm text-gray-500">
                                   <span>📅 Vencimento: {format(new Date(conta.data_vencimento + 'T00:00:00'), 'dd/MM/yyyy')}</span>
                                   {conta.data_pagamento && (
-                                    <span>✅ Pago em: {format(new Date(conta.data_pagamento + 'T00:00:00'), 'dd/MM/yyyy')}</span>
-                                  )}
+                                          <span>✅ Pago em: {conta.data_pagamento ? format(new Date(conta.data_pagamento + 'T00:00:00'), 'dd/MM/yyyy') : '⚠️ SEM DATA'}</span>
+                                        )}
                                   <span className="font-semibold text-green-700">💰 R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                                   {conta.fornecedor && <span>🏢 {conta.fornecedor}</span>}
                                   {conta.categoria && <span className="text-blue-600">📂 {conta.categoria}</span>}

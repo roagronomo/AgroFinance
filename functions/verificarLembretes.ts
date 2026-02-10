@@ -52,10 +52,10 @@ Deno.serve(async (req) => {
           horarioEvento.setHours(horas, minutos, 0, 0);
           
           const horario10MinAntes = new Date(horarioEvento.getTime() - 10 * 60 * 1000);
-          const tolerancia = 120 * 60 * 1000; // 2 horas de tolerância após o horário planejado
+          const janelaEnvio = 6 * 60 * 1000; // Janela de 6 minutos para capturar o envio (considera que roda a cada 5min)
           
-          // Enviar se passou do horário mas ainda está dentro da tolerância
-          if (agoraBrasilia >= horario10MinAntes && (agoraBrasilia - horario10MinAntes) < tolerancia) {
+          // Enviar apenas se estiver dentro da janela de 6 minutos após o horário planejado
+          if (agoraBrasilia >= horario10MinAntes && (agoraBrasilia - horario10MinAntes) <= janelaEnvio) {
             deveEnviar10MinAntes = true;
           }
         }
@@ -68,10 +68,10 @@ Deno.serve(async (req) => {
           horarioEvento.setHours(horas, minutos, 0, 0);
           
           const horarioExtra = new Date(horarioEvento.getTime() - lembrete.aviso_extra_minutos * 60 * 1000);
-          const tolerancia = 120 * 60 * 1000; // 2 horas de tolerância após o horário planejado
+          const janelaEnvio = 6 * 60 * 1000; // Janela de 6 minutos para capturar o envio (considera que roda a cada 5min)
           
-          // Enviar se passou do horário mas ainda está dentro da tolerância
-          if (agoraBrasilia >= horarioExtra && (agoraBrasilia - horarioExtra) < tolerancia) {
+          // Enviar apenas se estiver dentro da janela de 6 minutos após o horário planejado
+          if (agoraBrasilia >= horarioExtra && (agoraBrasilia - horarioExtra) <= janelaEnvio) {
             deveEnviarExtra = true;
           }
         }

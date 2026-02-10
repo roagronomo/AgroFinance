@@ -1058,6 +1058,7 @@ ${valor}`
   if (showForm) {
     return (
       <div className="p-6 max-w-4xl mx-auto">
+        <Toaster position="top-right" richColors duration={3000} />
         <Tabs value={tipoForm} onValueChange={setTipoForm}>
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="conta" className="flex items-center gap-2">

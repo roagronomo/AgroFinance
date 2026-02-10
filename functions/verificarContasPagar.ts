@@ -12,7 +12,14 @@ Deno.serve(async (req) => {
       pago: false 
     }, 'data_vencimento');
 
-    const hoje = new Date();
+    // Horário de Brasília (UTC-3)
+    const agora = new Date();
+    const offsetBrasilia = -3 * 60; // UTC-3 em minutos
+    const offsetAtual = agora.getTimezoneOffset(); // offset do servidor em minutos
+    const diferencaMinutos = offsetBrasilia - offsetAtual;
+    const agoraBrasilia = new Date(agora.getTime() + diferencaMinutos * 60 * 1000);
+    
+    const hoje = new Date(agoraBrasilia);
     hoje.setHours(0, 0, 0, 0);
 
     let lembretesEnviados = 0;

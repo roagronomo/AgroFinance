@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Edit, Trash2, Bell, Calendar as CalendarIcon, DollarSign, FileText, Upload, Check, X, Undo2, Paperclip, Upload as UploadIcon, Download, ChevronDown, ChevronRight, Send, CreditCard, Copy } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { format, differenceInDays, isValid, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import AutocompleteInput from "../components/common/AutocompleteInput";
@@ -1127,6 +1128,7 @@ ${valor}`
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
+                            locale={ptBR}
                             selected={formDataConta.data_vencimento ? new Date(formDataConta.data_vencimento + 'T00:00:00') : undefined}
                             onSelect={(date) => {
                               if (!date) return;
@@ -1518,6 +1520,7 @@ ${valor}`
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
+                            locale={ptBR}
                             selected={formDataLembrete.data_evento ? new Date(formDataLembrete.data_evento + 'T00:00:00') : undefined}
                             onSelect={(date) => {
                               if (!date) return;

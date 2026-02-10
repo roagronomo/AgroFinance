@@ -1712,7 +1712,7 @@ ${valor}`
 
   return (
     <div className="p-6 space-y-4">
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-right" richColors duration={3000} />
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Despesas e Lembretes</h1>

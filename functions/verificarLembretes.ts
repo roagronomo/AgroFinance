@@ -46,8 +46,10 @@ Deno.serve(async (req) => {
           horarioEvento.setHours(horas, minutos, 0, 0);
           
           const horario10MinAntes = new Date(horarioEvento.getTime() - 10 * 60 * 1000);
+          const tolerancia = 120 * 60 * 1000; // 2 horas de tolerância após o horário planejado
           
-          if (agora >= horario10MinAntes && agora < horarioEvento) {
+          // Enviar se passou do horário mas ainda está dentro da tolerância
+          if (agora >= horario10MinAntes && (agora - horario10MinAntes) < tolerancia) {
             deveEnviar10MinAntes = true;
           }
         }
@@ -60,8 +62,10 @@ Deno.serve(async (req) => {
           horarioEvento.setHours(horas, minutos, 0, 0);
           
           const horarioExtra = new Date(horarioEvento.getTime() - lembrete.aviso_extra_minutos * 60 * 1000);
+          const tolerancia = 120 * 60 * 1000; // 2 horas de tolerância após o horário planejado
           
-          if (agora >= horarioExtra && agora < horarioEvento) {
+          // Enviar se passou do horário mas ainda está dentro da tolerância
+          if (agora >= horarioExtra && (agora - horarioExtra) < tolerancia) {
             deveEnviarExtra = true;
           }
         }

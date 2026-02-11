@@ -272,9 +272,9 @@ export default function Vencimentos() {
       // Criar array de páginas apenas com dados reais
       const pages = [];
       for (let i = 0; i < grupos.length; i += ROWS_PER_PAGE) {
-        const pageData = grupos.slice(i, i + ROWS_PER_PAGE);
-        if (pageData.length > 0) {
-          pages.push(pageData);
+        const pageData = grupos.slice(i, Math.min(i + ROWS_PER_PAGE, grupos.length));
+        if (pageData && pageData.length > 0) {
+          pages.push({ data: pageData, startIndex: i });
         }
       }
 
@@ -518,10 +518,7 @@ export default function Vencimentos() {
             </div>
           </div>
 
-          ${pages.map((pageData, pageIndex) => {
-            const startIdx = pageIndex * ROWS_PER_PAGE;
-            
-            return `
+          ${pages.map((page) => `
               <div class="page">
                 <table>
                   <thead>
@@ -536,9 +533,9 @@ export default function Vencimentos() {
                     </tr>
                   </thead>
                   <tbody>
-                    ${pageData.map((grupo, idx) => `
+                    ${page.data.map((grupo, idx) => `
                       <tr>
-                        <td class="col-num">${startIdx + idx + 1}</td>
+                        <td class="col-num">${page.startIndex + idx + 1}</td>
                         <td class="col-cliente">${grupo.cliente?.split(' ')[0] || ''}</td>
                         <td class="col-banco">${bancoNomes[grupo.banco] || grupo.banco || 'N/A'}</td>
                         <td class="col-projeto">${grupo.itemFinanciado || 'N/A'}</td>
@@ -550,8 +547,7 @@ export default function Vencimentos() {
                   </tbody>
                 </table>
               </div>
-            `;
-          }).join('')}
+            `).join('')}
 
           <div class="footer-container">
             <span>Relatório gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
@@ -593,9 +589,9 @@ export default function Vencimentos() {
       // Criar array de páginas apenas com dados reais
       const pages = [];
       for (let i = 0; i < parcelasOrdenadas.length; i += ROWS_PER_PAGE) {
-        const pageData = parcelasOrdenadas.slice(i, i + ROWS_PER_PAGE);
-        if (pageData.length > 0) {
-          pages.push(pageData);
+        const pageData = parcelasOrdenadas.slice(i, Math.min(i + ROWS_PER_PAGE, parcelasOrdenadas.length));
+        if (pageData && pageData.length > 0) {
+          pages.push({ data: pageData, startIndex: i });
         }
       }
 
@@ -839,10 +835,7 @@ export default function Vencimentos() {
               </div>
             </div>
 
-            ${pages.map((pageData, pageIndex) => {
-              const startIdx = pageIndex * ROWS_PER_PAGE;
-              
-              return `
+            ${pages.map((page) => `
                 <div class="page">
                   <table>
                     <thead>
@@ -859,11 +852,11 @@ export default function Vencimentos() {
                       </tr>
                     </thead>
                     <tbody>
-                      ${pageData.map((parcela, idx) => {
+                      ${page.data.map((parcela, idx) => {
                         const projeto = projetos.find(p => p.id === parcela.projeto_id);
                         return `
                           <tr>
-                            <td class="col-num">${startIdx + idx + 1}</td>
+                            <td class="col-num">${page.startIndex + idx + 1}</td>
                             <td class="col-cliente">${projeto?.nome_cliente?.split(' ')[0] || ''}</td>
                             <td class="col-banco">${bancoNomes[projeto?.banco] || projeto?.banco || 'N/A'}</td>
                             <td class="col-projeto">${projeto?.item_financiado || 'N/A'}</td>
@@ -878,8 +871,7 @@ export default function Vencimentos() {
                     </tbody>
                   </table>
                 </div>
-              `;
-            }).join('')}
+              `).join('')}
 
             <div class="footer-container">
               <span>Relatório gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>

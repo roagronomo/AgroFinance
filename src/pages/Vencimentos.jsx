@@ -276,9 +276,17 @@ export default function Vencimentos() {
       } else {
         for (let i = 0; i < grupos.length; i += ROWS_PER_PAGE) {
           const pageItems = grupos.slice(i, i + ROWS_PER_PAGE);
-          const fillCount = ROWS_PER_PAGE - pageItems.length;
-          const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
-          pages.push([...pageItems, ...filler]);
+          const isLastPage = (i + ROWS_PER_PAGE) >= grupos.length;
+          
+          // Só preenche com linhas vazias se NÃO for a última página
+          if (!isLastPage) {
+            const fillCount = ROWS_PER_PAGE - pageItems.length;
+            const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
+            pages.push([...pageItems, ...filler]);
+          } else {
+            // Última página: apenas os itens reais, sem preenchimento
+            pages.push(pageItems);
+          }
         }
       }
 
@@ -618,9 +626,17 @@ export default function Vencimentos() {
       } else {
         for (let i = 0; i < parcelasOrdenadas.length; i += ROWS_PER_PAGE) {
           const pageItems = parcelasOrdenadas.slice(i, i + ROWS_PER_PAGE);
-          const fillCount = ROWS_PER_PAGE - pageItems.length;
-          const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
-          pages.push([...pageItems, ...filler]);
+          const isLastPage = (i + ROWS_PER_PAGE) >= parcelasOrdenadas.length;
+          
+          // Só preenche com linhas vazias se NÃO for a última página
+          if (!isLastPage) {
+            const fillCount = ROWS_PER_PAGE - pageItems.length;
+            const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
+            pages.push([...pageItems, ...filler]);
+          } else {
+            // Última página: apenas os itens reais, sem preenchimento
+            pages.push(pageItems);
+          }
         }
       }
 

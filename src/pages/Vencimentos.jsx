@@ -746,7 +746,7 @@ export default function Vencimentos() {
                 text-align: center;
               }
               .col-cliente {
-                width: 112px;
+                width: 56px;
               }
               .col-banco {
                 width: 130px;
@@ -767,7 +767,7 @@ export default function Vencimentos() {
                 text-align: center;
               }
               .col-valor {
-                width: 100px;
+                width: 130px;
                 text-align: right;
               }
               .col-status {

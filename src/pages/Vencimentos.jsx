@@ -270,24 +270,22 @@ export default function Vencimentos() {
       const ROWS_PER_PAGE = linhasPorPagina;
       const pages = [];
 
-      if (grupos.length === 0) {
+      for (let i = 0; i < grupos.length; i += ROWS_PER_PAGE) {
+        const pageItems = grupos.slice(i, i + ROWS_PER_PAGE);
+        const isLastPage = (i + ROWS_PER_PAGE) >= grupos.length;
+        
+        if (!isLastPage) {
+          const fillCount = ROWS_PER_PAGE - pageItems.length;
+          const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
+          pages.push([...pageItems, ...filler]);
+        } else {
+          pages.push(pageItems);
+        }
+      }
+      
+      if (pages.length === 0 && grupos.length === 0) {
         const filler = Array.from({ length: ROWS_PER_PAGE }, () => ({ __blank: true }));
         pages.push(filler);
-      } else {
-        for (let i = 0; i < grupos.length; i += ROWS_PER_PAGE) {
-          const pageItems = grupos.slice(i, i + ROWS_PER_PAGE);
-          const isLastPage = (i + ROWS_PER_PAGE) >= grupos.length;
-          
-          // Só preenche com linhas vazias se NÃO for a última página
-          if (!isLastPage) {
-            const fillCount = ROWS_PER_PAGE - pageItems.length;
-            const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
-            pages.push([...pageItems, ...filler]);
-          } else {
-            // Última página: apenas os itens reais, sem preenchimento
-            pages.push(pageItems);
-          }
-        }
       }
 
       const conteudo = `
@@ -620,24 +618,22 @@ export default function Vencimentos() {
       const ROWS_PER_PAGE = linhasPorPagina;
       const pages = [];
 
-      if (parcelasOrdenadas.length === 0) {
+      for (let i = 0; i < parcelasOrdenadas.length; i += ROWS_PER_PAGE) {
+        const pageItems = parcelasOrdenadas.slice(i, i + ROWS_PER_PAGE);
+        const isLastPage = (i + ROWS_PER_PAGE) >= parcelasOrdenadas.length;
+        
+        if (!isLastPage) {
+          const fillCount = ROWS_PER_PAGE - pageItems.length;
+          const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
+          pages.push([...pageItems, ...filler]);
+        } else {
+          pages.push(pageItems);
+        }
+      }
+      
+      if (pages.length === 0 && parcelasOrdenadas.length === 0) {
         const filler = Array.from({ length: ROWS_PER_PAGE }, () => ({ __blank: true }));
         pages.push(filler);
-      } else {
-        for (let i = 0; i < parcelasOrdenadas.length; i += ROWS_PER_PAGE) {
-          const pageItems = parcelasOrdenadas.slice(i, i + ROWS_PER_PAGE);
-          const isLastPage = (i + ROWS_PER_PAGE) >= parcelasOrdenadas.length;
-          
-          // Só preenche com linhas vazias se NÃO for a última página
-          if (!isLastPage) {
-            const fillCount = ROWS_PER_PAGE - pageItems.length;
-            const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
-            pages.push([...pageItems, ...filler]);
-          } else {
-            // Última página: apenas os itens reais, sem preenchimento
-            pages.push(pageItems);
-          }
-        }
       }
 
       const conteudo = `

@@ -39,15 +39,7 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Verificar se deve enviar o lembrete no dia (apenas às 9h da manhã)
-        let deveEnviarNoDia = false;
-        if (diasRestantes === 0 && !lembrete.lembrete_enviado) {
-          const horaAtual = agoraBrasilia.getHours();
-          // Enviar apenas entre 9h e 10h (janela de 1 hora para garantir envio)
-          if (horaAtual >= 9 && horaAtual < 10) {
-            deveEnviarNoDia = true;
-          }
-        }
+
 
         // Verificar se deve enviar 10 minutos antes (FIXO)
         let deveEnviar10MinAntes = false;
@@ -81,7 +73,7 @@ Deno.serve(async (req) => {
           }
         }
 
-        if (!deveEnviarAntecipado && !deveEnviarNoDia && !deveEnviar10MinAntes && !deveEnviarExtra) {
+        if (!deveEnviarAntecipado && !deveEnviar10MinAntes && !deveEnviarExtra) {
           continue;
         }
 
@@ -114,17 +106,6 @@ _Lembrete automático - AgroFinance_`;
 ${valorTexto}
 ${lembrete.link_acesso ? `🔗 *Link de Acesso:*\n${lembrete.link_acesso}\n\n` : ''}${lembrete.observacoes ? `📝 ${lembrete.observacoes}\n` : ''}
 ⚠️ O evento começa em ${textoTempo.toLowerCase()}!
-
-_Lembrete automático - AgroFinance_`;
-        } else if (deveEnviarNoDia) {
-          mensagem = `🔔 *LEMBRETE - HOJE!*
-
-📋 *${lembrete.descricao}*
-
-📅 *Data:* ${dataFormatada} (HOJE)
-${lembrete.hora_evento ? `⏰ *Horário:* ${lembrete.hora_evento}\n` : ''}${valorTexto}
-${lembrete.link_acesso ? `🔗 *Link de Acesso:*\n${lembrete.link_acesso}\n\n` : ''}${lembrete.observacoes ? `📝 ${lembrete.observacoes}\n` : ''}
-⚠️ O evento que você agendou é HOJE!
 
 _Lembrete automático - AgroFinance_`;
         } else {
@@ -190,9 +171,6 @@ _Lembrete automático - AgroFinance_`;
         if (enviouComSucesso) {
           // Atualizar o status do lembrete
           const updateData = {};
-          if (deveEnviarNoDia) {
-            updateData.lembrete_enviado = true;
-          }
           if (deveEnviarAntecipado) {
             updateData.lembrete_antecipado_enviado = true;
           }

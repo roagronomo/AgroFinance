@@ -271,11 +271,14 @@ export default function Vencimentos() {
       
       // Criar array de páginas apenas com dados reais
       const pages = [];
-      for (let i = 0; i < grupos.length; i += ROWS_PER_PAGE) {
-        const pageData = grupos.slice(i, Math.min(i + ROWS_PER_PAGE, grupos.length));
-        if (pageData && pageData.length > 0) {
+      let i = 0;
+      while (i < grupos.length) {
+        const end = Math.min(i + ROWS_PER_PAGE, grupos.length);
+        const pageData = grupos.slice(i, end);
+        if (pageData.length > 0) {
           pages.push({ data: pageData, startIndex: i });
         }
+        i = end;
       }
 
       const conteudo = `
@@ -588,11 +591,14 @@ export default function Vencimentos() {
       
       // Criar array de páginas apenas com dados reais
       const pages = [];
-      for (let i = 0; i < parcelasOrdenadas.length; i += ROWS_PER_PAGE) {
-        const pageData = parcelasOrdenadas.slice(i, Math.min(i + ROWS_PER_PAGE, parcelasOrdenadas.length));
-        if (pageData && pageData.length > 0) {
+      let i = 0;
+      while (i < parcelasOrdenadas.length) {
+        const end = Math.min(i + ROWS_PER_PAGE, parcelasOrdenadas.length);
+        const pageData = parcelasOrdenadas.slice(i, end);
+        if (pageData.length > 0) {
           pages.push({ data: pageData, startIndex: i });
         }
+        i = end;
       }
 
       const conteudo = `

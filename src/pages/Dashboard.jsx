@@ -129,7 +129,7 @@ export default function Dashboard() {
           <style>
             @page {
               size: A4;
-              margin: 1cm;
+              margin: 6mm;
             }
             body {
               font-family: 'Calibri Light', Calibri, sans-serif;
@@ -140,51 +140,59 @@ export default function Dashboard() {
             }
             .header {
               text-align: center;
-              padding: 20px 0;
+              padding: 10px 0;
               border-bottom: 2px solid #059669;
-              margin-bottom: 20px;
+              margin-bottom: 10px;
             }
             .header h1 {
-              font-size: 18pt;
-              margin: 0 0 5px 0;
+              font-size: 14pt;
+              margin: 0 0 3px 0;
               color: #059669;
             }
             .header p {
               margin: 0;
               color: #666;
-              font-size: 11pt;
+              font-size: 10pt;
             }
             table {
               width: 100%;
               border-collapse: collapse;
-              margin-top: 10px;
+              margin-top: 5px;
             }
             th, td {
               border: 1px solid #ddd;
-              padding: 8px;
+              padding: 4px 6px;
               text-align: left;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
             }
             th {
               background-color: #e6f4ea;
               font-weight: bold;
               color: #065f46;
+              font-size: 10pt;
+            }
+            td {
+              font-size: 10pt;
             }
             tr:nth-child(even) {
               background-color: #f9f9f9;
             }
             .footer {
-              margin-top: 30px;
+              margin-top: 10px;
               text-align: center;
-              font-size: 9pt;
+              font-size: 8pt;
               color: #666;
-              padding-top: 20px;
+              padding-top: 10px;
               border-top: 1px solid #e5e7eb;
             }
             .total {
               font-weight: bold;
-              margin-top: 10px;
+              margin-top: 8px;
               text-align: right;
               color: #059669;
+              font-size: 10pt;
             }
           </style>
         </head>
@@ -197,23 +205,23 @@ export default function Dashboard() {
           <table>
             <thead>
               <tr>
-                <th style="width: 40px">#</th>
-                <th style="width: 200px">Nome</th>
-                <th style="width: 120px">CPF/CNPJ</th>
-                <th style="width: 150px">Cidade/UF</th>
-                <th style="width: 120px">Celular</th>
-                <th>E-mail</th>
+                <th style="width: 30px; text-align: center">#</th>
+                <th style="width: 160px">Nome</th>
+                <th style="width: 100px">CPF/CNPJ</th>
+                <th style="width: 120px">Cidade/UF</th>
+                <th style="width: 90px">Celular</th>
+                <th style="width: 140px">E-mail</th>
               </tr>
             </thead>
             <tbody>
               ${clientesOrdenados.map((cliente, index) => `
                 <tr>
-                  <td style="text-align: center">${index + 1}</td>
-                  <td>${cliente.nome}</td>
-                  <td>${cliente.cpf || ''}</td>
-                  <td>${cliente.cidade || ''}/${cliente.uf || ''}</td>
-                  <td>${cliente.celular || ''}</td>
-                  <td>${cliente.email || ''}</td>
+                  <td style="text-align: center; width: 30px">${index + 1}</td>
+                  <td style="width: 160px">${cliente.nome}</td>
+                  <td style="width: 100px">${cliente.cpf || ''}</td>
+                  <td style="width: 120px">${cliente.cidade || ''}/${cliente.uf || ''}</td>
+                  <td style="width: 90px">${cliente.celular || ''}</td>
+                  <td style="width: 140px">${cliente.email || ''}</td>
                 </tr>
               `).join('')}
             </tbody>

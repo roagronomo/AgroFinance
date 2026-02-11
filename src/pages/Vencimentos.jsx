@@ -528,11 +528,7 @@ export default function Vencimentos() {
             </div>
           </div>
 
-          ${pages.map((page, pageIndex) => {
-            // Verificar se a página tem conteúdo real (não só linhas vazias)
-            const temConteudoReal = page.some(item => !item.__blank);
-            if (!temConteudoReal) return ''; // Não renderizar páginas completamente vazias
-
+          ${pages.filter(page => page.some(item => !item.__blank)).map((page, pageIndex) => {
             const startIndex = pageIndex * ROWS_PER_PAGE;
 
             return `

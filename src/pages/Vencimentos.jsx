@@ -876,30 +876,9 @@ export default function Vencimentos() {
               </div>
             </div>
 
-            ${pages.map((page, pageIndex) => {
+            ${pages.filter(page => page.some(item => !item.__blank)).map((page, pageIndex) => {
               const startIndex = pageIndex * ROWS_PER_PAGE;
 
-              return `
-                <div class="page">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th class="col-num">#</th>
-                        <th class="col-cliente">Cliente</th>
-                        <th class="col-banco">Banco</th>
-                        <th class="col-projeto">Projeto</th>
-                        <th class="col-contrato">Contrato</th>
-                        <th class="col-parcela">Parcela</th>
-                        <th class="col-vencimento">Vencimento</th>
-                        <th class="col-valor">Valor</th>
-                        <th class="col-status">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      // Verificar se a página tem conteúdo real
-              const temConteudoReal = page.some(item => !item.__blank);
-              if (!temConteudoReal) return ''; // Não renderizar páginas vazias
-              
               return `
                 <div class="page">
                   <table>
@@ -945,15 +924,11 @@ export default function Vencimentos() {
                             <td class="col-contrato">${projeto?.numero_contrato || 'N/A'}</td>
                             <td class="col-parcela">${parcela.numero_parcela}</td>
                             <td class="col-vencimento">${format(new Date(parcela.data_vencimento), "dd/MM/yyyy", { locale: ptBR })}</td>
-                            <td class="col-valor">R$ ${parcela.valor_parcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                            <td class="col-valor">R$ ${parcela.valor_parcela.toLocaleString('pt-BR', { minimumFractionDigints: 2 })}</td>
                             <td class="col-status status-${parcela.status}">${statusConfig[parcela.status]?.label || parcela.status}</td>
                           </tr>
                         `;
                       }).join('')}
-                    </tbody>
-                  </table>
-                </div>
-              `;
                     </tbody>
                   </table>
                 </div>

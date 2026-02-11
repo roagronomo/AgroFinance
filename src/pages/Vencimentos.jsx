@@ -268,7 +268,15 @@ export default function Vencimentos() {
 
       // Paginação manual respeitando linhasPorPagina
       const ROWS_PER_PAGE = linhasPorPagina;
-      const totalPages = Math.ceil(grupos.length / ROWS_PER_PAGE);
+      
+      // Criar array de páginas apenas com dados reais
+      const pages = [];
+      for (let i = 0; i < grupos.length; i += ROWS_PER_PAGE) {
+        const pageData = grupos.slice(i, i + ROWS_PER_PAGE);
+        if (pageData.length > 0) {
+          pages.push(pageData);
+        }
+      }
 
       const conteudo = `
         <html>
@@ -510,10 +518,8 @@ export default function Vencimentos() {
             </div>
           </div>
 
-          ${Array.from({ length: totalPages }, (_, pageIndex) => {
+          ${pages.map((pageData, pageIndex) => {
             const startIdx = pageIndex * ROWS_PER_PAGE;
-            const endIdx = Math.min(startIdx + ROWS_PER_PAGE, grupos.length);
-            const pageGrupos = grupos.slice(startIdx, endIdx);
             
             return `
               <div class="page">
@@ -530,7 +536,7 @@ export default function Vencimentos() {
                     </tr>
                   </thead>
                   <tbody>
-                    ${pageGrupos.map((grupo, idx) => `
+                    ${pageData.map((grupo, idx) => `
                       <tr>
                         <td class="col-num">${startIdx + idx + 1}</td>
                         <td class="col-cliente">${grupo.cliente?.split(' ')[0] || ''}</td>
@@ -583,7 +589,15 @@ export default function Vencimentos() {
       const periodo = filtros.ano !== 'todos' ? filtros.ano : 'Todos os anos';
 
       const ROWS_PER_PAGE = linhasPorPagina;
-      const totalPages = Math.ceil(parcelasOrdenadas.length / ROWS_PER_PAGE);
+      
+      // Criar array de páginas apenas com dados reais
+      const pages = [];
+      for (let i = 0; i < parcelasOrdenadas.length; i += ROWS_PER_PAGE) {
+        const pageData = parcelasOrdenadas.slice(i, i + ROWS_PER_PAGE);
+        if (pageData.length > 0) {
+          pages.push(pageData);
+        }
+      }
 
       const conteudo = `
         <html>
@@ -825,10 +839,8 @@ export default function Vencimentos() {
               </div>
             </div>
 
-            ${Array.from({ length: totalPages }, (_, pageIndex) => {
+            ${pages.map((pageData, pageIndex) => {
               const startIdx = pageIndex * ROWS_PER_PAGE;
-              const endIdx = Math.min(startIdx + ROWS_PER_PAGE, parcelasOrdenadas.length);
-              const pageParcelas = parcelasOrdenadas.slice(startIdx, endIdx);
               
               return `
                 <div class="page">
@@ -847,7 +859,7 @@ export default function Vencimentos() {
                       </tr>
                     </thead>
                     <tbody>
-                      ${pageParcelas.map((parcela, idx) => {
+                      ${pageData.map((parcela, idx) => {
                         const projeto = projetos.find(p => p.id === parcela.projeto_id);
                         return `
                           <tr>

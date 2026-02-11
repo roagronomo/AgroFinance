@@ -39,10 +39,15 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Verificar se deve enviar o lembrete no dia
-        const deveEnviarNoDia = 
-          diasRestantes === 0 && 
-          !lembrete.lembrete_enviado;
+        // Verificar se deve enviar o lembrete no dia (apenas às 9h da manhã)
+        let deveEnviarNoDia = false;
+        if (diasRestantes === 0 && !lembrete.lembrete_enviado) {
+          const horaAtual = agoraBrasilia.getHours();
+          // Enviar apenas entre 9h e 10h (janela de 1 hora para garantir envio)
+          if (horaAtual >= 9 && horaAtual < 10) {
+            deveEnviarNoDia = true;
+          }
+        }
 
         // Verificar se deve enviar 10 minutos antes (FIXO)
         let deveEnviar10MinAntes = false;
@@ -199,12 +204,7 @@ _Lembrete automático - AgroFinance_`;
           }
 
           await base44.asServiceRole.entities.Lembrete.update(lembrete.id, updateData);
-        } else {
-          erros.push({
-            lembrete: lembrete.descricao,
-            erro: response.error || 'Erro desconhecido'
-          });
-          console.error(`Erro ao enviar lembrete ${lembrete.descricao}:`, response.error);
+          console.log(`Flags atualizadas para ${lembrete.descricao}:`, updateData);
         }
 
       } catch (error) {

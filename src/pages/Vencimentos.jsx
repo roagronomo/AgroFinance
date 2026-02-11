@@ -288,6 +288,9 @@ export default function Vencimentos() {
         pages.push(filler);
       }
 
+      // Filtrar páginas que só tem conteúdo em branco
+      const pagesComConteudo = pages.filter(page => page.some(item => !item.__blank));
+
       const conteudo = `
         <html>
           <head>
@@ -528,7 +531,7 @@ export default function Vencimentos() {
             </div>
           </div>
 
-          ${pages.filter(page => page.some(item => !item.__blank)).map((page, pageIndex) => {
+          ${pagesComConteudo.map((page, pageIndex) => {
             const startIndex = pageIndex * ROWS_PER_PAGE;
 
             return `
@@ -635,6 +638,9 @@ export default function Vencimentos() {
         const filler = Array.from({ length: ROWS_PER_PAGE }, () => ({ __blank: true }));
         pages.push(filler);
       }
+
+      // Filtrar páginas que só tem conteúdo em branco
+      const pagesComConteudo = pages.filter(page => page.some(item => !item.__blank));
 
       const conteudo = `
         <html>
@@ -876,7 +882,7 @@ export default function Vencimentos() {
               </div>
             </div>
 
-            ${pages.filter(page => page.some(item => !item.__blank)).map((page, pageIndex) => {
+            ${pagesComConteudo.map((page, pageIndex) => {
               const startIndex = pageIndex * ROWS_PER_PAGE;
 
               return `

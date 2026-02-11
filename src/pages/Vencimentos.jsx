@@ -276,15 +276,9 @@ export default function Vencimentos() {
       } else {
         for (let i = 0; i < grupos.length; i += ROWS_PER_PAGE) {
           const pageItems = grupos.slice(i, i + ROWS_PER_PAGE);
-          // Só preenche com linhas vazias se não for a última página
-          const isLastPage = (i + ROWS_PER_PAGE) >= grupos.length;
-          if (!isLastPage) {
-            const fillCount = ROWS_PER_PAGE - pageItems.length;
-            const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
-            pages.push([...pageItems, ...filler]);
-          } else {
-            pages.push(pageItems);
-          }
+          const fillCount = ROWS_PER_PAGE - pageItems.length;
+          const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
+          pages.push([...pageItems, ...filler]);
         }
       }
 
@@ -624,15 +618,9 @@ export default function Vencimentos() {
       } else {
         for (let i = 0; i < parcelasOrdenadas.length; i += ROWS_PER_PAGE) {
           const pageItems = parcelasOrdenadas.slice(i, i + ROWS_PER_PAGE);
-          // Só preenche com linhas vazias se não for a última página
-          const isLastPage = (i + ROWS_PER_PAGE) >= parcelasOrdenadas.length;
-          if (!isLastPage) {
-            const fillCount = ROWS_PER_PAGE - pageItems.length;
-            const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
-            pages.push([...pageItems, ...filler]);
-          } else {
-            pages.push(pageItems);
-          }
+          const fillCount = ROWS_PER_PAGE - pageItems.length;
+          const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
+          pages.push([...pageItems, ...filler]);
         }
       }
 
@@ -728,7 +716,7 @@ export default function Vencimentos() {
                 font-weight: bold;
                 color: #065f46;
                 font-size: 11pt;
-                text-align: center;
+                text-align: center !important;
               }
               tbody tr:nth-child(even) {
                 background-color: #f9f9f9;
@@ -746,7 +734,7 @@ export default function Vencimentos() {
                 text-align: center;
               }
               .col-cliente {
-                width: 56px;
+                width: 64px;
               }
               .col-banco {
                 width: 130px;
@@ -767,8 +755,11 @@ export default function Vencimentos() {
                 text-align: center;
               }
               .col-valor {
-                width: 130px;
-                text-align: right;
+                width: 117px;
+                text-align: left;
+              }
+              thead .col-valor {
+                text-align: center;
               }
               .col-status {
                 width: 80px;

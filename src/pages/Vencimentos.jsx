@@ -266,30 +266,22 @@ export default function Vencimentos() {
       const valorTotal = grupos.reduce((sum, g) => sum + g.saldoDevedor, 0);
       const totalContratos = grupos.length;
 
-      // Paginação para Relatório Geral
+      // Paginação para Relatório Geral - SEM adicionar páginas vazias
       const ROWS_PER_PAGE = linhasPorPagina;
-      const pages = [];
+      const pagesComConteudo = [];
 
       for (let i = 0; i < grupos.length; i += ROWS_PER_PAGE) {
         const pageItems = grupos.slice(i, i + ROWS_PER_PAGE);
-        const isLastPage = (i + ROWS_PER_PAGE) >= grupos.length;
         
-        if (!isLastPage) {
+        // Adicionar filler apenas se NÃO for a última página
+        if (pageItems.length < ROWS_PER_PAGE && i + ROWS_PER_PAGE < grupos.length) {
           const fillCount = ROWS_PER_PAGE - pageItems.length;
           const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
-          pages.push([...pageItems, ...filler]);
+          pagesComConteudo.push([...pageItems, ...filler]);
         } else {
-          pages.push(pageItems);
+          pagesComConteudo.push(pageItems);
         }
       }
-      
-      if (pages.length === 0 && grupos.length === 0) {
-        const filler = Array.from({ length: ROWS_PER_PAGE }, () => ({ __blank: true }));
-        pages.push(filler);
-      }
-
-      // Filtrar páginas que só tem conteúdo em branco
-      const pagesComConteudo = pages.filter(page => page.some(item => !item.__blank));
 
       const conteudo = `
         <html>
@@ -619,28 +611,20 @@ export default function Vencimentos() {
       const periodo = filtros.ano !== 'todos' ? filtros.ano : 'Todos os anos';
 
       const ROWS_PER_PAGE = linhasPorPagina;
-      const pages = [];
+      const pagesComConteudo = [];
 
       for (let i = 0; i < parcelasOrdenadas.length; i += ROWS_PER_PAGE) {
         const pageItems = parcelasOrdenadas.slice(i, i + ROWS_PER_PAGE);
-        const isLastPage = (i + ROWS_PER_PAGE) >= parcelasOrdenadas.length;
         
-        if (!isLastPage) {
+        // Adicionar filler apenas se NÃO for a última página
+        if (pageItems.length < ROWS_PER_PAGE && i + ROWS_PER_PAGE < parcelasOrdenadas.length) {
           const fillCount = ROWS_PER_PAGE - pageItems.length;
           const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
-          pages.push([...pageItems, ...filler]);
+          pagesComConteudo.push([...pageItems, ...filler]);
         } else {
-          pages.push(pageItems);
+          pagesComConteudo.push(pageItems);
         }
       }
-      
-      if (pages.length === 0 && parcelasOrdenadas.length === 0) {
-        const filler = Array.from({ length: ROWS_PER_PAGE }, () => ({ __blank: true }));
-        pages.push(filler);
-      }
-
-      // Filtrar páginas que só tem conteúdo em branco
-      const pagesComConteudo = pages.filter(page => page.some(item => !item.__blank));
 
       const conteudo = `
         <html>

@@ -529,6 +529,10 @@ export default function Vencimentos() {
           </div>
 
           ${pages.map((page, pageIndex) => {
+            // Verificar se a página tem conteúdo real (não só linhas vazias)
+            const temConteudoReal = page.some(item => !item.__blank);
+            if (!temConteudoReal) return ''; // Não renderizar páginas completamente vazias
+
             const startIndex = pageIndex * ROWS_PER_PAGE;
 
             return `
@@ -896,6 +900,27 @@ export default function Vencimentos() {
                       </tr>
                     </thead>
                     <tbody>
+                      // Verificar se a página tem conteúdo real
+              const temConteudoReal = page.some(item => !item.__blank);
+              if (!temConteudoReal) return ''; // Não renderizar páginas vazias
+              
+              return `
+                <div class="page">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th class="col-num">#</th>
+                        <th class="col-cliente">Cliente</th>
+                        <th class="col-banco">Banco</th>
+                        <th class="col-projeto">Projeto</th>
+                        <th class="col-contrato">Contrato</th>
+                        <th class="col-parcela">Parcela</th>
+                        <th class="col-vencimento">Vencimento</th>
+                        <th class="col-valor">Valor</th>
+                        <th class="col-status">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
                       ${page.map((item, idx) => {
                         if (item.__blank) {
                           return `
@@ -929,6 +954,10 @@ export default function Vencimentos() {
                           </tr>
                         `;
                       }).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              `;
                     </tbody>
                   </table>
                 </div>

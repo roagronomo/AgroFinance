@@ -37,6 +37,7 @@ export default function Dashboard() {
   const [outrosServicos, setOutrosServicos] = useState([]);
   const [contasPagar, setContasPagar] = useState([]);
   const [aniversariantes, setAniversariantes] = useState([]);
+  const [clientes, setClientes] = useState([]);
 
   useEffect(() => {
     carregarTodosProjetos();
@@ -90,10 +91,12 @@ export default function Dashboard() {
 
   const carregarAniversariantes = async () => {
     try {
-      const clientes = await base44.entities.Cliente.list();
+      const clientesData = await base44.entities.Cliente.list();
+      setClientes(clientesData);
+      
       const mesAtual = new Date().getMonth() + 1;
       
-      const aniversariantesMes = clientes
+      const aniversariantesMes = clientesData
         .filter(c => c.data_nascimento && c.enviar_lembrete_aniversario === true)
         .map(c => {
           const dataNasc = new Date(c.data_nascimento + 'T00:00:00');
@@ -111,6 +114,132 @@ export default function Dashboard() {
     } catch (error) {
       console.error("Erro ao carregar aniversariantes:", error);
       setAniversariantes([]);
+    }
+  };
+
+  const exportarClientesPDF = () => {
+    const clientesOrdenados = [...clientes].sort((a, b) => 
+      a.nome.localeCompare(b.nome)
+    );
+
+    const conteudo = `
+      <html>
+        <head>
+          <title>Lista de Clientes</title>
+          <style>
+            @page {
+              size: A4;
+              margin: 1cm;
+            }
+            body {
+              font-family: 'Calibri Light', Calibri, sans-serif;
+              font-size: 10pt;
+              color: #333;
+              margin: 0;
+              padding: 0;
+            }
+            .header {
+              text-align: center;
+              padding: 20px 0;
+              border-bottom: 2px solid #059669;
+              margin-bottom: 20px;
+            }
+            .header h1 {
+              font-size: 18pt;
+              margin: 0 0 5px 0;
+              color: #059669;
+            }
+            .header p {
+              margin: 0;
+              color: #666;
+              font-size: 11pt;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 10px;
+            }
+            th, td {
+              border: 1px solid #ddd;
+              padding: 8px;
+              text-align: left;
+            }
+            th {
+              background-color: #e6f4ea;
+              font-weight: bold;
+              color: #065f46;
+            }
+            tr:nth-child(even) {
+              background-color: #f9f9f9;
+            }
+            .footer {
+              margin-top: 30px;
+              text-align: center;
+              font-size: 9pt;
+              color: #666;
+              padding-top: 20px;
+              border-top: 1px solid #e5e7eb;
+            }
+            .total {
+              font-weight: bold;
+              margin-top: 10px;
+              text-align: right;
+              color: #059669;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Lista de Clientes</h1>
+            <p>Cerrado Consultoria - Financiamentos Agrícolas</p>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 40px">#</th>
+                <th style="width: 200px">Nome</th>
+                <th style="width: 120px">CPF/CNPJ</th>
+                <th style="width: 150px">Cidade/UF</th>
+                <th style="width: 120px">Celular</th>
+                <th>E-mail</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${clientesOrdenados.map((cliente, index) => `
+                <tr>
+                  <td style="text-align: center">${index + 1}</td>
+                  <td>${cliente.nome}</td>
+                  <td>${cliente.cpf || ''}</td>
+                  <td>${cliente.cidade || ''}/${cliente.uf || ''}</td>
+                  <td>${cliente.celular || ''}</td>
+                  <td>${cliente.email || ''}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="total">
+            Total de Clientes: ${clientesOrdenados.length}
+          </div>
+
+          <div class="footer">
+            Relatório gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+          </div>
+        </body>
+      </html>
+    `;
+
+    const janela = window.open('', '_blank');
+    if (janela) {
+      janela.document.write(conteudo);
+      janela.document.close();
+      janela.document.title = `Lista_Clientes_${format(new Date(), 'dd-MM-yyyy')}`;
+      setTimeout(() => {
+        janela.print();
+      }, 500);
+    } else {
+      alert("Seu navegador bloqueou a abertura da janela de impressão.");
     }
   };
 
@@ -271,6 +400,14 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex items-center gap-3 w-full md:w-auto">
+            <Button
+              onClick={exportarClientesPDF}
+              variant="outline"
+              className="border-green-300 text-green-700 hover:bg-green-50"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Exportar Clientes
+            </Button>
             <div className="w-40">
               <Select 
                 value={anoSelecionado === "todos" ? "" : anoSelecionado} 

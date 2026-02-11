@@ -266,21 +266,12 @@ export default function Vencimentos() {
       const valorTotal = grupos.reduce((sum, g) => sum + g.saldoDevedor, 0);
       const totalContratos = grupos.length;
 
-      // Paginação para Relatório Geral - SEM adicionar páginas vazias
+      // Paginação para Relatório Geral
       const ROWS_PER_PAGE = linhasPorPagina;
       const pagesComConteudo = [];
 
       for (let i = 0; i < grupos.length; i += ROWS_PER_PAGE) {
-        const pageItems = grupos.slice(i, i + ROWS_PER_PAGE);
-        
-        // Adicionar filler apenas se NÃO for a última página
-        if (pageItems.length < ROWS_PER_PAGE && i + ROWS_PER_PAGE < grupos.length) {
-          const fillCount = ROWS_PER_PAGE - pageItems.length;
-          const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
-          pagesComConteudo.push([...pageItems, ...filler]);
-        } else {
-          pagesComConteudo.push(pageItems);
-        }
+        pagesComConteudo.push(grupos.slice(i, i + ROWS_PER_PAGE));
       }
 
       const conteudo = `
@@ -541,34 +532,17 @@ export default function Vencimentos() {
                     </tr>
                   </thead>
                   <tbody>
-                    ${page.map((item, idx) => {
-                      if (item.__blank) {
-                        return `
-                          <tr class="blank-row">
-                            <td class="col-num"></td>
-                            <td class="col-cliente"></td>
-                            <td class="col-banco"></td>
-                            <td class="col-projeto"></td>
-                            <td class="col-contrato"></td>
-                            <td class="col-vencimento"></td>
-                            <td class="col-valor"></td>
-                          </tr>
-                        `;
-                      }
-
-                      const grupo = item;
-                      return `
-                        <tr>
-                          <td class="col-num">${startIndex + idx + 1}</td>
-                          <td class="col-cliente">${grupo.cliente?.split(' ')[0] || ''}</td>
-                          <td class="col-banco">${bancoNomes[grupo.banco] || grupo.banco || 'N/A'}</td>
-                          <td class="col-projeto">${grupo.itemFinanciado || 'N/A'}</td>
-                          <td class="col-contrato">${grupo.numeroContrato || 'N/A'}</td>
-                          <td class="col-vencimento">${format(grupo.ultimoVencimento, "dd/MM/yyyy", { locale: ptBR })}</td>
-                          <td class="col-valor">R$ ${grupo.saldoDevedor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                        </tr>
-                      `;
-                    }).join('')}
+                    ${page.map((grupo, idx) => `
+                      <tr>
+                        <td class="col-num">${startIndex + idx + 1}</td>
+                        <td class="col-cliente">${grupo.cliente?.split(' ')[0] || ''}</td>
+                        <td class="col-banco">${bancoNomes[grupo.banco] || grupo.banco || 'N/A'}</td>
+                        <td class="col-projeto">${grupo.itemFinanciado || 'N/A'}</td>
+                        <td class="col-contrato">${grupo.numeroContrato || 'N/A'}</td>
+                        <td class="col-vencimento">${format(grupo.ultimoVencimento, "dd/MM/yyyy", { locale: ptBR })}</td>
+                        <td class="col-valor">R$ ${grupo.saldoDevedor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    `).join('')}
                   </tbody>
                 </table>
               </div>
@@ -614,16 +588,7 @@ export default function Vencimentos() {
       const pagesComConteudo = [];
 
       for (let i = 0; i < parcelasOrdenadas.length; i += ROWS_PER_PAGE) {
-        const pageItems = parcelasOrdenadas.slice(i, i + ROWS_PER_PAGE);
-        
-        // Adicionar filler apenas se NÃO for a última página
-        if (pageItems.length < ROWS_PER_PAGE && i + ROWS_PER_PAGE < parcelasOrdenadas.length) {
-          const fillCount = ROWS_PER_PAGE - pageItems.length;
-          const filler = Array.from({ length: fillCount }, () => ({ __blank: true }));
-          pagesComConteudo.push([...pageItems, ...filler]);
-        } else {
-          pagesComConteudo.push(pageItems);
-        }
+        pagesComConteudo.push(parcelasOrdenadas.slice(i, i + ROWS_PER_PAGE));
       }
 
       const conteudo = `
@@ -886,24 +851,7 @@ export default function Vencimentos() {
                       </tr>
                     </thead>
                     <tbody>
-                      ${page.map((item, idx) => {
-                        if (item.__blank) {
-                          return `
-                            <tr class="blank-row">
-                              <td class="col-num"></td>
-                              <td class="col-cliente"></td>
-                              <td class="col-banco"></td>
-                              <td class="col-projeto"></td>
-                              <td class="col-contrato"></td>
-                              <td class="col-parcela"></td>
-                              <td class="col-vencimento"></td>
-                              <td class="col-valor"></td>
-                              <td class="col-status"></td>
-                            </tr>
-                          `;
-                        }
-
-                        const parcela = item;
+                      ${page.map((parcela, idx) => {
                         const projeto = projetos.find(p => p.id === parcela.projeto_id);
                         return `
                           <tr>
@@ -914,7 +862,7 @@ export default function Vencimentos() {
                             <td class="col-contrato">${projeto?.numero_contrato || 'N/A'}</td>
                             <td class="col-parcela">${parcela.numero_parcela}</td>
                             <td class="col-vencimento">${format(new Date(parcela.data_vencimento), "dd/MM/yyyy", { locale: ptBR })}</td>
-                            <td class="col-valor">R$ ${parcela.valor_parcela.toLocaleString('pt-BR', { minimumFractionDigints: 2 })}</td>
+                            <td class="col-valor">R$ ${parcela.valor_parcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                             <td class="col-status status-${parcela.status}">${statusConfig[parcela.status]?.label || parcela.status}</td>
                           </tr>
                         `;

@@ -266,13 +266,8 @@ export default function Vencimentos() {
       const valorTotal = grupos.reduce((sum, g) => sum + g.saldoDevedor, 0);
       const totalContratos = grupos.length;
 
-      // Paginação para Relatório Geral
+      // Gerar HTML diretamente sem paginação artificial
       const ROWS_PER_PAGE = linhasPorPagina;
-      const pagesComConteudo = [];
-
-      for (let i = 0; i < grupos.length; i += ROWS_PER_PAGE) {
-        pagesComConteudo.push(grupos.slice(i, i + ROWS_PER_PAGE));
-      }
 
       const conteudo = `
         <html>
@@ -289,16 +284,6 @@ export default function Vencimentos() {
               color: #333;
               margin: 0;
               padding: 0;
-            }
-            .page {
-              position: relative;
-              min-height: 100vh;
-              padding-top: 2.5cm;
-              padding-bottom: 1.5cm;
-              box-sizing: border-box;
-            }
-            .page:not(:last-child) {
-              page-break-after: always;
             }
             .header-container {
               position: fixed;
@@ -514,40 +499,34 @@ export default function Vencimentos() {
             </div>
           </div>
 
-          ${pagesComConteudo.map((page, pageIndex) => {
-            const startIndex = pageIndex * ROWS_PER_PAGE;
-
-            return `
-              <div class="page">
-                <table>
-                  <thead>
-                    <tr>
-                      <th class="col-num">#</th>
-                      <th class="col-cliente">Cliente</th>
-                      <th class="col-banco">Banco</th>
-                      <th class="col-projeto">Projeto</th>
-                      <th class="col-contrato">Contrato</th>
-                      <th class="col-vencimento">Último Vencimento</th>
-                      <th class="col-valor">Saldo Devedor</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${page.map((grupo, idx) => `
-                      <tr>
-                        <td class="col-num">${startIndex + idx + 1}</td>
-                        <td class="col-cliente">${grupo.cliente?.split(' ')[0] || ''}</td>
-                        <td class="col-banco">${bancoNomes[grupo.banco] || grupo.banco || 'N/A'}</td>
-                        <td class="col-projeto">${grupo.itemFinanciado || 'N/A'}</td>
-                        <td class="col-contrato">${grupo.numeroContrato || 'N/A'}</td>
-                        <td class="col-vencimento">${format(grupo.ultimoVencimento, "dd/MM/yyyy", { locale: ptBR })}</td>
-                        <td class="col-valor">R$ ${grupo.saldoDevedor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
-              </div>
-            `;
-          }).join('')}
+          <div style="padding-top: 2.5cm; padding-bottom: 1.5cm;">
+            <table>
+              <thead>
+                <tr>
+                  <th class="col-num">#</th>
+                  <th class="col-cliente">Cliente</th>
+                  <th class="col-banco">Banco</th>
+                  <th class="col-projeto">Projeto</th>
+                  <th class="col-contrato">Contrato</th>
+                  <th class="col-vencimento">Último Vencimento</th>
+                  <th class="col-valor">Saldo Devedor</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${grupos.map((grupo, idx) => `
+                  <tr>
+                    <td class="col-num">${idx + 1}</td>
+                    <td class="col-cliente">${grupo.cliente?.split(' ')[0] || ''}</td>
+                    <td class="col-banco">${bancoNomes[grupo.banco] || grupo.banco || 'N/A'}</td>
+                    <td class="col-projeto">${grupo.itemFinanciado || 'N/A'}</td>
+                    <td class="col-contrato">${grupo.numeroContrato || 'N/A'}</td>
+                    <td class="col-vencimento">${format(grupo.ultimoVencimento, "dd/MM/yyyy", { locale: ptBR })}</td>
+                    <td class="col-valor">R$ ${grupo.saldoDevedor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
 
           <div class="footer-container">
             <span>Relatório gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
@@ -585,11 +564,6 @@ export default function Vencimentos() {
       const periodo = filtros.ano !== 'todos' ? filtros.ano : 'Todos os anos';
 
       const ROWS_PER_PAGE = linhasPorPagina;
-      const pagesComConteudo = [];
-
-      for (let i = 0; i < parcelasOrdenadas.length; i += ROWS_PER_PAGE) {
-        pagesComConteudo.push(parcelasOrdenadas.slice(i, i + ROWS_PER_PAGE));
-      }
 
       const conteudo = `
         <html>
@@ -606,16 +580,6 @@ export default function Vencimentos() {
                 color: #333;
                 margin: 0;
                 padding: 0;
-              }
-              .page {
-                position: relative;
-                min-height: 100vh;
-                padding-top: 2.5cm;
-                padding-bottom: 1.5cm;
-                box-sizing: border-box;
-              }
-              .page:not(:last-child) {
-                page-break-after: always;
               }
               .header-container {
                 position: fixed;
@@ -831,47 +795,41 @@ export default function Vencimentos() {
               </div>
             </div>
 
-            ${pagesComConteudo.map((page, pageIndex) => {
-              const startIndex = pageIndex * ROWS_PER_PAGE;
-
-              return `
-                <div class="page">
-                  <table>
-                    <thead>
+            <div style="padding-top: 2.5cm; padding-bottom: 1.5cm;">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="col-num">#</th>
+                    <th class="col-cliente">Cliente</th>
+                    <th class="col-banco">Banco</th>
+                    <th class="col-projeto">Projeto</th>
+                    <th class="col-contrato">Contrato</th>
+                    <th class="col-parcela">Parcela</th>
+                    <th class="col-vencimento">Vencimento</th>
+                    <th class="col-valor">Valor</th>
+                    <th class="col-status">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${parcelasOrdenadas.map((parcela, idx) => {
+                    const projeto = projetos.find(p => p.id === parcela.projeto_id);
+                    return `
                       <tr>
-                        <th class="col-num">#</th>
-                        <th class="col-cliente">Cliente</th>
-                        <th class="col-banco">Banco</th>
-                        <th class="col-projeto">Projeto</th>
-                        <th class="col-contrato">Contrato</th>
-                        <th class="col-parcela">Parcela</th>
-                        <th class="col-vencimento">Vencimento</th>
-                        <th class="col-valor">Valor</th>
-                        <th class="col-status">Status</th>
+                        <td class="col-num">${idx + 1}</td>
+                        <td class="col-cliente">${projeto?.nome_cliente?.split(' ')[0] || ''}</td>
+                        <td class="col-banco">${bancoNomes[projeto?.banco] || projeto?.banco || 'N/A'}</td>
+                        <td class="col-projeto">${projeto?.item_financiado || 'N/A'}</td>
+                        <td class="col-contrato">${projeto?.numero_contrato || 'N/A'}</td>
+                        <td class="col-parcela">${parcela.numero_parcela}</td>
+                        <td class="col-vencimento">${format(new Date(parcela.data_vencimento), "dd/MM/yyyy", { locale: ptBR })}</td>
+                        <td class="col-valor">R$ ${parcela.valor_parcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                        <td class="col-status status-${parcela.status}">${statusConfig[parcela.status]?.label || parcela.status}</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      ${page.map((parcela, idx) => {
-                        const projeto = projetos.find(p => p.id === parcela.projeto_id);
-                        return `
-                          <tr>
-                            <td class="col-num">${startIndex + idx + 1}</td>
-                            <td class="col-cliente">${projeto?.nome_cliente?.split(' ')[0] || ''}</td>
-                            <td class="col-banco">${bancoNomes[projeto?.banco] || projeto?.banco || 'N/A'}</td>
-                            <td class="col-projeto">${projeto?.item_financiado || 'N/A'}</td>
-                            <td class="col-contrato">${projeto?.numero_contrato || 'N/A'}</td>
-                            <td class="col-parcela">${parcela.numero_parcela}</td>
-                            <td class="col-vencimento">${format(new Date(parcela.data_vencimento), "dd/MM/yyyy", { locale: ptBR })}</td>
-                            <td class="col-valor">R$ ${parcela.valor_parcela.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                            <td class="col-status status-${parcela.status}">${statusConfig[parcela.status]?.label || parcela.status}</td>
-                          </tr>
-                        `;
-                      }).join('')}
-                    </tbody>
-                  </table>
-                </div>
-              `;
-            }).join('')}
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
 
             <div class="footer-container">
               <span>Relatório gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>

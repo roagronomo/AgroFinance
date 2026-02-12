@@ -370,40 +370,26 @@ export default function Checklist() {
           <style>
             @page {
               size: A4;
-              margin: 1.5cm;
+              margin: 6mm;
             }
             
             body {
               font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               margin: 0;
-              padding: 20px;
+              padding: 0;
               color: #1F2937;
-              line-height: 1.6;
+              line-height: 1.3;
+              font-size: 10pt;
             }
             
             .header {
               display: flex;
               align-items: center;
               justify-content: space-between;
-              padding: 20px;
-              background: linear-gradient(135deg, ${config.cor}, ${config.cor}dd);
-              border-radius: 12px;
-              margin-bottom: 30px;
-              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            }
-            
-            .header-left {
-              display: flex;
-              align-items: center;
-              gap: 20px;
-            }
-            
-            .logo {
-              width: 120px;
-              height: auto;
-              background: white;
-              padding: 10px;
-              border-radius: 8px;
+              padding: 8px 12px;
+              background: ${config.cor};
+              border-bottom: 3px solid ${config.cor};
+              margin-bottom: 8px;
             }
             
             .header-title {
@@ -411,55 +397,55 @@ export default function Checklist() {
             }
             
             .header-title h1 {
-              margin: 0 0 5px 0;
-              font-size: 28px;
+              margin: 0;
+              font-size: 14pt;
               font-weight: 700;
             }
             
             .header-title p {
-              margin: 0;
-              font-size: 16px;
+              margin: 2px 0 0 0;
+              font-size: 9pt;
               opacity: 0.95;
             }
             
             .header-right {
               background: white;
-              padding: 15px 20px;
-              border-radius: 8px;
+              padding: 6px 12px;
+              border-radius: 4px;
               text-align: center;
-              min-width: 150px;
             }
             
             .header-right .progress-label {
-              font-size: 12px;
+              font-size: 8pt;
               color: #6B7280;
-              margin-bottom: 5px;
+              margin: 0;
             }
             
             .header-right .progress-value {
-              font-size: 32px;
+              font-size: 18pt;
               font-weight: 700;
               color: ${config.cor};
               line-height: 1;
+              margin: 2px 0;
             }
             
             .cliente-info {
               background: ${config.corClara};
-              border-left: 4px solid ${config.cor};
-              padding: 15px 20px;
-              margin-bottom: 25px;
-              border-radius: 8px;
+              border-left: 3px solid ${config.cor};
+              padding: 6px 10px;
+              margin-bottom: 8px;
             }
             
             .cliente-info h2 {
-              margin: 0 0 5px 0;
-              font-size: 18px;
+              margin: 0;
+              font-size: 9pt;
               color: ${config.cor};
+              font-weight: 600;
             }
             
             .cliente-info p {
-              margin: 0;
-              font-size: 24px;
+              margin: 2px 0 0 0;
+              font-size: 11pt;
               font-weight: 600;
               color: #1F2937;
             }
@@ -467,18 +453,17 @@ export default function Checklist() {
             .checklist-items {
               display: flex;
               flex-direction: column;
-              gap: 12px;
+              gap: 4px;
             }
             
             .checklist-item {
               background: white;
-              border: 2px solid #E5E7EB;
-              border-radius: 8px;
-              padding: 15px 20px;
+              border: 1px solid #E5E7EB;
+              border-radius: 4px;
+              padding: 6px 10px;
               display: flex;
               align-items: flex-start;
-              gap: 15px;
-              transition: all 0.2s;
+              gap: 8px;
               page-break-inside: avoid;
             }
             
@@ -488,12 +473,12 @@ export default function Checklist() {
             }
             
             .checkbox {
-              width: 24px;
-              height: 24px;
-              border: 2px solid ${config.cor};
-              border-radius: 6px;
+              width: 16px;
+              height: 16px;
+              border: 1.5px solid ${config.cor};
+              border-radius: 3px;
               flex-shrink: 0;
-              margin-top: 2px;
+              margin-top: 1px;
               display: flex;
               align-items: center;
               justify-content: center;
@@ -506,7 +491,7 @@ export default function Checklist() {
             
             .checkbox-check {
               color: white;
-              font-size: 16px;
+              font-size: 11px;
               font-weight: bold;
             }
             
@@ -515,10 +500,11 @@ export default function Checklist() {
             }
             
             .item-title {
-              font-size: 15px;
+              font-size: 9.5pt;
               font-weight: 600;
               color: #1F2937;
-              margin-bottom: 5px;
+              margin: 0;
+              line-height: 1.3;
             }
             
             .checklist-item.marcado .item-title {
@@ -526,19 +512,20 @@ export default function Checklist() {
             }
             
             .item-observacao {
-              font-size: 13px;
+              font-size: 8.5pt;
               color: #6B7280;
-              margin-top: 5px;
+              margin-top: 2px;
               font-style: italic;
+              line-height: 1.2;
             }
             
             .badge {
               display: inline-block;
-              padding: 3px 8px;
-              border-radius: 4px;
-              font-size: 11px;
+              padding: 1px 5px;
+              border-radius: 3px;
+              font-size: 7.5pt;
               font-weight: 600;
-              margin-left: 8px;
+              margin-left: 5px;
             }
             
             .badge-obrigatorio {
@@ -547,12 +534,16 @@ export default function Checklist() {
             }
             
             .footer {
-              margin-top: 40px;
-              padding-top: 20px;
-              border-top: 2px solid #E5E7EB;
+              margin-top: 10px;
+              padding-top: 6px;
+              border-top: 1px solid #E5E7EB;
               text-align: center;
               color: #6B7280;
-              font-size: 12px;
+              font-size: 7.5pt;
+            }
+            
+            .footer p {
+              margin: 2px 0;
             }
             
             @media print {
@@ -568,12 +559,9 @@ export default function Checklist() {
         </head>
         <body>
           <div class="header">
-            <div class="header-left">
-              ${config.logo ? `<img src="${config.logo}" alt="Logo" class="logo" />` : ''}
-              <div class="header-title">
-                <h1>CHECKLIST DE DOCUMENTAÇÃO</h1>
-                <p>${checklistClienteAtual.tipo_projeto}</p>
-              </div>
+            <div class="header-title">
+              <h1>CHECKLIST DE DOCUMENTAÇÃO</h1>
+              <p>${checklistClienteAtual.tipo_projeto} • ${config.nome}</p>
             </div>
             <div class="header-right">
               <div class="progress-label">Progresso</div>
@@ -595,8 +583,7 @@ export default function Checklist() {
                 </div>
                 <div class="item-content">
                   <div class="item-title">
-                    ${index + 1}. ${item.item}
-                    ${item.obrigatorio ? '<span class="badge badge-obrigatorio">OBRIGATÓRIO</span>' : ''}
+                    ${index + 1}. ${item.item}${item.obrigatorio ? '<span class="badge badge-obrigatorio">OBRIGATÓRIO</span>' : ''}
                   </div>
                   ${item.observacao ? `<div class="item-observacao">📌 ${item.observacao}</div>` : ''}
                 </div>

@@ -1305,21 +1305,27 @@ export default function Checklist() {
           </Card>
         ) : (
           <>
-            <div className="bg-white rounded-xl shadow-sm border p-4 mb-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-1 h-5 bg-indigo-600 rounded-full"></div>
+                <h3 className="font-semibold text-gray-900">Filtros de Busca</h3>
+              </div>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Filtrar por Banco
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                    Banco
                   </label>
                   <Select
                     value={filtros.banco}
                     onValueChange={(value) => setFiltros(prev => ({ ...prev, banco: value }))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="border-gray-300 focus:border-indigo-500">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="todos">Todos os Bancos</SelectItem>
+                      <SelectItem value="todos">
+                        <span className="font-medium">Todos os Bancos</span>
+                      </SelectItem>
                       {bancos.map(banco => (
                         <SelectItem key={banco.value} value={banco.value}>
                           {banco.label}
@@ -1330,13 +1336,14 @@ export default function Checklist() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Buscar Tipo de Projeto
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                    Tipo de Projeto
                   </label>
                   <Input
                     placeholder="Digite para buscar..."
                     value={filtros.tipoProjeto}
                     onChange={(e) => setFiltros(prev => ({ ...prev, tipoProjeto: e.target.value }))}
+                    className="border-gray-300 focus:border-indigo-500"
                   />
                 </div>
               </div>

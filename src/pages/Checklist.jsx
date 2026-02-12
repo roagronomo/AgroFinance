@@ -61,17 +61,29 @@ export default function Checklist() {
 
   const [formularioCliente, setFormularioCliente] = useState({
     cliente_nome: "",
+    cliente_cpf: "",
     banco: "",
     tipo_projeto: "",
     template_id: ""
   });
+
+  const [clientes, setClientes] = useState([]);
 
   useEffect(() => {
     carregarDados();
   }, []);
 
   const carregarDados = async () => {
-    await Promise.all([carregarTemplates(), carregarChecklistsClientes()]);
+    await Promise.all([carregarTemplates(), carregarChecklistsClientes(), carregarClientes()]);
+  };
+
+  const carregarClientes = async () => {
+    try {
+      const data = await base44.entities.Cliente.list("nome");
+      setClientes(data);
+    } catch (error) {
+      console.error("Erro ao carregar clientes:", error);
+    }
   };
 
   const carregarTemplates = async () => {
@@ -196,12 +208,24 @@ export default function Checklist() {
   const iniciarChecklistCliente = () => {
     setFormularioCliente({
       cliente_nome: "",
+      cliente_cpf: "",
       banco: "",
       tipo_projeto: "",
       template_id: ""
     });
     setChecklistClienteAtual(null);
     setModoCliente(true);
+  };
+
+  const selecionarCliente = (clienteId) => {
+    const cliente = clientes.find(c => c.id === clienteId);
+    if (cliente) {
+      setFormularioCliente(prev => ({
+        ...prev,
+        cliente_nome: cliente.nome,
+        cliente_cpf: cliente.cpf || ""
+      }));
+    }
   };
 
   const selecionarTemplate = (templateId) => {
@@ -606,6 +630,7 @@ export default function Checklist() {
     setChecklistClienteAtual(null);
     setFormularioCliente({
       cliente_nome: "",
+      cliente_cpf: "",
       banco: "",
       tipo_projeto: "",
       template_id: ""
@@ -755,14 +780,33 @@ export default function Checklist() {
             <CardContent className="p-6 space-y-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Nome do Cliente *
+                  Selecionar Cliente *
                 </label>
-                <Input
-                  placeholder="Digite o nome completo do cliente"
+                <Select
                   value={formularioCliente.cliente_nome}
-                  onChange={(e) => setFormularioCliente(prev => ({ ...prev, cliente_nome: e.target.value }))}
-                  className="text-lg"
-                />
+                  onValueChange={selecionarCliente}
+                >
+                  <SelectTrigger className="text-lg">
+                    <SelectValue placeholder="Escolha um cliente cadastrado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clientes.map(cliente => (
+                      <SelectItem key={cliente.id} value={cliente.id}>
+                        {cliente.nome} {cliente.cpf ? `(CPF: ${cliente.cpf})` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {formularioCliente.cliente_nome && formularioCliente.cliente_cpf && (
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="text-sm text-blue-900">
+                      <strong>Cliente selecionado:</strong> {formularioCliente.cliente_nome}
+                    </p>
+                    <p className="text-sm text-blue-700">
+                      CPF: {formularioCliente.cliente_cpf}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">

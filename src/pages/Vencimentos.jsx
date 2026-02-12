@@ -305,6 +305,9 @@ export default function Vencimentos() {
             .page:not(:last-child) {
               page-break-after: always;
             }
+            .page.last-page {
+              page-break-after: avoid;
+            }
             .header-container {
               position: fixed;
               top: 0;
@@ -476,11 +479,11 @@ export default function Vencimentos() {
             }
 
             @media print {
-              .page {
+              .page:not(.last-page) {
                 page-break-after: always;
               }
-              .page:last-child {
-                page-break-after: auto;
+              .page.last-page {
+                page-break-after: avoid;
               }
               table {
                 page-break-inside: avoid;
@@ -519,8 +522,8 @@ export default function Vencimentos() {
             </div>
           </div>
 
-          ${pages.map((page) => `
-              <div class="page">
+          ${pages.map((page, pageIndex) => `
+              <div class="page${pageIndex === pages.length - 1 ? ' last-page' : ''}">
                 <table>
                   <thead>
                     <tr>
@@ -622,6 +625,9 @@ export default function Vencimentos() {
               }
               .page:not(:last-child) {
                 page-break-after: always;
+              }
+              .page.last-page {
+                page-break-after: avoid;
               }
               .header-container {
                 position: fixed;
@@ -794,11 +800,11 @@ export default function Vencimentos() {
               }
 
               @media print {
-                .page {
+                .page:not(.last-page) {
                   page-break-after: always;
                 }
-                .page:last-child {
-                  page-break-after: auto;
+                .page.last-page {
+                  page-break-after: avoid;
                 }
                 table {
                   page-break-inside: avoid;
@@ -837,8 +843,8 @@ export default function Vencimentos() {
               </div>
             </div>
 
-            ${pages.map((page) => `
-                <div class="page">
+            ${pages.map((page, pageIndex) => `
+                <div class="page${pageIndex === pages.length - 1 ? ' last-page' : ''}">
                   <table>
                     <thead>
                       <tr>

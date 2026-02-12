@@ -100,6 +100,17 @@ const navigationSections = [
     ]
   },
   {
+    title: "Projetos",
+    icon: ClipboardCheck,
+    items: [
+      {
+        title: "Checklist",
+        url: createPageUrl("Checklist"),
+        icon: ClipboardCheck,
+      },
+    ]
+  },
+  {
     title: "Financiamentos",
     icon: Wallet,
     items: [
@@ -155,6 +166,7 @@ export default function Layout({ children, currentPageName }) {
   const [updateCheckStatus, setUpdateCheckStatus] = useState('');
   const [openSections, setOpenSections] = useState({
     "Cadastro": true,
+    "Projetos": true,
     "Financiamentos": true
   });
 

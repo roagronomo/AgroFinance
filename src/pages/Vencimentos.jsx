@@ -298,8 +298,6 @@ export default function Vencimentos() {
               padding: 0;
             }
             .page {
-              position: relative;
-              min-height: 100vh;
               padding-top: 2.5cm;
               padding-bottom: 1.5cm;
               box-sizing: border-box;
@@ -618,8 +616,6 @@ export default function Vencimentos() {
                 padding: 0;
               }
               .page {
-                position: relative;
-                min-height: 100vh;
                 padding-top: 2.5cm;
                 padding-bottom: 1.5cm;
                 box-sizing: border-box;

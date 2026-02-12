@@ -463,6 +463,7 @@ export default function Checklist() {
 
             .logo-container {
               padding: 4px;
+              background: white;
               display: flex;
               align-items: center;
               justify-content: center;

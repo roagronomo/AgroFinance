@@ -988,46 +988,64 @@ export default function Checklist() {
 
       <div className="p-4 md:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
         <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <ClipboardCheck className="w-8 h-8 text-indigo-600" />
-              Checklist de Projetos
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Gerencie templates e checklists de clientes
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={iniciarChecklistCliente}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <UserCheck className="w-5 h-5 mr-2" />
-              Checklist de Cliente
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="border-indigo-300 text-indigo-700 hover:bg-indigo-50"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Novo Template
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={iniciarNovo}>
-                  <FileText className="w-4 h-4 mr-2" />
-                  Template Personalizado
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => criarTemplateModelo("bradesco_custeio_pecuario")}>
-                  <Building2 className="w-4 h-4 mr-2" />
-                  Modelo Bradesco - Custeio Pecuário
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+        {/* Header Moderno */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-8">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            {/* Título e Descrição */}
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg">
+                <ClipboardCheck className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                  Checklist de Projetos
+                </h1>
+                <p className="text-sm text-gray-600">
+                  Gerencie templates e checklists de clientes de forma organizada
+                </p>
+              </div>
+            </div>
+
+            {/* Ações Principais */}
+            <div className="flex flex-wrap gap-3">
+              <Button
+                onClick={iniciarChecklistCliente}
+                size="lg"
+                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transition-all"
+              >
+                <UserCheck className="w-5 h-5 mr-2" />
+                Novo Checklist
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="border-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm"
+                  >
+                    <Plus className="w-5 h-5 mr-2" />
+                    Criar Template
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64">
+                  <DropdownMenuItem onClick={iniciarNovo} className="py-3">
+                    <FileText className="w-4 h-4 mr-3 text-indigo-600" />
+                    <div>
+                      <p className="font-medium">Template Personalizado</p>
+                      <p className="text-xs text-gray-500">Crie do zero</p>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => criarTemplateModelo("bradesco_custeio_pecuario")} className="py-3">
+                    <Building2 className="w-4 h-4 mr-3 text-red-600" />
+                    <div>
+                      <p className="font-medium">Bradesco - Custeio Pecuário</p>
+                      <p className="text-xs text-gray-500">Modelo pré-definido</p>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
 

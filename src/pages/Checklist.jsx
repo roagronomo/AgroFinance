@@ -1444,7 +1444,7 @@ export default function Checklist() {
             </div>
           </div>
 
-        {/* Seção de Checklists de Clientes */}
+        {/* Lista de Checklists */}
         {checklistsClientes.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-gray-300">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
@@ -1459,176 +1459,78 @@ export default function Checklist() {
             <Button
               onClick={iniciarChecklistCliente}
               className="bg-green-600 hover:bg-green-700"
+              size="lg"
             >
               <Plus className="w-5 h-5 mr-2" />
               Criar Primeiro Checklist
             </Button>
           </div>
         ) : (
-          <>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-1 h-5 bg-indigo-600 rounded-full"></div>
-                <h3 className="font-semibold text-gray-900">Filtros de Busca</h3>
-              </div>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                    Banco
-                  </label>
-                  <Select
-                    value={filtros.banco}
-                    onValueChange={(value) => setFiltros(prev => ({ ...prev, banco: value }))}
-                  >
-                    <SelectTrigger className="border-gray-300 focus:border-indigo-500">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todos">
-                        <span className="font-medium">Todos os Bancos</span>
-                      </SelectItem>
-                      {bancos.map(banco => (
-                        <SelectItem key={banco.value} value={banco.value}>
-                          {banco.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+          <div className="grid gap-4">
+            {checklistsClientes.map(checklist => {
+              const totalItens = checklist.itens_checklist?.length || 0;
+              const itensMarcados = checklist.itens_checklist?.filter(item => item.marcado).length || 0;
+              const progresso = totalItens > 0 ? Math.round((itensMarcados / totalItens) * 100) : 0;
 
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                    Tipo de Projeto
-                  </label>
-                  <Input
-                    placeholder="Digite para buscar..."
-                    value={filtros.tipoProjeto}
-                    onChange={(e) => setFiltros(prev => ({ ...prev, tipoProjeto: e.target.value }))}
-                    className="border-gray-300 focus:border-indigo-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {isLoading ? (
-              <div className="text-center py-12">
-                <div className="inline-block w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-                <p className="text-gray-600 mt-4">Carregando checklists...</p>
-              </div>
-            ) : templatesFiltrados.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-xl border">
-                <ClipboardCheck className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                  Nenhum checklist encontrado
-                </h3>
-                <p className="text-gray-500 mb-6">
-                  Crie seu primeiro checklist de projeto
-                </p>
-                <Button onClick={iniciarNovo} className="bg-indigo-600 hover:bg-indigo-700">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Criar Checklist
-                </Button>
-              </div>
-            ) : (
-              <div className="grid md:grid-cols-2 gap-6">
-                {templatesFiltrados.map(template => {
-                  const totalItens = template.itens_checklist?.length || 0;
-                  const obrigatorios = template.itens_checklist?.filter(item => item.obrigatorio).length || 0;
-                  
-                  return (
-                    <Card 
-                      key={template.id} 
-                      className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-indigo-500 hover:border-l-indigo-600 bg-gradient-to-br from-white to-gray-50"
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex flex-col gap-4">
-                          {/* Header */}
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <div className="p-2 bg-indigo-100 rounded-lg group-hover:bg-indigo-200 transition-colors">
-                                  <Building2 className="w-5 h-5 text-indigo-600" />
-                                </div>
-                                <div>
-                                  <h3 className="font-bold text-gray-900 text-base leading-tight">
-                                    {template.nome_template}
-                                  </h3>
-                                  <p className="text-xs text-gray-500 mt-0.5">
-                                    {getBancoLabel(template.banco)}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div className="flex gap-2">
-                              <Button
-                                onClick={() => iniciarEdicao(template)}
-                                variant="ghost"
-                                size="sm"
-                                className="hover:bg-indigo-50 hover:text-indigo-600"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                onClick={() => confirmarExclusaoTemplate(template.id, template.nome_template)}
-                                variant="ghost"
-                                size="sm"
-                                className="hover:bg-red-50 hover:text-red-600"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
+              return (
+                <Card 
+                  key={checklist.id} 
+                  className="hover:shadow-xl transition-all cursor-pointer border-l-4 border-l-green-500"
+                  onClick={() => abrirChecklistCliente(checklist)}
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="p-2 bg-green-100 rounded-lg">
+                            <UserCheck className="w-5 h-5 text-green-600" />
                           </div>
-
-                          {/* Info Badges */}
-                          <div className="flex flex-wrap gap-2">
-                            <Badge className="bg-indigo-600 text-white hover:bg-indigo-700 px-3 py-1">
-                              {template.tipo_projeto}
-                            </Badge>
-                            <Badge variant="outline" className="border-gray-300 text-gray-700 px-3 py-1">
-                              <FileText className="w-3 h-3 mr-1.5" />
-                              {totalItens} {totalItens === 1 ? 'item' : 'itens'}
-                            </Badge>
-                            {obrigatorios > 0 && (
-                              <Badge variant="outline" className="border-red-300 text-red-700 bg-red-50 px-3 py-1">
-                                {obrigatorios} obrigatório{obrigatorios !== 1 ? 's' : ''}
-                              </Badge>
-                            )}
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-900">
+                              {checklist.cliente_nome}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              {getBancoLabel(checklist.banco)} • {checklist.tipo_projeto}
+                            </p>
                           </div>
-
-                          {/* Preview dos itens */}
-                          {template.itens_checklist?.length > 0 && (
-                            <div className="bg-white rounded-lg p-3 border border-gray-200 space-y-2">
-                              <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
-                                Documentos Incluídos:
-                              </p>
-                              <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                                {template.itens_checklist.slice(0, 5).map((item, idx) => (
-                                  <div key={idx} className="flex items-start gap-2 text-sm">
-                                    <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${
-                                      item.obrigatorio ? 'bg-red-500' : 'bg-indigo-400'
-                                    }`} />
-                                    <span className="text-gray-700 leading-tight line-clamp-1">
-                                      {item.item}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                              {template.itens_checklist.length > 5 && (
-                                <p className="text-xs text-gray-500 italic pt-2 border-t border-gray-100">
-                                  + {template.itens_checklist.length - 5} documento{template.itens_checklist.length - 5 !== 1 ? 's' : ''} adicional{template.itens_checklist.length - 5 !== 1 ? 'is' : ''}
-                                </p>
-                              )}
-                            </div>
+                          {checklist.concluido && (
+                            <Badge className="bg-green-500 text-white ml-auto">
+                              ✓ Concluído
+                            </Badge>
                           )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-          </>
+
+                        <div className="mt-4">
+                          <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+                            <span>Progresso: {itensMarcados}/{totalItens} documentos</span>
+                            <span className="font-bold text-green-600">{progresso}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-3">
+                            <div
+                              className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all"
+                              style={{ width: `${progresso}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          confirmarExclusaoChecklist(checklist.id, checklist.cliente_nome);
+                        }}
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         )}
         </div>
       </div>

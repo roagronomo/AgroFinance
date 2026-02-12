@@ -777,8 +777,7 @@ export default function Checklist() {
                     <div className="flex-shrink-0 mt-1">
                       <Checkbox
                         checked={item.marcado}
-                        onCheckedChange={() => toggleItemChecklist(index)}
-                        className="w-6 h-6"
+                        className="w-6 h-6 pointer-events-none"
                       />
                     </div>
                     <div className="flex-1">

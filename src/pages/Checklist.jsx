@@ -1335,74 +1335,102 @@ export default function Checklist() {
                 </Button>
               </div>
             ) : (
-              <div className="grid gap-4">
-                {templatesFiltrados.map(template => (
-                  <Card key={template.id} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <Building2 className="w-5 h-5 text-indigo-600" />
-                            <h3 className="text-lg font-semibold text-gray-900">
-                              {template.nome_template}
-                            </h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                {templatesFiltrados.map(template => {
+                  const totalItens = template.itens_checklist?.length || 0;
+                  const obrigatorios = template.itens_checklist?.filter(item => item.obrigatorio).length || 0;
+                  
+                  return (
+                    <Card 
+                      key={template.id} 
+                      className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-indigo-500 hover:border-l-indigo-600 bg-gradient-to-br from-white to-gray-50"
+                    >
+                      <CardContent className="p-6">
+                        <div className="flex flex-col gap-4">
+                          {/* Header */}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="p-2 bg-indigo-100 rounded-lg group-hover:bg-indigo-200 transition-colors">
+                                  <Building2 className="w-5 h-5 text-indigo-600" />
+                                </div>
+                                <div>
+                                  <h3 className="font-bold text-gray-900 text-base leading-tight">
+                                    {template.nome_template}
+                                  </h3>
+                                  <p className="text-xs text-gray-500 mt-0.5">
+                                    {getBancoLabel(template.banco)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => iniciarEdicao(template)}
+                                variant="ghost"
+                                size="sm"
+                                className="hover:bg-indigo-50 hover:text-indigo-600"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                onClick={() => confirmarExclusaoTemplate(template.id, template.nome_template)}
+                                variant="ghost"
+                                size="sm"
+                                className="hover:bg-red-50 hover:text-red-600"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
-                          
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            <Badge className="bg-indigo-100 text-indigo-700">
-                              {getBancoLabel(template.banco)}
-                            </Badge>
-                            <Badge variant="outline">
+
+                          {/* Info Badges */}
+                          <div className="flex flex-wrap gap-2">
+                            <Badge className="bg-indigo-600 text-white hover:bg-indigo-700 px-3 py-1">
                               {template.tipo_projeto}
                             </Badge>
-                            {template.itens_checklist?.length > 0 && (
-                              <Badge variant="outline" className="text-gray-600">
-                                {template.itens_checklist.length} itens
+                            <Badge variant="outline" className="border-gray-300 text-gray-700 px-3 py-1">
+                              <FileText className="w-3 h-3 mr-1.5" />
+                              {totalItens} {totalItens === 1 ? 'item' : 'itens'}
+                            </Badge>
+                            {obrigatorios > 0 && (
+                              <Badge variant="outline" className="border-red-300 text-red-700 bg-red-50 px-3 py-1">
+                                {obrigatorios} obrigatório{obrigatorios !== 1 ? 's' : ''}
                               </Badge>
                             )}
                           </div>
 
+                          {/* Preview dos itens */}
                           {template.itens_checklist?.length > 0 && (
-                            <div className="mt-4 space-y-2">
-                              {template.itens_checklist.slice(0, 3).map((item, idx) => (
-                                <div key={idx} className="flex items-center gap-2 text-sm text-gray-600">
-                                  <div className="w-2 h-2 bg-indigo-400 rounded-full" />
-                                  <span>{item.item}</span>
-                                  {item.obrigatorio && (
-                                    <span className="text-xs text-indigo-600">(obrigatório)</span>
-                                  )}
-                                </div>
-                              ))}
-                              {template.itens_checklist.length > 3 && (
-                                <p className="text-xs text-gray-500 ml-4">
-                                  + {template.itens_checklist.length - 3} itens
+                            <div className="bg-white rounded-lg p-3 border border-gray-200 space-y-2">
+                              <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                                Documentos Incluídos:
+                              </p>
+                              <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                                {template.itens_checklist.slice(0, 5).map((item, idx) => (
+                                  <div key={idx} className="flex items-start gap-2 text-sm">
+                                    <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${
+                                      item.obrigatorio ? 'bg-red-500' : 'bg-indigo-400'
+                                    }`} />
+                                    <span className="text-gray-700 leading-tight line-clamp-1">
+                                      {item.item}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                              {template.itens_checklist.length > 5 && (
+                                <p className="text-xs text-gray-500 italic pt-2 border-t border-gray-100">
+                                  + {template.itens_checklist.length - 5} documento{template.itens_checklist.length - 5 !== 1 ? 's' : ''} adicional{template.itens_checklist.length - 5 !== 1 ? 'is' : ''}
                                 </p>
                               )}
                             </div>
                           )}
                         </div>
-
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={() => iniciarEdicao(template)}
-                            variant="outline"
-                            size="sm"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            onClick={() => confirmarExclusaoTemplate(template.id, template.nome_template)}
-                            variant="outline"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </>

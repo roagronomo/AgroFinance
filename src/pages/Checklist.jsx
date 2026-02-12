@@ -723,15 +723,8 @@ export default function Checklist() {
   };
 
   const voltarParaLista = () => {
-    setModoCliente(false);
+    setVisao("principal");
     setChecklistClienteAtual(null);
-    setFormularioCliente({
-      cliente_nome: "",
-      cliente_cpf: "",
-      banco: "",
-      tipo_projeto: "",
-      template_id: ""
-    });
   };
 
   const confirmarExclusaoChecklist = (id, nome) => {

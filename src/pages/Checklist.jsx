@@ -1104,13 +1104,18 @@ export default function Checklist() {
               </div>
             </div>
 
-        {/* Seção de Checklists de Clientes */}
-        {checklistsClientes.length > 0 && !modoEdicao && (
           <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <UserCheck className="w-6 h-6 text-green-600" />
-              Checklists de Clientes
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <UserCheck className="w-6 h-6 text-green-600" />
+                </div>
+                Seus Checklists
+              </h2>
+              <Badge variant="outline" className="text-base px-4 py-2">
+                {checklistsClientes.length} {checklistsClientes.length === 1 ? 'checklist' : 'checklists'}
+              </Badge>
+            </div>
             <div className="grid gap-4">
               {checklistsClientes.map(checklist => {
                 const totalItens = checklist.itens_checklist?.length || 0;

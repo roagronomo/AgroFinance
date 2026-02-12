@@ -27,6 +27,16 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -75,6 +85,8 @@ export default function Checklist() {
   });
 
   const [clientes, setClientes] = useState([]);
+  const [dialogoExclusao, setDialogoExclusao] = useState({ aberto: false, tipo: null, id: null, nome: "" });
+  const [mensagemErro, setMensagemErro] = useState("");
 
   useEffect(() => {
     carregarDados();
@@ -170,7 +182,7 @@ export default function Checklist() {
 
   const salvarTemplate = async () => {
     if (!formulario.banco || !formulario.tipo_projeto || !formulario.nome_template) {
-      alert("Preencha banco, tipo de projeto e nome do template");
+      setMensagemErro("Preencha banco, tipo de projeto e nome do template");
       return;
     }
 
@@ -185,19 +197,24 @@ export default function Checklist() {
       cancelarEdicao();
     } catch (error) {
       console.error("Erro ao salvar template:", error);
-      alert("Erro ao salvar template");
+      setMensagemErro("Erro ao salvar template");
     }
   };
 
-  const excluirTemplate = async (id) => {
-    if (!window.confirm("Tem certeza que deseja excluir este template?")) return;
+  const confirmarExclusaoTemplate = (id, nome) => {
+    setDialogoExclusao({ aberto: true, tipo: "template", id, nome });
+  };
+
+  const excluirTemplate = async () => {
+    const { id } = dialogoExclusao;
+    setDialogoExclusao({ aberto: false, tipo: null, id: null, nome: "" });
 
     try {
       await base44.entities.ChecklistTemplate.delete(id);
       await carregarTemplates();
     } catch (error) {
       console.error("Erro ao excluir template:", error);
-      alert("Erro ao excluir template");
+      setMensagemErro("Erro ao excluir template");
     }
   };
 
@@ -228,17 +245,16 @@ export default function Checklist() {
     }
 
     if (!templateData.banco) {
-      alert("Template modelo não disponível");
+      setMensagemErro("Template modelo não disponível");
       return;
     }
 
     try {
       await base44.entities.ChecklistTemplate.create(templateData);
       await carregarTemplates();
-      alert("Template modelo criado com sucesso!");
     } catch (error) {
       console.error("Erro ao criar template modelo:", error);
-      alert("Erro ao criar template modelo");
+      setMensagemErro("Erro ao criar template modelo");
     }
   };
 
@@ -290,7 +306,7 @@ export default function Checklist() {
 
   const criarChecklistCliente = async () => {
     if (!formularioCliente.cliente_nome || !formularioCliente.template_id) {
-      alert("Preencha o nome do cliente e selecione um template");
+      setMensagemErro("Preencha o nome do cliente e selecione um template");
       return;
     }
 
@@ -314,7 +330,7 @@ export default function Checklist() {
       await carregarChecklistsClientes();
     } catch (error) {
       console.error("Erro ao criar checklist do cliente:", error);
-      alert("Erro ao criar checklist");
+      setMensagemErro("Erro ao criar checklist");
     }
   };
 
@@ -672,8 +688,13 @@ export default function Checklist() {
     });
   };
 
-  const excluirChecklistCliente = async (id) => {
-    if (!window.confirm("Tem certeza que deseja excluir este checklist do cliente?")) return;
+  const confirmarExclusaoChecklist = (id, nome) => {
+    setDialogoExclusao({ aberto: true, tipo: "checklist", id, nome });
+  };
+
+  const excluirChecklistCliente = async () => {
+    const { id } = dialogoExclusao;
+    setDialogoExclusao({ aberto: false, tipo: null, id: null, nome: "" });
 
     try {
       await base44.entities.ChecklistPreenchido.delete(id);
@@ -683,7 +704,7 @@ export default function Checklist() {
       }
     } catch (error) {
       console.error("Erro ao excluir checklist:", error);
-      alert("Erro ao excluir checklist");
+      setMensagemErro("Erro ao excluir checklist");
     }
   };
 
@@ -902,8 +923,46 @@ export default function Checklist() {
   }
 
   return (
-    <div className="p-4 md:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
-      <div className="max-w-7xl mx-auto">
+    <>
+      <AlertDialog open={dialogoExclusao.aberto} onOpenChange={(aberto) => !aberto && setDialogoExclusao({ aberto: false, tipo: null, id: null, nome: "" })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              {dialogoExclusao.tipo === "template" 
+                ? `Tem certeza que deseja excluir o template "${dialogoExclusao.nome}"? Esta ação não pode ser desfeita.`
+                : `Tem certeza que deseja excluir o checklist do cliente "${dialogoExclusao.nome}"? Esta ação não pode ser desfeita.`
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={dialogoExclusao.tipo === "template" ? excluirTemplate : excluirChecklistCliente}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!mensagemErro} onOpenChange={(aberto) => !aberto && setMensagemErro("")}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Atenção</AlertDialogTitle>
+            <AlertDialogDescription>
+              {mensagemErro}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setMensagemErro("")}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <div className="p-4 md:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
+        <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
@@ -1009,7 +1068,7 @@ export default function Checklist() {
                             <Edit className="w-4 h-4" />
                           </Button>
                           <Button
-                            onClick={() => excluirChecklistCliente(checklist.id)}
+                            onClick={() => confirmarExclusaoChecklist(checklist.id, checklist.cliente_nome)}
                             variant="outline"
                             size="sm"
                             className="text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -1307,7 +1366,7 @@ export default function Checklist() {
                             <Edit className="w-4 h-4" />
                           </Button>
                           <Button
-                            onClick={() => excluirTemplate(template.id)}
+                            onClick={() => confirmarExclusaoTemplate(template.id, template.nome_template)}
                             variant="outline"
                             size="sm"
                             className="text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -1323,7 +1382,8 @@ export default function Checklist() {
             )}
           </>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

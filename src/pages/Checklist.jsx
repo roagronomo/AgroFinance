@@ -450,10 +450,29 @@ export default function Checklist() {
               display: flex;
               align-items: center;
               justify-content: space-between;
-              padding: 8px 12px;
+              padding: 10px 12px;
               background: ${config.cor};
-              border-bottom: 3px solid ${config.cor};
               margin-bottom: 8px;
+            }
+            
+            .header-left {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+            }
+            
+            .logo-container {
+              background: white;
+              padding: 4px 8px;
+              border-radius: 4px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            
+            .logo {
+              height: 28px;
+              width: auto;
             }
             
             .header-title {
@@ -464,6 +483,7 @@ export default function Checklist() {
               margin: 0;
               font-size: 14pt;
               font-weight: 700;
+              text-shadow: 0 1px 2px rgba(0,0,0,0.1);
             }
             
             .header-title p {
@@ -623,9 +643,16 @@ export default function Checklist() {
         </head>
         <body>
           <div class="header">
-            <div class="header-title">
-              <h1>CHECKLIST DE DOCUMENTAÇÃO</h1>
-              <p>${checklistClienteAtual.tipo_projeto} • ${config.nome}</p>
+            <div class="header-left">
+              ${config.logo ? `
+                <div class="logo-container">
+                  <img src="${config.logo}" alt="${config.nome}" class="logo" />
+                </div>
+              ` : ''}
+              <div class="header-title">
+                <h1>CHECKLIST DE DOCUMENTAÇÃO</h1>
+                <p>${checklistClienteAtual.tipo_projeto} • ${config.nome}</p>
+              </div>
             </div>
             <div class="header-right">
               <div class="progress-label">Progresso</div>

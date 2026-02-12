@@ -1347,7 +1347,10 @@ export default function Checklist() {
                   Salvar Template
                 </Button>
                 <Button
-                  onClick={cancelarEdicao}
+                  onClick={() => {
+                    cancelarEdicao();
+                    setVisao("principal");
+                  }}
                   variant="outline"
                   className="flex-1"
                 >
@@ -1357,6 +1360,105 @@ export default function Checklist() {
               </div>
             </CardContent>
           </Card>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // ============= VISÃO: PRINCIPAL (LISTA DE CHECKLISTS) =============
+  return (
+    <>
+      <AlertDialog open={dialogoExclusao.aberto} onOpenChange={(aberto) => !aberto && setDialogoExclusao({ aberto: false, tipo: null, id: null, nome: "" })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o checklist do cliente "{dialogoExclusao.nome}"? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={excluirChecklistCliente}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!mensagemErro} onOpenChange={(aberto) => !aberto && setMensagemErro("")}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Atenção</AlertDialogTitle>
+            <AlertDialogDescription>
+              {mensagemErro}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setMensagemErro("")}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <div className="p-4 md:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
+        <div className="max-w-7xl mx-auto">
+          {/* Hero Section - Simples e Limpo */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl shadow-xl mb-6">
+              <ClipboardCheck className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-3">
+              Checklists de Projetos
+            </h1>
+            <p className="text-gray-600 text-lg mb-8">
+              Gerencie a documentação dos seus clientes de forma organizada
+            </p>
+            
+            <div className="flex justify-center gap-4">
+              <Button
+                onClick={iniciarChecklistCliente}
+                size="lg"
+                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-xl transition-all text-lg px-8 py-6"
+              >
+                <Plus className="w-6 h-6 mr-3" />
+                Novo Checklist
+              </Button>
+              
+              <Button
+                onClick={() => setVisao("configuracao")}
+                size="lg"
+                variant="outline"
+                className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 shadow-md text-lg px-8 py-6"
+              >
+                <FileText className="w-6 h-6 mr-3" />
+                Gerenciar Templates
+              </Button>
+            </div>
+          </div>
+
+        {/* Seção de Checklists de Clientes */}
+        {checklistsClientes.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-gray-300">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+              <ClipboardCheck className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+              Nenhum checklist criado
+            </h3>
+            <p className="text-gray-500 mb-6">
+              Crie seu primeiro checklist para começar
+            </p>
+            <Button
+              onClick={iniciarChecklistCliente}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Criar Primeiro Checklist
+            </Button>
+          </div>
         ) : (
           <>
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">

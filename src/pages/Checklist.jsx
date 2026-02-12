@@ -306,36 +306,36 @@ export default function Checklist() {
     }
   };
 
-  const selecionarCliente = (clienteId) => {
+  const selecionarClienteWizard = (clienteId) => {
     const cliente = clientes.find(c => c.id === clienteId);
     if (cliente) {
-      setFormularioCliente(prev => ({
+      setWizardData(prev => ({
         ...prev,
+        cliente_id: clienteId,
         cliente_nome: cliente.nome,
         cliente_cpf: cliente.cpf || ""
       }));
     }
   };
 
-  const selecionarTemplate = (templateId) => {
+  const selecionarTemplateWizard = (templateId) => {
     const template = templates.find(t => t.id === templateId);
     if (template) {
-      setFormularioCliente(prev => ({
+      setWizardData(prev => ({
         ...prev,
-        banco: template.banco,
         tipo_projeto: template.tipo_projeto,
         template_id: templateId
       }));
     }
   };
 
-  const criarChecklistCliente = async () => {
-    if (!formularioCliente.cliente_nome || !formularioCliente.template_id) {
-      setMensagemErro("Preencha o nome do cliente e selecione um template");
+  const finalizarWizard = async () => {
+    if (!wizardData.cliente_nome || !wizardData.template_id) {
+      setMensagemErro("Preencha o cliente e selecione um template");
       return;
     }
 
-    const template = templates.find(t => t.id === formularioCliente.template_id);
+    const template = templates.find(t => t.id === wizardData.template_id);
     const itensComMarcacao = template.itens_checklist.map(item => ({
       ...item,
       marcado: false
@@ -343,15 +343,16 @@ export default function Checklist() {
 
     try {
       const novoChecklist = await base44.entities.ChecklistPreenchido.create({
-        cliente_nome: formularioCliente.cliente_nome,
-        banco: formularioCliente.banco,
-        tipo_projeto: formularioCliente.tipo_projeto,
-        template_id: formularioCliente.template_id,
+        cliente_nome: wizardData.cliente_nome,
+        banco: wizardData.banco,
+        tipo_projeto: wizardData.tipo_projeto,
+        template_id: wizardData.template_id,
         itens_checklist: itensComMarcacao,
         concluido: false
       });
 
       setChecklistClienteAtual(novoChecklist);
+      setVisao("checklist");
       await carregarChecklistsClientes();
     } catch (error) {
       console.error("Erro ao criar checklist do cliente:", error);

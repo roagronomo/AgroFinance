@@ -789,7 +789,7 @@ export default function Checklist() {
             </CardContent>
           </Card>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {checklistClienteAtual.itens_checklist.map((item, index) => (
               <Card
                 key={index}
@@ -798,17 +798,17 @@ export default function Checklist() {
                 }`}
                 onClick={() => toggleItemChecklist(index)}
               >
-                <CardContent className="p-5">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 mt-1">
+                <CardContent className="p-3">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-0.5">
                       <Checkbox
                         checked={item.marcado}
-                        className="w-6 h-6 pointer-events-none"
+                        className="w-5 h-5 pointer-events-none"
                       />
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className={`font-semibold ${item.marcado ? 'text-green-700' : 'text-gray-900'}`}>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h3 className={`font-semibold text-sm ${item.marcado ? 'text-green-700' : 'text-gray-900'}`}>
                           {index + 1}. {item.item}
                         </h3>
                         {item.obrigatorio && (
@@ -818,7 +818,7 @@ export default function Checklist() {
                         )}
                       </div>
                       {item.observacao && (
-                        <p className="text-sm text-gray-600 italic mt-2">
+                        <p className="text-xs text-gray-600 italic mt-1">
                           📌 {item.observacao}
                         </p>
                       )}

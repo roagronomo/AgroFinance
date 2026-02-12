@@ -451,45 +451,43 @@ export default function Checklist() {
               align-items: center;
               justify-content: space-between;
               padding: 10px 12px;
-              background: ${config.cor};
+              border-bottom: 3px solid ${config.cor};
               margin-bottom: 8px;
             }
-            
+
             .header-left {
               display: flex;
               align-items: center;
               gap: 12px;
             }
-            
+
             .logo-container {
-              background: white;
-              padding: 4px 8px;
-              border-radius: 4px;
+              padding: 4px;
               display: flex;
               align-items: center;
               justify-content: center;
             }
-            
+
             .logo {
-              height: 28px;
+              height: 32px;
               width: auto;
+              max-width: 120px;
             }
-            
+
             .header-title {
-              color: white;
+              color: ${config.cor};
             }
-            
+
             .header-title h1 {
               margin: 0;
               font-size: 14pt;
               font-weight: 700;
-              text-shadow: 0 1px 2px rgba(0,0,0,0.1);
             }
-            
+
             .header-title p {
               margin: 2px 0 0 0;
               font-size: 9pt;
-              opacity: 0.95;
+              color: #6B7280;
             }
             
             .header-right {

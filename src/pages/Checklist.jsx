@@ -362,13 +362,7 @@ export default function Checklist() {
 
   const abrirChecklistCliente = (checklist) => {
     setChecklistClienteAtual(checklist);
-    setFormularioCliente({
-      cliente_nome: checklist.cliente_nome,
-      banco: checklist.banco,
-      tipo_projeto: checklist.tipo_projeto,
-      template_id: checklist.template_id
-    });
-    setModoCliente(true);
+    setVisao("checklist");
   };
 
   const toggleItemChecklist = async (indexItem) => {

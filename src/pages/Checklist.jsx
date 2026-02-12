@@ -1043,107 +1043,66 @@ export default function Checklist() {
     );
   }
 
-  return (
-    <>
-      <AlertDialog open={dialogoExclusao.aberto} onOpenChange={(aberto) => !aberto && setDialogoExclusao({ aberto: false, tipo: null, id: null, nome: "" })}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              {dialogoExclusao.tipo === "template" 
-                ? `Tem certeza que deseja excluir o template "${dialogoExclusao.nome}"? Esta ação não pode ser desfeita.`
-                : `Tem certeza que deseja excluir o checklist do cliente "${dialogoExclusao.nome}"? Esta ação não pode ser desfeita.`
-              }
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={dialogoExclusao.tipo === "template" ? excluirTemplate : excluirChecklistCliente}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+  // ============= VISÃO: CONFIGURAÇÃO (GERENCIAR TEMPLATES) =============
+  if (visao === "configuracao") {
+    return (
+      <>
+        <AlertDialog open={dialogoExclusao.aberto} onOpenChange={(aberto) => !aberto && setDialogoExclusao({ aberto: false, tipo: null, id: null, nome: "" })}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir o template "{dialogoExclusao.nome}"? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={excluirTemplate}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
-      <AlertDialog open={!!mensagemErro} onOpenChange={(aberto) => !aberto && setMensagemErro("")}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Atenção</AlertDialogTitle>
-            <AlertDialogDescription>
-              {mensagemErro}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setMensagemErro("")}>OK</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        <AlertDialog open={!!mensagemErro} onOpenChange={(aberto) => !aberto && setMensagemErro("")}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Atenção</AlertDialogTitle>
+              <AlertDialogDescription>
+                {mensagemErro}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={() => setMensagemErro("")}>OK</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
-      <div className="p-4 md:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
-        <div className="max-w-7xl mx-auto">
-        {/* Header Moderno */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-8">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            {/* Título e Descrição */}
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg">
-                <ClipboardCheck className="w-7 h-7 text-white" />
-              </div>
+        <div className="p-4 md:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-4 mb-6">
+              <Button
+                onClick={() => {
+                  cancelarEdicao();
+                  setVisao("principal");
+                }}
+                variant="outline"
+                size="icon"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                  Checklist de Projetos
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {templateEditando ? "Editar Template" : "Novo Template"}
                 </h1>
-                <p className="text-sm text-gray-600">
-                  Gerencie templates e checklists de clientes de forma organizada
+                <p className="text-gray-600">
+                  Gerenciar templates de checklist
                 </p>
               </div>
             </div>
-
-            {/* Ações Principais */}
-            <div className="flex flex-wrap gap-3">
-              <Button
-                onClick={iniciarChecklistCliente}
-                size="lg"
-                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transition-all"
-              >
-                <UserCheck className="w-5 h-5 mr-2" />
-                Novo Checklist
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="border-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm"
-                  >
-                    <Plus className="w-5 h-5 mr-2" />
-                    Criar Template
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  <DropdownMenuItem onClick={iniciarNovo} className="py-3">
-                    <FileText className="w-4 h-4 mr-3 text-indigo-600" />
-                    <div>
-                      <p className="font-medium">Template Personalizado</p>
-                      <p className="text-xs text-gray-500">Crie do zero</p>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => criarTemplateModelo("bradesco_custeio_pecuario")} className="py-3">
-                    <Building2 className="w-4 h-4 mr-3 text-red-600" />
-                    <div>
-                      <p className="font-medium">Bradesco - Custeio Pecuário</p>
-                      <p className="text-xs text-gray-500">Modelo pré-definido</p>
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </div>
 
         {/* Seção de Checklists de Clientes */}
         {checklistsClientes.length > 0 && !modoEdicao && (

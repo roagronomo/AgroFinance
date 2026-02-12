@@ -1130,11 +1130,20 @@ export default function Checklist() {
 
         {/* Seção de Templates */}
         {!modoEdicao && (
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <FileText className="w-6 h-6 text-indigo-600" />
-              Templates de Checklist
-            </h2>
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-100 rounded-lg">
+                  <FileText className="w-5 h-5 text-indigo-600" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">
+                  Templates de Checklist
+                </h2>
+              </div>
+              <Badge variant="outline" className="text-sm px-3 py-1">
+                {templatesFiltrados.length} template{templatesFiltrados.length !== 1 ? 's' : ''}
+              </Badge>
+            </div>
           </div>
         )}
 

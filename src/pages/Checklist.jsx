@@ -850,15 +850,14 @@ export default function Checklist() {
     );
   }
 
-  if (modoCliente && !checklistClienteAtual) {
-    const templatesParaSeleção = templates.filter(t => t.ativo);
-
+  // ============= VISÃO: WIZARD DE CRIAÇÃO =============
+  if (visao === "wizard") {
     return (
       <div className="p-4 md:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-4 mb-6">
             <Button
-              onClick={voltarParaLista}
+              onClick={voltarWizard}
               variant="outline"
               size="icon"
             >
@@ -866,97 +865,177 @@ export default function Checklist() {
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                Novo Checklist de Cliente
+                Novo Checklist
               </h1>
               <p className="text-gray-600">
-                Selecione um template e preencha os dados do cliente
+                Passo {wizardPasso} de 2
               </p>
             </div>
           </div>
 
           <Card className="shadow-lg">
-            <CardContent className="p-6 space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Selecionar Cliente *
-                </label>
-                <Select
-                  value={formularioCliente.cliente_nome}
-                  onValueChange={selecionarCliente}
-                >
-                  <SelectTrigger className="text-lg">
-                    <SelectValue placeholder="Escolha um cliente cadastrado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clientes.map(cliente => (
-                      <SelectItem key={cliente.id} value={cliente.id}>
-                        {cliente.nome} {cliente.cpf ? `(CPF: ${cliente.cpf})` : ''}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {formularioCliente.cliente_nome && formularioCliente.cliente_cpf && (
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-blue-900">
-                      <strong>Cliente selecionado:</strong> {formularioCliente.cliente_nome}
-                    </p>
-                    <p className="text-sm text-blue-700">
-                      CPF: {formularioCliente.cliente_cpf}
+            <CardContent className="p-8">
+              {wizardPasso === 1 && (
+                <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
+                      <Building2 className="w-8 h-8 text-indigo-600" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">
+                      Selecione o Banco
+                    </h2>
+                    <p className="text-gray-600">
+                      Escolha a instituição financeira do projeto
                     </p>
                   </div>
-                )}
-              </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Selecione o Template *
-                </label>
-                <Select
-                  value={formularioCliente.template_id}
-                  onValueChange={selecionarTemplate}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Escolha um template de checklist" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {templatesParaSeleção.map(template => (
-                      <SelectItem key={template.id} value={template.id}>
-                        {getBancoLabel(template.banco)} - {template.tipo_projeto} ({template.itens_checklist?.length || 0} itens)
-                      </SelectItem>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {bancos.map(banco => (
+                      <button
+                        key={banco.value}
+                        onClick={() => setWizardData(prev => ({ ...prev, banco: banco.value }))}
+                        className={`p-6 rounded-xl border-2 transition-all text-left ${
+                          wizardData.banco === banco.value
+                            ? 'border-indigo-500 bg-indigo-50 shadow-md'
+                            : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-3 h-3 rounded-full ${
+                            wizardData.banco === banco.value ? 'bg-indigo-600' : 'bg-gray-300'
+                          }`} />
+                          <span className="font-medium text-gray-900">{banco.label}</span>
+                        </div>
+                      </button>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  </div>
 
-              {formularioCliente.template_id && (
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-blue-900 mb-2">
-                    Template selecionado:
-                  </p>
-                  <p className="text-sm text-blue-700">
-                    {templates.find(t => t.id === formularioCliente.template_id)?.nome_template}
-                  </p>
+                  <div className="flex justify-end pt-6 border-t">
+                    <Button
+                      onClick={avancarWizard}
+                      disabled={!wizardData.banco}
+                      className="bg-indigo-600 hover:bg-indigo-700"
+                      size="lg"
+                    >
+                      Próximo
+                      <ArrowLeft className="w-5 h-5 ml-2 rotate-180" />
+                    </Button>
+                  </div>
                 </div>
               )}
 
-              <div className="flex gap-3 pt-4 border-t">
-                <Button
-                  onClick={criarChecklistCliente}
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700"
-                  disabled={!formularioCliente.cliente_nome || !formularioCliente.template_id}
-                >
-                  <UserCheck className="w-5 h-5 mr-2" />
-                  Criar Checklist
-                </Button>
-                <Button
-                  onClick={voltarParaLista}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  <X className="w-5 h-5 mr-2" />
-                  Cancelar
-                </Button>
-              </div>
+              {wizardPasso === 2 && (
+                <div className="space-y-6">
+                  <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                      <UserCheck className="w-8 h-8 text-green-600" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">
+                      Cliente e Tipo de Financiamento
+                    </h2>
+                    <p className="text-gray-600">
+                      {getBancoLabel(wizardData.banco)}
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        Cliente *
+                      </label>
+                      <Select
+                        value={wizardData.cliente_id}
+                        onValueChange={selecionarClienteWizard}
+                      >
+                        <SelectTrigger className="text-lg">
+                          <SelectValue placeholder="Selecione o cliente" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {clientes.map(cliente => (
+                            <SelectItem key={cliente.id} value={cliente.id}>
+                              {cliente.nome} {cliente.cpf ? `(CPF: ${cliente.cpf})` : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {wizardData.cliente_id && (
+                      <>
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <p className="text-sm font-medium text-blue-900">
+                            {wizardData.cliente_nome}
+                          </p>
+                          {wizardData.cliente_cpf && (
+                            <p className="text-sm text-blue-700">
+                              CPF: {wizardData.cliente_cpf}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-gray-700">
+                            Tipo de Financiamento *
+                          </label>
+                          {templatesDisponiveis.length > 0 ? (
+                            <div className="grid gap-3">
+                              {templatesDisponiveis.map(template => (
+                                <button
+                                  key={template.id}
+                                  onClick={() => selecionarTemplateWizard(template.id)}
+                                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                                    wizardData.template_id === template.id
+                                      ? 'border-indigo-500 bg-indigo-50'
+                                      : 'border-gray-200 hover:border-indigo-300'
+                                  }`}
+                                >
+                                  <div className="flex items-start justify-between">
+                                    <div>
+                                      <p className="font-medium text-gray-900">{template.tipo_projeto}</p>
+                                      <p className="text-sm text-gray-600 mt-1">
+                                        {template.itens_checklist?.length || 0} documentos
+                                      </p>
+                                    </div>
+                                    {wizardData.template_id === template.id && (
+                                      <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
+                                        <X className="w-4 h-4 text-white rotate-45" />
+                                      </div>
+                                    )}
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8 bg-gray-50 rounded-lg">
+                              <p className="text-gray-600">
+                                Nenhum template disponível para {getBancoLabel(wizardData.banco)}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3 pt-6 border-t">
+                    <Button
+                      onClick={voltarWizard}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      Voltar
+                    </Button>
+                    <Button
+                      onClick={finalizarWizard}
+                      disabled={!wizardData.cliente_id || !wizardData.template_id}
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                    >
+                      <UserCheck className="w-5 h-5 mr-2" />
+                      Criar Checklist
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

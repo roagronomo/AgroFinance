@@ -20,6 +20,13 @@ import {
   Printer,
   ArrowLeft
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -191,6 +198,47 @@ export default function Checklist() {
     } catch (error) {
       console.error("Erro ao excluir template:", error);
       alert("Erro ao excluir template");
+    }
+  };
+
+  const criarTemplateModelo = async (tipoBanco) => {
+    let templateData = {};
+
+    if (tipoBanco === "bradesco_custeio_pecuario") {
+      templateData = {
+        banco: "bradesco",
+        tipo_projeto: "Custeio Pecuário",
+        nome_template: "Checklist Bradesco - Custeio Pecuário",
+        itens_checklist: [
+          { item: "IPRF", obrigatorio: true, observacao: "Imposto sobre Propriedade Territorial Rural Federal" },
+          { item: "Inscrição Estadual", obrigatorio: true },
+          { item: "CND do ITR", obrigatorio: true, observacao: "Certidão Negativa de Débitos do ITR" },
+          { item: "Contrato de Arrendamento", obrigatorio: true, observacao: "Se aplicável" },
+          { item: "CCIR", obrigatorio: true, observacao: "Deve conter a matrícula correta do imóvel" },
+          { item: "Matrícula do imóvel", obrigatorio: true },
+          { item: "CAR", obrigatorio: true, observacao: "Deve conter a matrícula correta do imóvel" },
+          { item: "CND do CPF", obrigatorio: true, observacao: "Certidão Negativa de Débitos do CPF" },
+          { item: "Comprovante do estado civil (Certidão de Casamento, Certidão de Óbito, Declaração de União Estável)", obrigatorio: true },
+          { item: "Saldo bancário (Bradesco e Concorrentes)", obrigatorio: true },
+          { item: "Extrato de conta corrente (3 meses)", obrigatorio: true },
+          { item: "Declaração de existência de contas bancárias", obrigatorio: true }
+        ],
+        ativo: true
+      };
+    }
+
+    if (!templateData.banco) {
+      alert("Template modelo não disponível");
+      return;
+    }
+
+    try {
+      await base44.entities.ChecklistTemplate.create(templateData);
+      await carregarTemplates();
+      alert("Template modelo criado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao criar template modelo:", error);
+      alert("Erro ao criar template modelo");
     }
   };
 
@@ -874,14 +922,28 @@ export default function Checklist() {
               <UserCheck className="w-5 h-5 mr-2" />
               Checklist de Cliente
             </Button>
-            <Button
-              onClick={iniciarNovo}
-              variant="outline"
-              className="border-indigo-300 text-indigo-700 hover:bg-indigo-50"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Novo Template
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Novo Template
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={iniciarNovo}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Template Personalizado
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => criarTemplateModelo("bradesco_custeio_pecuario")}>
+                  <Building2 className="w-4 h-4 mr-2" />
+                  Modelo Bradesco - Custeio Pecuário
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 

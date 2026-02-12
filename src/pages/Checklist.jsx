@@ -53,13 +53,23 @@ export default function Checklist() {
   const [templates, setTemplates] = useState([]);
   const [checklistsClientes, setChecklistsClientes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [modoEdicao, setModoEdicao] = useState(false);
-  const [modoCliente, setModoCliente] = useState(false);
+  const [visao, setVisao] = useState("principal"); // "principal", "wizard", "configuracao", "checklist"
   const [checklistClienteAtual, setChecklistClienteAtual] = useState(null);
   const [templateEditando, setTemplateEditando] = useState(null);
   const [filtros, setFiltros] = useState({
     banco: "todos",
     tipoProjeto: ""
+  });
+
+  // Estados do wizard de criação
+  const [wizardPasso, setWizardPasso] = useState(1); // 1: banco, 2: cliente e tipo
+  const [wizardData, setWizardData] = useState({
+    banco: "",
+    cliente_id: "",
+    cliente_nome: "",
+    cliente_cpf: "",
+    tipo_projeto: "",
+    template_id: ""
   });
 
   const [formulario, setFormulario] = useState({

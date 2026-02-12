@@ -1202,14 +1202,13 @@ export default function Checklist() {
           </div>
         )}
 
-        {modoEdicao ? (
-          <Card className="shadow-lg">
-            <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-600" />
-                {templateEditando ? "Editar Checklist" : "Novo Checklist"}
-              </CardTitle>
-            </CardHeader>
+            <Card className="shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b">
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-indigo-600" />
+                  Dados do Template
+                </CardTitle>
+              </CardHeader>
             <CardContent className="p-6 space-y-6">
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">

@@ -144,7 +144,7 @@ export default function Checklist() {
       ativo: true
     });
     setTemplateEditando(null);
-    setModoEdicao(true);
+    setVisao("configuracao");
   };
 
   const iniciarEdicao = (template) => {
@@ -156,11 +156,11 @@ export default function Checklist() {
       ativo: template.ativo !== false
     });
     setTemplateEditando(template);
-    setModoEdicao(true);
+    setVisao("configuracao");
   };
 
   const cancelarEdicao = () => {
-    setModoEdicao(false);
+    setVisao("principal");
     setTemplateEditando(null);
     setFormulario({
       banco: "",

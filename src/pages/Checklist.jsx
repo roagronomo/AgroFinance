@@ -747,7 +747,11 @@ export default function Checklist() {
     }
   };
 
-  if (modoCliente && checklistClienteAtual) {
+  // Importar Settings do lucide-react no topo se não estiver
+  const templatesDisponiveis = templates.filter(t => t.ativo && t.banco === wizardData.banco);
+
+  // ============= VISÃO: CHECKLIST INDIVIDUAL =============
+  if (visao === "checklist" && checklistClienteAtual) {
     return (
       <div className="p-4 md:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
         <div className="max-w-5xl mx-auto">

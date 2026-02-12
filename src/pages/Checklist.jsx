@@ -280,15 +280,30 @@ export default function Checklist() {
   };
 
   const iniciarChecklistCliente = () => {
-    setFormularioCliente({
+    setWizardPasso(1);
+    setWizardData({
+      banco: "",
+      cliente_id: "",
       cliente_nome: "",
       cliente_cpf: "",
-      banco: "",
       tipo_projeto: "",
       template_id: ""
     });
-    setChecklistClienteAtual(null);
-    setModoCliente(true);
+    setVisao("wizard");
+  };
+
+  const avancarWizard = () => {
+    if (wizardPasso === 1 && wizardData.banco) {
+      setWizardPasso(2);
+    }
+  };
+
+  const voltarWizard = () => {
+    if (wizardPasso === 2) {
+      setWizardPasso(1);
+    } else {
+      setVisao("principal");
+    }
   };
 
   const selecionarCliente = (clienteId) => {

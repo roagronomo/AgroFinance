@@ -15,8 +15,13 @@ import {
   Save,
   X,
   Building2,
-  FileText
+  FileText,
+  UserCheck,
+  Printer,
+  ArrowLeft
 } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const bancos = [
   { value: "banco_do_brasil_private", label: "Banco do Brasil Private" },
@@ -29,8 +34,11 @@ const bancos = [
 
 export default function Checklist() {
   const [templates, setTemplates] = useState([]);
+  const [checklistsClientes, setChecklistsClientes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [modoEdicao, setModoEdicao] = useState(false);
+  const [modoCliente, setModoCliente] = useState(false);
+  const [checklistClienteAtual, setChecklistClienteAtual] = useState(null);
   const [templateEditando, setTemplateEditando] = useState(null);
   const [filtros, setFiltros] = useState({
     banco: "todos",
@@ -51,9 +59,20 @@ export default function Checklist() {
     observacao: ""
   });
 
+  const [formularioCliente, setFormularioCliente] = useState({
+    cliente_nome: "",
+    banco: "",
+    tipo_projeto: "",
+    template_id: ""
+  });
+
   useEffect(() => {
-    carregarTemplates();
+    carregarDados();
   }, []);
+
+  const carregarDados = async () => {
+    await Promise.all([carregarTemplates(), carregarChecklistsClientes()]);
+  };
 
   const carregarTemplates = async () => {
     setIsLoading(true);
@@ -64,6 +83,15 @@ export default function Checklist() {
       console.error("Erro ao carregar templates:", error);
     }
     setIsLoading(false);
+  };
+
+  const carregarChecklistsClientes = async () => {
+    try {
+      const data = await base44.entities.ChecklistPreenchido.list("-created_date");
+      setChecklistsClientes(data);
+    } catch (error) {
+      console.error("Erro ao carregar checklists de clientes:", error);
+    }
   };
 
   const iniciarNovo = () => {
@@ -165,6 +193,635 @@ export default function Checklist() {
     return bancos.find(b => b.value === value)?.label || value;
   };
 
+  const iniciarChecklistCliente = () => {
+    setFormularioCliente({
+      cliente_nome: "",
+      banco: "",
+      tipo_projeto: "",
+      template_id: ""
+    });
+    setChecklistClienteAtual(null);
+    setModoCliente(true);
+  };
+
+  const selecionarTemplate = (templateId) => {
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      setFormularioCliente(prev => ({
+        ...prev,
+        banco: template.banco,
+        tipo_projeto: template.tipo_projeto,
+        template_id: templateId
+      }));
+    }
+  };
+
+  const criarChecklistCliente = async () => {
+    if (!formularioCliente.cliente_nome || !formularioCliente.template_id) {
+      alert("Preencha o nome do cliente e selecione um template");
+      return;
+    }
+
+    const template = templates.find(t => t.id === formularioCliente.template_id);
+    const itensComMarcacao = template.itens_checklist.map(item => ({
+      ...item,
+      marcado: false
+    }));
+
+    try {
+      const novoChecklist = await base44.entities.ChecklistPreenchido.create({
+        cliente_nome: formularioCliente.cliente_nome,
+        banco: formularioCliente.banco,
+        tipo_projeto: formularioCliente.tipo_projeto,
+        template_id: formularioCliente.template_id,
+        itens_checklist: itensComMarcacao,
+        concluido: false
+      });
+
+      setChecklistClienteAtual(novoChecklist);
+      await carregarChecklistsClientes();
+    } catch (error) {
+      console.error("Erro ao criar checklist do cliente:", error);
+      alert("Erro ao criar checklist");
+    }
+  };
+
+  const abrirChecklistCliente = (checklist) => {
+    setChecklistClienteAtual(checklist);
+    setFormularioCliente({
+      cliente_nome: checklist.cliente_nome,
+      banco: checklist.banco,
+      tipo_projeto: checklist.tipo_projeto,
+      template_id: checklist.template_id
+    });
+    setModoCliente(true);
+  };
+
+  const toggleItemChecklist = async (indexItem) => {
+    if (!checklistClienteAtual) return;
+
+    const itensAtualizados = [...checklistClienteAtual.itens_checklist];
+    itensAtualizados[indexItem].marcado = !itensAtualizados[indexItem].marcado;
+
+    const todosObrigatoriosMarcados = itensAtualizados
+      .filter(item => item.obrigatorio)
+      .every(item => item.marcado);
+
+    try {
+      const checklistAtualizado = await base44.entities.ChecklistPreenchido.update(
+        checklistClienteAtual.id,
+        {
+          itens_checklist: itensAtualizados,
+          concluido: todosObrigatoriosMarcados,
+          data_conclusao: todosObrigatoriosMarcados ? new Date().toISOString() : null
+        }
+      );
+
+      setChecklistClienteAtual(checklistAtualizado);
+      await carregarChecklistsClientes();
+    } catch (error) {
+      console.error("Erro ao atualizar checklist:", error);
+    }
+  };
+
+  const gerarPDFChecklist = () => {
+    if (!checklistClienteAtual) return;
+
+    const bancoConfig = {
+      bradesco: {
+        cor: "#CC092F",
+        corClara: "#FFE6EA",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Bradesco_logo.svg/200px-Bradesco_logo.svg.png",
+        nome: "Banco Bradesco"
+      },
+      banco_do_brasil_private: {
+        cor: "#FDB813",
+        corClara: "#FFF8E1",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Banco_do_Brasil_logo.svg/200px-Banco_do_Brasil_logo.svg.png",
+        nome: "Banco do Brasil Private"
+      },
+      banco_do_brasil_varejo: {
+        cor: "#FDB813",
+        corClara: "#FFF8E1",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Banco_do_Brasil_logo.svg/200px-Banco_do_Brasil_logo.svg.png",
+        nome: "Banco do Brasil Varejo"
+      },
+      caixa_economica_federal: {
+        cor: "#0066B3",
+        corClara: "#E3F2FD",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Caixa_logo.svg/200px-Caixa_logo.svg.png",
+        nome: "Caixa Econômica Federal"
+      },
+      sicoob: {
+        cor: "#00984A",
+        corClara: "#E8F5E9",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Sicoob_logo.svg/200px-Sicoob_logo.svg.png",
+        nome: "Sicoob"
+      },
+      sicredi: {
+        cor: "#00A859",
+        corClara: "#E8F5E9",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Sicredi_logo.svg/200px-Sicredi_logo.svg.png",
+        nome: "Sicredi"
+      }
+    };
+
+    const config = bancoConfig[checklistClienteAtual.banco] || {
+      cor: "#1F2937",
+      corClara: "#F3F4F6",
+      logo: "",
+      nome: getBancoLabel(checklistClienteAtual.banco)
+    };
+
+    const totalItens = checklistClienteAtual.itens_checklist.length;
+    const itensMarcados = checklistClienteAtual.itens_checklist.filter(item => item.marcado).length;
+    const progresso = Math.round((itensMarcados / totalItens) * 100);
+
+    const conteudoPDF = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Checklist - ${checklistClienteAtual.cliente_nome}</title>
+          <style>
+            @page {
+              size: A4;
+              margin: 1.5cm;
+            }
+            
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              margin: 0;
+              padding: 20px;
+              color: #1F2937;
+              line-height: 1.6;
+            }
+            
+            .header {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              padding: 20px;
+              background: linear-gradient(135deg, ${config.cor}, ${config.cor}dd);
+              border-radius: 12px;
+              margin-bottom: 30px;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            
+            .header-left {
+              display: flex;
+              align-items: center;
+              gap: 20px;
+            }
+            
+            .logo {
+              width: 120px;
+              height: auto;
+              background: white;
+              padding: 10px;
+              border-radius: 8px;
+            }
+            
+            .header-title {
+              color: white;
+            }
+            
+            .header-title h1 {
+              margin: 0 0 5px 0;
+              font-size: 28px;
+              font-weight: 700;
+            }
+            
+            .header-title p {
+              margin: 0;
+              font-size: 16px;
+              opacity: 0.95;
+            }
+            
+            .header-right {
+              background: white;
+              padding: 15px 20px;
+              border-radius: 8px;
+              text-align: center;
+              min-width: 150px;
+            }
+            
+            .header-right .progress-label {
+              font-size: 12px;
+              color: #6B7280;
+              margin-bottom: 5px;
+            }
+            
+            .header-right .progress-value {
+              font-size: 32px;
+              font-weight: 700;
+              color: ${config.cor};
+              line-height: 1;
+            }
+            
+            .cliente-info {
+              background: ${config.corClara};
+              border-left: 4px solid ${config.cor};
+              padding: 15px 20px;
+              margin-bottom: 25px;
+              border-radius: 8px;
+            }
+            
+            .cliente-info h2 {
+              margin: 0 0 5px 0;
+              font-size: 18px;
+              color: ${config.cor};
+            }
+            
+            .cliente-info p {
+              margin: 0;
+              font-size: 24px;
+              font-weight: 600;
+              color: #1F2937;
+            }
+            
+            .checklist-items {
+              display: flex;
+              flex-direction: column;
+              gap: 12px;
+            }
+            
+            .checklist-item {
+              background: white;
+              border: 2px solid #E5E7EB;
+              border-radius: 8px;
+              padding: 15px 20px;
+              display: flex;
+              align-items: flex-start;
+              gap: 15px;
+              transition: all 0.2s;
+              page-break-inside: avoid;
+            }
+            
+            .checklist-item.marcado {
+              background: ${config.corClara};
+              border-color: ${config.cor};
+            }
+            
+            .checkbox {
+              width: 24px;
+              height: 24px;
+              border: 2px solid ${config.cor};
+              border-radius: 6px;
+              flex-shrink: 0;
+              margin-top: 2px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: white;
+            }
+            
+            .checklist-item.marcado .checkbox {
+              background: ${config.cor};
+            }
+            
+            .checkbox-check {
+              color: white;
+              font-size: 16px;
+              font-weight: bold;
+            }
+            
+            .item-content {
+              flex: 1;
+            }
+            
+            .item-title {
+              font-size: 15px;
+              font-weight: 600;
+              color: #1F2937;
+              margin-bottom: 5px;
+            }
+            
+            .checklist-item.marcado .item-title {
+              color: ${config.cor};
+            }
+            
+            .item-observacao {
+              font-size: 13px;
+              color: #6B7280;
+              margin-top: 5px;
+              font-style: italic;
+            }
+            
+            .badge {
+              display: inline-block;
+              padding: 3px 8px;
+              border-radius: 4px;
+              font-size: 11px;
+              font-weight: 600;
+              margin-left: 8px;
+            }
+            
+            .badge-obrigatorio {
+              background: #FEE2E2;
+              color: #DC2626;
+            }
+            
+            .footer {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 2px solid #E5E7EB;
+              text-align: center;
+              color: #6B7280;
+              font-size: 12px;
+            }
+            
+            @media print {
+              body {
+                padding: 0;
+              }
+              
+              .checklist-item {
+                page-break-inside: avoid;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="header-left">
+              ${config.logo ? `<img src="${config.logo}" alt="Logo" class="logo" />` : ''}
+              <div class="header-title">
+                <h1>CHECKLIST DE DOCUMENTAÇÃO</h1>
+                <p>${checklistClienteAtual.tipo_projeto}</p>
+              </div>
+            </div>
+            <div class="header-right">
+              <div class="progress-label">Progresso</div>
+              <div class="progress-value">${progresso}%</div>
+              <div class="progress-label">${itensMarcados}/${totalItens} itens</div>
+            </div>
+          </div>
+          
+          <div class="cliente-info">
+            <h2>Cliente</h2>
+            <p>${checklistClienteAtual.cliente_nome}</p>
+          </div>
+          
+          <div class="checklist-items">
+            ${checklistClienteAtual.itens_checklist.map((item, index) => `
+              <div class="checklist-item ${item.marcado ? 'marcado' : ''}">
+                <div class="checkbox">
+                  ${item.marcado ? '<span class="checkbox-check">✓</span>' : ''}
+                </div>
+                <div class="item-content">
+                  <div class="item-title">
+                    ${index + 1}. ${item.item}
+                    ${item.obrigatorio ? '<span class="badge badge-obrigatorio">OBRIGATÓRIO</span>' : ''}
+                  </div>
+                  ${item.observacao ? `<div class="item-observacao">📌 ${item.observacao}</div>` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div class="footer">
+            <p><strong>Cerrado Consultoria - Financiamentos Agrícolas</strong></p>
+            <p>Documento gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const janela = window.open('', '_blank');
+    if (janela) {
+      janela.document.write(conteudoPDF);
+      janela.document.close();
+      janela.document.title = `Checklist_${checklistClienteAtual.cliente_nome.replace(/\s+/g, '_')}`;
+      setTimeout(() => {
+        janela.print();
+      }, 500);
+    } else {
+      alert("Bloqueador de pop-ups ativo. Permita pop-ups para gerar o PDF.");
+    }
+  };
+
+  const voltarParaLista = () => {
+    setModoCliente(false);
+    setChecklistClienteAtual(null);
+    setFormularioCliente({
+      cliente_nome: "",
+      banco: "",
+      tipo_projeto: "",
+      template_id: ""
+    });
+  };
+
+  const excluirChecklistCliente = async (id) => {
+    if (!window.confirm("Tem certeza que deseja excluir este checklist do cliente?")) return;
+
+    try {
+      await base44.entities.ChecklistPreenchido.delete(id);
+      await carregarChecklistsClientes();
+      if (checklistClienteAtual?.id === id) {
+        voltarParaLista();
+      }
+    } catch (error) {
+      console.error("Erro ao excluir checklist:", error);
+      alert("Erro ao excluir checklist");
+    }
+  };
+
+  if (modoCliente && checklistClienteAtual) {
+    return (
+      <div className="p-4 md:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center gap-4 mb-6">
+            <Button
+              onClick={voltarParaLista}
+              variant="outline"
+              size="icon"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-gray-900">
+                Checklist: {checklistClienteAtual.cliente_nome}
+              </h1>
+              <p className="text-gray-600">
+                {getBancoLabel(checklistClienteAtual.banco)} • {checklistClienteAtual.tipo_projeto}
+              </p>
+            </div>
+            <Button
+              onClick={gerarPDFChecklist}
+              className="bg-indigo-600 hover:bg-indigo-700"
+            >
+              <Printer className="w-5 h-5 mr-2" />
+              Gerar PDF
+            </Button>
+          </div>
+
+          <Card className="shadow-lg mb-6">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-sm text-gray-600">Progresso do Checklist</p>
+                  <p className="text-2xl font-bold text-indigo-600">
+                    {checklistClienteAtual.itens_checklist.filter(item => item.marcado).length} de {checklistClienteAtual.itens_checklist.length} itens
+                  </p>
+                </div>
+                {checklistClienteAtual.concluido && (
+                  <Badge className="bg-green-100 text-green-700 px-4 py-2">
+                    ✓ Concluído
+                  </Badge>
+                )}
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-3">
+                <div
+                  className="bg-indigo-600 h-3 rounded-full transition-all"
+                  style={{
+                    width: `${(checklistClienteAtual.itens_checklist.filter(item => item.marcado).length / checklistClienteAtual.itens_checklist.length) * 100}%`
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="space-y-3">
+            {checklistClienteAtual.itens_checklist.map((item, index) => (
+              <Card
+                key={index}
+                className={`transition-all cursor-pointer hover:shadow-md ${
+                  item.marcado ? 'bg-green-50 border-green-300' : 'bg-white'
+                }`}
+                onClick={() => toggleItemChecklist(index)}
+              >
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 mt-1">
+                      <Checkbox
+                        checked={item.marcado}
+                        onCheckedChange={() => toggleItemChecklist(index)}
+                        className="w-6 h-6"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className={`font-semibold ${item.marcado ? 'text-green-700' : 'text-gray-900'}`}>
+                          {index + 1}. {item.item}
+                        </h3>
+                        {item.obrigatorio && (
+                          <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
+                            Obrigatório
+                          </Badge>
+                        )}
+                      </div>
+                      {item.observacao && (
+                        <p className="text-sm text-gray-600 italic mt-2">
+                          📌 {item.observacao}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (modoCliente && !checklistClienteAtual) {
+    const templatesParaSeleção = templates.filter(t => t.ativo);
+
+    return (
+      <div className="p-4 md:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex items-center gap-4 mb-6">
+            <Button
+              onClick={voltarParaLista}
+              variant="outline"
+              size="icon"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Novo Checklist de Cliente
+              </h1>
+              <p className="text-gray-600">
+                Selecione um template e preencha os dados do cliente
+              </p>
+            </div>
+          </div>
+
+          <Card className="shadow-lg">
+            <CardContent className="p-6 space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Nome do Cliente *
+                </label>
+                <Input
+                  placeholder="Digite o nome completo do cliente"
+                  value={formularioCliente.cliente_nome}
+                  onChange={(e) => setFormularioCliente(prev => ({ ...prev, cliente_nome: e.target.value }))}
+                  className="text-lg"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Selecione o Template *
+                </label>
+                <Select
+                  value={formularioCliente.template_id}
+                  onValueChange={selecionarTemplate}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Escolha um template de checklist" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templatesParaSeleção.map(template => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {getBancoLabel(template.banco)} - {template.tipo_projeto} ({template.itens_checklist?.length || 0} itens)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formularioCliente.template_id && (
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <p className="text-sm font-medium text-blue-900 mb-2">
+                    Template selecionado:
+                  </p>
+                  <p className="text-sm text-blue-700">
+                    {templates.find(t => t.id === formularioCliente.template_id)?.nome_template}
+                  </p>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4 border-t">
+                <Button
+                  onClick={criarChecklistCliente}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                  disabled={!formularioCliente.cliente_nome || !formularioCliente.template_id}
+                >
+                  <UserCheck className="w-5 h-5 mr-2" />
+                  Criar Checklist
+                </Button>
+                <Button
+                  onClick={voltarParaLista}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  <X className="w-5 h-5 mr-2" />
+                  Cancelar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
@@ -175,17 +832,116 @@ export default function Checklist() {
               Checklist de Projetos
             </h1>
             <p className="text-gray-600 mt-1">
-              Gerencie checklists por banco e tipo de projeto
+              Gerencie templates e checklists de clientes
             </p>
           </div>
-          <Button
-            onClick={iniciarNovo}
-            className="bg-indigo-600 hover:bg-indigo-700"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Novo Checklist
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={iniciarChecklistCliente}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <UserCheck className="w-5 h-5 mr-2" />
+              Checklist de Cliente
+            </Button>
+            <Button
+              onClick={iniciarNovo}
+              variant="outline"
+              className="border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Novo Template
+            </Button>
+          </div>
         </div>
+
+        {/* Seção de Checklists de Clientes */}
+        {checklistsClientes.length > 0 && !modoEdicao && (
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <UserCheck className="w-6 h-6 text-green-600" />
+              Checklists de Clientes
+            </h2>
+            <div className="grid gap-4">
+              {checklistsClientes.map(checklist => {
+                const totalItens = checklist.itens_checklist?.length || 0;
+                const itensMarcados = checklist.itens_checklist?.filter(item => item.marcado).length || 0;
+                const progresso = totalItens > 0 ? Math.round((itensMarcados / totalItens) * 100) : 0;
+
+                return (
+                  <Card key={checklist.id} className="hover:shadow-lg transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <UserCheck className="w-5 h-5 text-green-600" />
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {checklist.cliente_nome}
+                            </h3>
+                            {checklist.concluido && (
+                              <Badge className="bg-green-100 text-green-700">
+                                ✓ Concluído
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            <Badge className="bg-blue-100 text-blue-700">
+                              {getBancoLabel(checklist.banco)}
+                            </Badge>
+                            <Badge variant="outline">
+                              {checklist.tipo_projeto}
+                            </Badge>
+                          </div>
+
+                          <div className="mt-4">
+                            <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+                              <span>Progresso: {itensMarcados}/{totalItens} itens</span>
+                              <span className="font-semibold">{progresso}%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className="bg-green-600 h-2 rounded-full transition-all"
+                                style={{ width: `${progresso}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => abrirChecklistCliente(checklist)}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            onClick={() => excluirChecklistCliente(checklist.id)}
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Seção de Templates */}
+        {!modoEdicao && (
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <FileText className="w-6 h-6 text-indigo-600" />
+              Templates de Checklist
+            </h2>
+          </div>
+        )}
 
         {modoEdicao ? (
           <Card className="shadow-lg">

@@ -379,7 +379,7 @@ export default function Checklist() {
       bradesco: {
         cor: "#CC092F",
         corClara: "#FFE6EA",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Bradesco_logo.svg/200px-Bradesco_logo.svg.png",
+        logo: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68c43a9d96ab992732fde594/e7db1ccaf_image.png",
         nome: "Banco Bradesco"
       },
       banco_do_brasil_private: {

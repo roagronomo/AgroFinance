@@ -14,10 +14,8 @@ Deno.serve(async (req) => {
 
     // Horário de Brasília (UTC-3)
     const agora = new Date();
-    const offsetBrasilia = -3 * 60; // UTC-3 em minutos
-    const offsetAtual = agora.getTimezoneOffset(); // offset do servidor em minutos
-    const diferencaMinutos = offsetBrasilia - offsetAtual;
-    const agoraBrasilia = new Date(agora.getTime() + diferencaMinutos * 60 * 1000);
+    // Brasília está a UTC-3, então precisamos subtrair 3 horas do UTC
+    const agoraBrasilia = new Date(agora.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
     
     const hoje = new Date(agoraBrasilia);
     hoje.setHours(0, 0, 0, 0);

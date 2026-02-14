@@ -108,6 +108,11 @@ const navigationSections = [
         url: createPageUrl("Checklist"),
         icon: ClipboardCheck,
       },
+      {
+        title: "Croqui Bradesco",
+        url: createPageUrl("CroquiBradesco"),
+        icon: FileText,
+      },
     ]
   },
   {

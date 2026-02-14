@@ -67,6 +67,7 @@ import OutrosServicos from './pages/OutrosServicos';
 import ProducaoAgricola from './pages/ProducaoAgricola';
 import TodosProjetos from './pages/TodosProjetos';
 import Vencimentos from './pages/Vencimentos';
+import CroquiBradesco from './pages/CroquiBradesco';
 import __Layout from './Layout.jsx';
 
 
@@ -91,6 +92,7 @@ export const PAGES = {
     "ProducaoAgricola": ProducaoAgricola,
     "TodosProjetos": TodosProjetos,
     "Vencimentos": Vencimentos,
+    "CroquiBradesco": CroquiBradesco,
 }
 
 export const pagesConfig = {

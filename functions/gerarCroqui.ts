@@ -11,7 +11,7 @@ import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, Image
 // ==================================================================
 
 function parseKMLFromString(kmlContent) {
-  const dom = new DOMParser().parseFromString(kmlContent);
+  const dom = new DOMParser().parseFromString(kmlContent, 'text/xml');
   const geojson = tj.kml(dom);
   const polygonFeature = geojson.features.find(f => f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon');
   

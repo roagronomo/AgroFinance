@@ -221,14 +221,14 @@ export default function CroquiBradesco() {
                 </Button>
 
                 <Button
-                  onClick={() => handleDownload(arquivosGerados.png_url, arquivosGerados.png_filename)}
+                  onClick={() => handleDownload(arquivosGerados.svg_url, arquivosGerados.svg_filename)}
                   variant="outline"
                   className="w-full justify-start text-left h-auto py-4"
                 >
                   <Download className="w-5 h-5 mr-3 flex-shrink-0 text-green-600" />
                   <div>
-                    <p className="font-semibold">Imagem (PNG)</p>
-                    <p className="text-sm text-gray-600">{arquivosGerados.png_filename}</p>
+                    <p className="font-semibold">Imagem (SVG)</p>
+                    <p className="text-sm text-gray-600">{arquivosGerados.svg_filename}</p>
                   </div>
                 </Button>
 

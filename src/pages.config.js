@@ -55,6 +55,7 @@ import CadastroClientes from './pages/CadastroClientes';
 import CadastroImoveis from './pages/CadastroImoveis';
 import Checklist from './pages/Checklist';
 import CorrecaoVinculos from './pages/CorrecaoVinculos';
+import CroquiBradesco from './pages/CroquiBradesco';
 import Dashboard from './pages/Dashboard';
 import DespesasLembretes from './pages/DespesasLembretes';
 import EditarProjeto from './pages/EditarProjeto';
@@ -67,7 +68,6 @@ import OutrosServicos from './pages/OutrosServicos';
 import ProducaoAgricola from './pages/ProducaoAgricola';
 import TodosProjetos from './pages/TodosProjetos';
 import Vencimentos from './pages/Vencimentos';
-import CroquiBradesco from './pages/CroquiBradesco';
 import __Layout from './Layout.jsx';
 
 
@@ -80,6 +80,7 @@ export const PAGES = {
     "CadastroImoveis": CadastroImoveis,
     "Checklist": Checklist,
     "CorrecaoVinculos": CorrecaoVinculos,
+    "CroquiBradesco": CroquiBradesco,
     "Dashboard": Dashboard,
     "DespesasLembretes": DespesasLembretes,
     "EditarProjeto": EditarProjeto,
@@ -92,7 +93,6 @@ export const PAGES = {
     "ProducaoAgricola": ProducaoAgricola,
     "TodosProjetos": TodosProjetos,
     "Vencimentos": Vencimentos,
-    "CroquiBradesco": CroquiBradesco,
 }
 
 export const pagesConfig = {

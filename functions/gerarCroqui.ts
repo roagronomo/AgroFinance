@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
-import { kml } from 'npm:@tmcw/togeojson@5.8.1';
+import { kml as kmlToGeoJSON } from 'npm:@tmcw/togeojson@5.8.1';
 import * as turf from 'npm:@turf/turf@7.0.0';
 import proj4 from 'npm:proj4@2.11.0';
 import { DOMParser } from 'npm:xmldom@0.6.0';
@@ -12,7 +12,7 @@ import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, Image
 
 function parseKMLFromString(kmlContent) {
   const dom = new DOMParser().parseFromString(kmlContent, 'text/xml');
-  const geojson = kml(dom);
+  const geojson = kmlToGeoJSON(dom);
   const polygonFeature = geojson.features.find(f => f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon');
   
   if (!polygonFeature) throw new Error('Nenhum polígono encontrado no arquivo KML.');

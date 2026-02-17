@@ -3,7 +3,6 @@ import { kml } from 'npm:@tmcw/togeojson@5.8.1';
 import * as turf from 'npm:@turf/turf@7.0.0';
 import proj4 from 'npm:proj4@2.11.0';
 import { DOMParser } from 'npm:xmldom@0.6.0';
-import { createCanvas } from 'npm:canvas@2.11.2';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, ImageRun, AlignmentType, WidthType, VerticalAlign, Header, Footer, convertInchesToTwip } from 'npm:docx@8.5.0';
 
 // ========================================================================
@@ -19,7 +18,6 @@ function parseKMLFromString(kmlContent) {
     
     console.log('GeoJSON gerado, features:', geojson.features.length);
     
-    // Encontra o polígono no GeoJSON
     const polygonFeature = geojson.features.find(f => 
       f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon'
     );
@@ -28,7 +26,6 @@ function parseKMLFromString(kmlContent) {
       throw new Error('Nenhum polígono encontrado no arquivo KML.');
     }
     
-    // Se for MultiPolygon, pega o maior polígono
     if (polygonFeature.geometry.type === 'MultiPolygon') {
       console.log('MultiPolygon detectado, selecionando o maior...');
       let maxArea = 0, maxIdx = 0;
@@ -65,13 +62,11 @@ function simplifyPolygonDynamic(polygonFeature, targetAreaHa, maxPoints = 20, to
   
   console.log(`Simplificando polígono: ${originalPointCount} pontos, área original: ${originalAreaHa.toFixed(2)} ha, área alvo: ${targetAreaHa} ha`);
   
-  // Se já tem poucos pontos, só ajusta a área
   if (originalPointCount <= maxPoints) {
     console.log('Polígono já tem poucos pontos, apenas ajustando área...');
     return adjustAreaToTarget(polygonFeature, targetAreaHa, toleranceHa);
   }
   
-  // Tenta simplificar mantendo a forma
   const candidates = [];
   for (let exp = -5; exp <= -1.5; exp += 0.1) {
     try {
@@ -100,7 +95,6 @@ function simplifyPolygonDynamic(polygonFeature, targetAreaHa, maxPoints = 20, to
     return adjustAreaToTarget(polygonFeature, targetAreaHa, toleranceHa);
   }
   
-  // Ordena candidatos: prioriza menor número de pontos e melhor fidelidade de forma
   candidates.sort((a, b) => {
     const aGood = a.shapeFidelity < 0.3, bGood = b.shapeFidelity < 0.3;
     if (aGood && !bGood) return -1;
@@ -131,11 +125,9 @@ function adjustAreaToTarget(polygonFeature, targetAreaHa, toleranceHa = 2.0, max
       return current;
     }
     
-    // Calcula fator de escala para ajustar a área
     const scaleFactor = Math.sqrt(targetAreaHa / currentAreaHa);
     const centroid = turf.centroid(current).geometry.coordinates;
     
-    // Escala as coordenadas em relação ao centróide
     const scaledCoords = current.geometry.coordinates[0].map(coord => [
       centroid[0] + (coord[0] - centroid[0]) * scaleFactor, 
       centroid[1] + (coord[1] - centroid[1]) * scaleFactor
@@ -196,50 +188,36 @@ function extractVertices(polygonFeature) {
 }
 
 // ========================================================================
-// PARTE 3: GERAÇÃO DE IMAGEM PNG DO CROQUI
+// PARTE 3: GERAÇÃO DE IMAGEM SVG DO CROQUI
 // ========================================================================
 
-function generateCroquiImageBuffer(geoResult, areaHa) {
-  console.log('Gerando imagem PNG do croqui...');
+function generateCroquiSVG(geoResult, areaHa) {
+  console.log('Gerando imagem SVG do croqui...');
   
-  const DPI = 300;
-  const WIDTH_CM = 11;
-  const HEIGHT_CM = 12;
-  const WIDTH_PX = Math.round(WIDTH_CM / 2.54 * DPI);
-  const HEIGHT_PX = Math.round(HEIGHT_CM / 2.54 * DPI);
+  const WIDTH = 1200;
+  const HEIGHT = 1300;
   
-  const canvas = createCanvas(WIDTH_PX, HEIGHT_PX);
-  const ctx = canvas.getContext('2d');
-  
-  // Fundo branco
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, WIDTH_PX, HEIGHT_PX);
-  
-  // Margens
   const margin = { 
-    left: WIDTH_PX * 0.12, 
-    right: WIDTH_PX * 0.04, 
-    top: HEIGHT_PX * 0.04, 
-    bottom: HEIGHT_PX * 0.10 
+    left: WIDTH * 0.12, 
+    right: WIDTH * 0.04, 
+    top: HEIGHT * 0.04, 
+    bottom: HEIGHT * 0.10 
   };
   
-  const plotWidth = WIDTH_PX - margin.left - margin.right;
-  const plotHeight = HEIGHT_PX - margin.top - margin.bottom;
+  const plotWidth = WIDTH - margin.left - margin.right;
+  const plotHeight = HEIGHT - margin.top - margin.bottom;
   
-  // Calcula bounds do polígono
   const coords = geoResult.polygon.geometry.coordinates[0];
   const lons = coords.map(c => c[0]);
   const lats = coords.map(c => c[1]);
   const lonMin = Math.min(...lons), lonMax = Math.max(...lons);
   const latMin = Math.min(...lats), latMax = Math.max(...lats);
   
-  // Adiciona padding
   const lonPad = (lonMax - lonMin) * 0.08;
   const latPad = (latMax - latMin) * 0.08;
   let fLonMin = lonMin - lonPad, fLonMax = lonMax + lonPad;
   let fLatMin = latMin - latPad, fLatMax = latMax + latPad;
   
-  // Ajusta aspect ratio
   const dataAspect = (fLonMax - fLonMin) / (fLatMax - fLatMin);
   const plotAspect = plotWidth / plotHeight;
   
@@ -255,50 +233,44 @@ function generateCroquiImageBuffer(geoResult, areaHa) {
     fLonMax = lonCenter + newLonRange / 2;
   }
   
-  // Funções de conversão para pixel
   const toPixelX = lon => margin.left + ((lon - fLonMin) / (fLonMax - fLonMin)) * plotWidth;
   const toPixelY = lat => margin.top + ((fLatMax - lat) / (fLatMax - fLatMin)) * plotHeight;
   
-  // Desenha o polígono
-  ctx.strokeStyle = '#2d6a2e';
-  ctx.lineWidth = 3;
-  ctx.fillStyle = 'rgba(200, 220, 192, 0.7)';
-  ctx.beginPath();
-  coords.forEach((c, i) => {
-    if (i === 0) ctx.moveTo(toPixelX(c[0]), toPixelY(c[1]));
-    else ctx.lineTo(toPixelX(c[0]), toPixelY(c[1]));
-  });
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
+  const polygonPoints = coords.map(c => `${toPixelX(c[0])},${toPixelY(c[1])}`).join(' ');
   
-  // Desenha os vértices e labels
-  const fontSize = Math.round(WIDTH_PX * 0.022);
-  ctx.font = `bold ${fontSize}px sans-serif`;
-  ctx.fillStyle = '#1a4d1a';
-  
+  let verticesElements = '';
   geoResult.vertices.forEach(v => {
     const x = toPixelX(v.lon);
     const y = toPixelY(v.lat);
-    
-    // Ponto do vértice
-    ctx.beginPath();
-    ctx.arc(x, y, 4, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Label do vértice
-    ctx.fillText(v.label, x + 8, y - 8);
+    verticesElements += `
+      <circle cx="${x}" cy="${y}" r="4" fill="#1a4d1a"/>
+      <text x="${x + 8}" y="${y - 8}" font-family="sans-serif" font-size="24" font-weight="bold" fill="#1a4d1a">${v.label}</text>
+    `;
   });
   
-  // Texto com a área
-  const areaFontSize = Math.round(WIDTH_PX * 0.024);
-  ctx.font = `bold ${areaFontSize}px sans-serif`;
-  ctx.fillStyle = '#2d6a2e';
-  ctx.textAlign = 'center';
-  ctx.fillText(`Área: ${areaHa.toFixed(2).replace('.', ',')} ha`, WIDTH_PX / 2, HEIGHT_PX - 15);
+  const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${WIDTH}" height="${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="${WIDTH}" height="${HEIGHT}" fill="white"/>
   
-  console.log('✓ Imagem PNG gerada com sucesso');
-  return canvas.toBuffer('image/png');
+  <polygon points="${polygonPoints}" 
+           fill="rgba(200, 220, 192, 0.7)" 
+           stroke="#2d6a2e" 
+           stroke-width="3"/>
+  
+  ${verticesElements}
+  
+  <text x="${WIDTH / 2}" y="${HEIGHT - 20}" 
+        font-family="sans-serif" 
+        font-size="26" 
+        font-weight="bold" 
+        fill="#2d6a2e" 
+        text-anchor="middle">
+    Área: ${areaHa.toFixed(2).replace('.', ',')} ha
+  </text>
+</svg>`;
+  
+  console.log('✓ SVG gerado com sucesso');
+  return svg;
 }
 
 // ========================================================================
@@ -306,12 +278,11 @@ function generateCroquiImageBuffer(geoResult, areaHa) {
 // ========================================================================
 
 async function generateDocxBuffer(params) {
-  const { fazendaNome, matricula, municipio, areaHa, vertices, imageBuffer } = params;
+  const { fazendaNome, matricula, municipio, areaHa, vertices, svgContent } = params;
   const GREEN_DARK = '2d6a2e';
   
   console.log('Gerando documento DOCX...');
   
-  // Função para criar células do cabeçalho
   const headerCell = text => new TableCell({ 
     shading: { fill: GREEN_DARK }, 
     verticalAlign: VerticalAlign.CENTER, 
@@ -327,7 +298,6 @@ async function generateDocxBuffer(params) {
     })] 
   });
   
-  // Função para criar células de dados
   const dataCell = text => new TableCell({ 
     verticalAlign: VerticalAlign.CENTER, 
     children: [new Paragraph({ 
@@ -340,7 +310,6 @@ async function generateDocxBuffer(params) {
     })] 
   });
   
-  // Cria tabela de coordenadas em duas colunas
   const halfCount = Math.ceil(vertices.length / 2);
   const tableRows = [
     new TableRow({ 
@@ -372,7 +341,9 @@ async function generateDocxBuffer(params) {
     }));
   }
   
-  // Cria o documento
+  // Converte SVG para buffer
+  const svgBuffer = new TextEncoder().encode(svgContent);
+  
   const doc = new Document({
     sections: [{
       properties: { 
@@ -448,8 +419,9 @@ async function generateDocxBuffer(params) {
           alignment: AlignmentType.CENTER, 
           spacing: { after: 150 }, 
           children: [new ImageRun({ 
-            data: imageBuffer, 
-            transformation: { width: 312, height: 340 } 
+            data: svgBuffer, 
+            transformation: { width: 312, height: 340 },
+            type: 'svg'
           })] 
         }),
         new Table({ 
@@ -504,7 +476,7 @@ function generateKMLString(params) {
     .map(c => `${c[0].toFixed(8)},${c[1].toFixed(8)},0`)
     .join(' ');
   
-  const kml = `<?xml version="1.0" encoding="UTF-8"?>
+  const kmlStr = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
     <name>${fazendaNome}</name>
@@ -522,7 +494,7 @@ function generateKMLString(params) {
 </kml>`;
   
   console.log('✓ Arquivo KML gerado com sucesso');
-  return kml;
+  return kmlStr;
 }
 
 // ========================================================================
@@ -565,8 +537,8 @@ Deno.serve(async (req) => {
     
     const geoResult = { polygon: simplifiedPolygon, vertices };
     
-    // PASSO 2: Gera a imagem PNG
-    const imageBuffer = generateCroquiImageBuffer(geoResult, finalAreaHa);
+    // PASSO 2: Gera o SVG
+    const svgContent = generateCroquiSVG(geoResult, finalAreaHa);
     
     // PASSO 3: Gera o documento DOCX
     const docxBuffer = await generateDocxBuffer({ 
@@ -575,7 +547,7 @@ Deno.serve(async (req) => {
       municipio, 
       areaHa: finalAreaHa, 
       vertices, 
-      imageBuffer 
+      svgContent 
     });
     
     // PASSO 4: Gera o KML final
@@ -593,10 +565,10 @@ Deno.serve(async (req) => {
     const { file_url: docxUrl } = await base44.asServiceRole.integrations.Core.UploadFile({ file: docxFile });
     console.log('  ✓ DOCX:', docxUrl);
     
-    const pngBlob = new Blob([imageBuffer], { type: 'image/png' });
-    const pngFile = new File([pngBlob], `Croqui_${nomeBase}.png`);
-    const { file_url: pngUrl } = await base44.asServiceRole.integrations.Core.UploadFile({ file: pngFile });
-    console.log('  ✓ PNG:', pngUrl);
+    const svgBlob = new Blob([new TextEncoder().encode(svgContent)], { type: 'image/svg+xml' });
+    const svgFile = new File([svgBlob], `Croqui_${nomeBase}.svg`);
+    const { file_url: svgUrl } = await base44.asServiceRole.integrations.Core.UploadFile({ file: svgFile });
+    console.log('  ✓ SVG:', svgUrl);
     
     const kmlBlob = new Blob([kmlBuffer], { type: 'application/vnd.google-earth.kml+xml' });
     const kmlFile = new File([kmlBlob], `Croqui_${nomeBase}.kml`);
@@ -612,8 +584,8 @@ Deno.serve(async (req) => {
       files: {
         docx_url: docxUrl,
         docx_filename: `Croqui_${nomeBase}_Mat_${matricula}.docx`,
-        png_url: pngUrl,
-        png_filename: `Croqui_${nomeBase}.png`,
+        svg_url: svgUrl,
+        svg_filename: `Croqui_${nomeBase}.svg`,
         kml_url: kmlUrl,
         kml_filename: `Croqui_${nomeBase}.kml`
       },

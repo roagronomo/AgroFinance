@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
 
     let lembretesEnviados = 0;
     const erros = [];
-    const resumoPorTelefone = {}; // Acumular valores por telefone
+    const resumoPorDestino = {}; // Acumular contas por destino (telefone ou grupo)
 
     for (const conta of contas) {
       try {
@@ -45,12 +45,50 @@ Deno.serve(async (req) => {
           continue;
         }
 
+        // Determinar o destino (grupo ou telefone individual)
+        const destino = conta.grupo_whatsapp_id || conta.telefone_contato;
+        
+        // Criar chave única para evitar duplicação: destino + ID da conta
+        const chaveUnica = `${destino}_${conta.id}`;
+        
+        // Verificar se já enviamos para esta conta (evitar duplicação)
+        if (resumoPorDestino[chaveUnica]) {
+          console.log(`Lembrete já enviado para ${conta.descricao} - pulando duplicação`);
+          continue;
+        }
+
         const dataFormatada = dataVencimento.toLocaleDateString('pt-BR');
         const valorFormatado = conta.valor.toLocaleString('pt-BR', { 
           style: 'currency', 
           currency: 'BRL' 
         });
 
+        // Acumular informações da conta para envio agrupado
+        if (!resumoPorDestino[chaveUnica]) {
+          resumoPorDestino[chaveUnica] = {
+            destino,
+            conta,
+            deveEnviarNoDia,
+            deveEnviarAntecipado,
+            dataFormatada,
+            valorFormatado
+          };
+        }
+
+      } catch (error) {
+        erros.push({
+          conta: conta.descricao,
+          erro: error.message
+        });
+        console.error(`Erro ao processar conta ${conta.descricao}:`, error);
+      }
+    }
+
+    // Agora enviar todas as mensagens acumuladas
+    for (const [chaveUnica, info] of Object.entries(resumoPorDestino)) {
+      try {
+        const { conta, destino, deveEnviarNoDia, deveEnviarAntecipado, dataFormatada, valorFormatado } = info;
+        
         let mensagem;
         const recorrenteInfo = conta.recorrente ? `💳 *Parcela ${conta.parcela_atual}/${conta.parcelas_total}*\n` : '';
         
@@ -81,8 +119,6 @@ ${conta.codigo_barras && !conta.recorrente ? `\n🔢 *Código de Barras:*\n\`${c
 _Lembrete automático - AgroFinance_`;
         }
 
-        // Enviar WhatsApp - usar grupo se preenchido, senão usar telefone individual
-        const destino = conta.grupo_whatsapp_id || conta.telefone_contato;
         const response = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
           numero: destino,
           mensagem: mensagem
@@ -138,16 +174,6 @@ _Lembrete automático - AgroFinance_`;
           await base44.asServiceRole.entities.ContaPagar.update(conta.id, updateData);
           lembretesEnviados++;
           console.log(`Lembrete enviado: ${conta.descricao}`);
-
-          // Acumular valor para resumo (usar o destino que foi enviado)
-          if (!resumoPorTelefone[destino]) {
-            resumoPorTelefone[destino] = {
-              total: 0,
-              quantidade: 0
-            };
-          }
-          resumoPorTelefone[destino].total += conta.valor;
-          resumoPorTelefone[destino].quantidade += 1;
         } else {
           erros.push({
             conta: conta.descricao,
@@ -158,42 +184,14 @@ _Lembrete automático - AgroFinance_`;
 
       } catch (error) {
         erros.push({
-          conta: conta.descricao,
+          conta: info.conta.descricao,
           erro: error.message
         });
-        console.error(`Erro ao processar conta ${conta.descricao}:`, error);
+        console.error(`Erro ao processar conta ${info.conta.descricao}:`, error);
       }
     }
 
     console.log(`Verificação concluída. ${lembretesEnviados} lembrete(s) enviado(s).`);
-
-    // Enviar mensagem de resumo para cada destino (telefone ou grupo)
-    for (const [destino, dados] of Object.entries(resumoPorTelefone)) {
-      if (dados.quantidade > 0) {
-        const totalFormatado = dados.total.toLocaleString('pt-BR', {
-          style: 'currency',
-          currency: 'BRL'
-        });
-
-        const tipoDestino = destino.includes('@g.us') ? 'grupo' : 'número';
-        const mensagemResumo = `📊 *RESUMO - CONTAS A PAGAR*
-
-Total de contas notificadas: ${dados.quantidade}
-💰 *VALOR TOTAL: ${totalFormatado}*
-
-_Resumo automático - AgroFinance_`;
-
-        try {
-          await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
-            numero: destino,
-            mensagem: mensagemResumo
-          });
-          console.log(`Resumo enviado para ${tipoDestino} ${destino}: ${dados.quantidade} contas, total ${totalFormatado}`);
-        } catch (error) {
-          console.error(`Erro ao enviar resumo para ${destino}:`, error);
-        }
-      }
-    }
 
     return Response.json({
       success: true,

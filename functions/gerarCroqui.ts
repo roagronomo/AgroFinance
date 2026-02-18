@@ -4,6 +4,7 @@ import * as turf from 'npm:@turf/turf@7.0.0';
 import proj4 from 'npm:proj4@2.11.0';
 import { DOMParser } from 'npm:xmldom@0.6.0';
 import { jsPDF } from 'npm:jspdf@2.5.2';
+import { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, AlignmentType, WidthType, HeadingLevel, BorderStyle } from 'npm:docx@8.5.0';
 
 // ========================================================================
 // PARTE 1: PROCESSAMENTO GEOESPACIAL
@@ -187,7 +188,117 @@ function extractVertices(polygonFeature, formatoCoordenadas) {
 }
 
 // ========================================================================
-// PARTE 3: GERAÇÃO DO PDF PROFISSIONAL COM TEMPLATE TIMBRADO
+// PARTE 3: GERAÇÃO DO DOCX PROFISSIONAL
+// ========================================================================
+
+function generateProfessionalDOCX(params) {
+  const { fazendaNome, matricula, municipio, areaHa, vertices, formatoCoordenadas } = params;
+  
+  console.log('Gerando documento DOCX profissional...');
+  
+  // Criar tabela de coordenadas
+  const tableRows = [
+    new TableRow({
+      children: [
+        new TableCell({
+          children: [new Paragraph({ text: 'Vértice', alignment: AlignmentType.CENTER, bold: true })],
+          width: { size: 15, type: WidthType.PERCENTAGE },
+          shading: { fill: '3C5F36' }
+        }),
+        new TableCell({
+          children: [new Paragraph({ text: 'Latitude', alignment: AlignmentType.CENTER, bold: true })],
+          width: { size: 35, type: WidthType.PERCENTAGE },
+          shading: { fill: '3C5F36' }
+        }),
+        new TableCell({
+          children: [new Paragraph({ text: 'Longitude', alignment: AlignmentType.CENTER, bold: true })],
+          width: { size: 35, type: WidthType.PERCENTAGE },
+          shading: { fill: '3C5F36' }
+        })
+      ]
+    })
+  ];
+  
+  vertices.forEach(v => {
+    tableRows.push(new TableRow({
+      children: [
+        new TableCell({ children: [new Paragraph({ text: v.label, alignment: AlignmentType.CENTER })] }),
+        new TableCell({ children: [new Paragraph({ text: v.latFormatted, alignment: AlignmentType.CENTER })] }),
+        new TableCell({ children: [new Paragraph({ text: v.lonFormatted, alignment: AlignmentType.CENTER })] })
+      ]
+    }));
+  });
+  
+  const doc = new Document({
+    sections: [{
+      properties: {},
+      children: [
+        new Paragraph({
+          text: `CROQUI DE LOCALIZAÇÃO`,
+          heading: HeadingLevel.HEADING_1,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 200 }
+        }),
+        new Paragraph({
+          text: `Fazenda: ${fazendaNome}`,
+          spacing: { after: 100 }
+        }),
+        new Paragraph({
+          text: `Matrícula: ${matricula}`,
+          spacing: { after: 100 }
+        }),
+        new Paragraph({
+          text: `Município: ${municipio}`,
+          spacing: { after: 100 }
+        }),
+        new Paragraph({
+          text: `Área: ${areaHa.toFixed(2).replace('.', ',')} ha`,
+          spacing: { after: 300 }
+        }),
+        new Paragraph({
+          text: `Coordenadas Geográficas ${formatoCoordenadas === 'gms' ? '(Graus, Minutos e Segundos)' : '(Graus Decimais)'} - Datum: SIRGAS 2000`,
+          heading: HeadingLevel.HEADING_2,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 200 }
+        }),
+        new Table({
+          rows: tableRows,
+          width: { size: 100, type: WidthType.PERCENTAGE }
+        }),
+        new Paragraph({
+          text: '',
+          spacing: { after: 400 }
+        }),
+        new Paragraph({
+          text: '________________________________________',
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 100 }
+        }),
+        new Paragraph({
+          text: 'Rodrigo Rodrigues Lopes do Nascimento',
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 50 }
+        }),
+        new Paragraph({
+          text: 'CPF: 005.789.781-64 | CREA-GO: 24423/D',
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 50 }
+        }),
+        new Paragraph({
+          text: 'Responsável Técnico',
+          alignment: AlignmentType.CENTER,
+          bold: true
+        })
+      ]
+    }]
+  });
+  
+  console.log('✓ Documento DOCX gerado com sucesso');
+  return Packer.toBuffer(doc);
+}
+
+// ========================================================================
+// PARTE 4: GERAÇÃO DO PDF PROFISSIONAL COM TEMPLATE TIMBRADO
 // ========================================================================
 
 function generateProfessionalPDF(params) {
@@ -237,10 +348,10 @@ function generateProfessionalPDF(params) {
   
   // ===== GRÁFICO DO CROQUI COM GRID E BÚSSOLA =====
   yPos += 10;
-  const graphX = 25;
+  const graphX = 30;
   const graphY = yPos;
-  const graphWidth = 160;
-  const graphHeight = 130;
+  const graphWidth = 150;
+  const graphHeight = 100;
   
   // Calcula os limites do polígono
   const coords = polygon.geometry.coordinates[0];
@@ -466,7 +577,7 @@ function generateProfessionalPDF(params) {
 }
 
 // ========================================================================
-// PARTE 4: GERAÇÃO DO ARQUIVO KML AJUSTADO
+// PARTE 5: GERAÇÃO DO ARQUIVO KML AJUSTADO
 // ========================================================================
 
 function generateKMLString(params) {
@@ -500,7 +611,7 @@ function generateKMLString(params) {
 }
 
 // ========================================================================
-// FUNÇÃO PRINCIPAL - ENDPOINT DENO
+// PARTE 6: FUNÇÃO PRINCIPAL - ENDPOINT DENO
 // ========================================================================
 
 Deno.serve(async (req) => {
@@ -539,7 +650,17 @@ Deno.serve(async (req) => {
     
     const geoResult = { polygon: simplifiedPolygon, vertices };
     
-    // PASSO 2: Gera o PDF profissional
+    // PASSO 2: Gera o DOCX profissional
+    const docxBuffer = await generateProfessionalDOCX({ 
+      fazendaNome, 
+      matricula, 
+      municipio, 
+      areaHa: finalAreaHa, 
+      vertices,
+      formatoCoordenadas
+    });
+    
+    // PASSO 3: Gera o PDF profissional
     const pdfBuffer = generateProfessionalPDF({ 
       fazendaNome, 
       matricula, 
@@ -550,13 +671,18 @@ Deno.serve(async (req) => {
       formatoCoordenadas
     });
     
-    // PASSO 3: Gera o KML ajustado
+    // PASSO 4: Gera o KML ajustado
     const kmlString = generateKMLString({ ...formData, ...geoResult });
     const kmlBuffer = new TextEncoder().encode(kmlString);
     
-    // PASSO 4: Upload dos arquivos com nomes corretos
+    // PASSO 5: Upload dos arquivos com nomes corretos
     console.log('\nFazendo upload dos arquivos gerados...');
-    const nomeBase = `Croqui_${fazendaNome.replace(/\s+/g, '_')}_Mat_${matricula}`;
+    const nomeBase = `Croqui_${fazendaNome.replace(/\s+/g, '_')}_Mat_${matricula.replace(/\./g, '')}`;
+    
+    const docxBlob = new Blob([docxBuffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const docxFile = new File([docxBlob], `${nomeBase}.docx`);
+    const { file_url: docxUrl } = await base44.asServiceRole.integrations.Core.UploadFile({ file: docxFile });
+    console.log('  ✓ DOCX:', docxUrl);
     
     const pdfBlob = new Blob([pdfBuffer], { type: 'application/pdf' });
     const pdfFile = new File([pdfBlob], `${nomeBase}.pdf`);
@@ -575,7 +701,7 @@ Deno.serve(async (req) => {
     return Response.json({
       success: true,
       files: {
-        docx_url: pdfUrl,
+        docx_url: docxUrl,
         docx_filename: `${nomeBase}.docx`,
         pdf_url: pdfUrl,
         pdf_filename: `${nomeBase}.pdf`,

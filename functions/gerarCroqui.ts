@@ -306,7 +306,14 @@ function generateProfessionalPDF(params) {
   doc.setLineWidth(0.5);
   
   const polyPoints = coords.map(c => [toPixelX(c[0]), toPixelY(c[1])]);
-  doc.polygon(polyPoints, 'FD');
+  
+  // Desenha o polígono usando linhas conectadas
+  doc.moveTo(polyPoints[0][0], polyPoints[0][1]);
+  for (let i = 1; i < polyPoints.length; i++) {
+    doc.lineTo(polyPoints[i][0], polyPoints[i][1]);
+  }
+  doc.lineTo(polyPoints[0][0], polyPoints[0][1]);
+  doc.fillStroke();
   
   // Desenha os vértices e labels
   doc.setFillColor(26, 77, 26);

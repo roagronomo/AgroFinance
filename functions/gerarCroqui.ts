@@ -677,7 +677,7 @@ Deno.serve(async (req) => {
     
     // PASSO 5: Upload dos arquivos com nomes corretos
     console.log('\nFazendo upload dos arquivos gerados...');
-    const nomeBase = `Croqui_${fazendaNome.replace(/\s+/g, '_')}_Mat_${matricula.replace(/\./g, '')}`;
+    const nomeBase = `Croqui_${fazendaNome.replace(/\s+/g, '_')}_Mat_${matricula}`;
     
     const docxBlob = new Blob([docxBuffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
     const docxFile = new File([docxBlob], `${nomeBase}.docx`);

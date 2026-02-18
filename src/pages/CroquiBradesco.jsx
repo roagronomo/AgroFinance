@@ -268,26 +268,26 @@ export default function CroquiBradesco() {
             <CardContent className="p-6">
               <div className="grid gap-3">
                 <Button
+                  onClick={() => handleDownload(arquivosGerados.pdf_url, arquivosGerados.pdf_filename)}
+                  variant="default"
+                  className="w-full justify-start text-left h-auto py-4 bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <Download className="w-5 h-5 mr-3 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold">📄 Croqui PDF Timbrado (Principal)</p>
+                    <p className="text-sm opacity-90">{arquivosGerados.pdf_filename}</p>
+                  </div>
+                </Button>
+
+                <Button
                   onClick={() => handleDownload(arquivosGerados.docx_url, arquivosGerados.docx_filename)}
                   variant="outline"
                   className="w-full justify-start text-left h-auto py-4"
                 >
                   <Download className="w-5 h-5 mr-3 flex-shrink-0 text-blue-600" />
                   <div>
-                    <p className="font-semibold">Documento Word (DOCX)</p>
+                    <p className="font-semibold">📝 Documento Word (DOCX)</p>
                     <p className="text-sm text-gray-600">{arquivosGerados.docx_filename}</p>
-                  </div>
-                </Button>
-
-                <Button
-                  onClick={() => handleDownload(arquivosGerados.pdf_url, arquivosGerados.pdf_filename)}
-                  variant="outline"
-                  className="w-full justify-start text-left h-auto py-4"
-                >
-                  <Download className="w-5 h-5 mr-3 flex-shrink-0 text-red-600" />
-                  <div>
-                    <p className="font-semibold">Documento PDF</p>
-                    <p className="text-sm text-gray-600">{arquivosGerados.pdf_filename}</p>
                   </div>
                 </Button>
 
@@ -298,7 +298,7 @@ export default function CroquiBradesco() {
                 >
                   <Download className="w-5 h-5 mr-3 flex-shrink-0 text-orange-600" />
                   <div>
-                    <p className="font-semibold">Arquivo KML Ajustado</p>
+                    <p className="font-semibold">🗺️ Arquivo KML Ajustado</p>
                     <p className="text-sm text-gray-600">{arquivosGerados.kml_filename}</p>
                   </div>
                 </Button>

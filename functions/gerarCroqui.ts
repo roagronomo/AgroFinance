@@ -347,11 +347,11 @@ function generateProfessionalPDF(params) {
   doc.text(`Matrícula nº ${matricula} | Município: ${municipio} | Área: ${areaHa.toFixed(2).replace('.', ',')} ha`, pageWidth / 2, yPos, { align: 'center' });
   
   // ===== GRÁFICO DO CROQUI COM GRID E BÚSSOLA =====
-  yPos += 10;
-  const graphX = 30;
+  yPos += 8;
+  const graphX = 35;
   const graphY = yPos;
-  const graphWidth = 150;
-  const graphHeight = 100;
+  const graphWidth = 140;
+  const graphHeight = 90;
   
   // Calcula os limites do polígono
   const coords = polygon.geometry.coordinates[0];
@@ -454,7 +454,7 @@ function generateProfessionalPDF(params) {
   doc.text('N', compassX, compassY - 12, { align: 'center' });
   
   // ===== TABELA DE COORDENADAS =====
-  yPos = graphY + graphHeight + 15;
+  yPos = graphY + graphHeight + 10;
   
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(10);
@@ -467,8 +467,8 @@ function generateProfessionalPDF(params) {
   yPos += 5;
   
   // Cabeçalho da tabela
-  const colWidth = 31.5;
-  let xPos = 10;
+  const colWidth = 31;
+  let xPos = 12;
   
   doc.setFillColor(60, 95, 54);
   doc.rect(xPos, yPos, colWidth, 6, 'F');
@@ -493,7 +493,7 @@ function generateProfessionalPDF(params) {
   // Dados da tabela (duas colunas)
   doc.setTextColor(0, 0, 0);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
+  doc.setFontSize(6.5);
   
   const halfCount = Math.ceil(vertices.length / 2);
   
@@ -529,28 +529,28 @@ function generateProfessionalPDF(params) {
   }
   
   // ===== ÁREA TOTAL =====
-  yPos += 5;
-  doc.setFontSize(10);
+  yPos += 4;
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
   doc.text(`Área Total: ${areaHa.toFixed(2).replace('.', ',')} ha`, pageWidth / 2, yPos, { align: 'center' });
   
   // ===== ASSINATURA =====
-  yPos += 10;
+  yPos += 8;
   doc.setLineWidth(0.3);
-  doc.line(pageWidth / 2 - 40, yPos, pageWidth / 2 + 40, yPos);
+  doc.line(pageWidth / 2 - 35, yPos, pageWidth / 2 + 35, yPos);
   
-  yPos += 4;
-  doc.setFontSize(9);
+  yPos += 3.5;
+  doc.setFontSize(8.5);
   doc.setFont('helvetica', 'bold');
   doc.text('Rodrigo Rodrigues Lopes do Nascimento', pageWidth / 2, yPos, { align: 'center' });
   
-  yPos += 4;
+  yPos += 3.5;
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.text('CPF: 005.789.781-64 | CREA-GO: 24423/D', pageWidth / 2, yPos, { align: 'center' });
   
-  yPos += 4;
+  yPos += 3.5;
   doc.setFont('helvetica', 'bold');
   doc.text('Responsável Técnico', pageWidth / 2, yPos, { align: 'center' });
   

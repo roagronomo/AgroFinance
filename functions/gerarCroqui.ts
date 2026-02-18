@@ -492,43 +492,44 @@ function generateProfessionalPDF(params) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   
-  // ===== CABEÇALHO TIMBRADO - MODELO CERRADO =====
-  // Faixa amarela superior
+  // ===== CABEÇALHO TIMBRADO - MODELO CERRADO EXATO =====
+  // Faixa amarela superior (mais alta)
   doc.setFillColor(255, 193, 7);
-  doc.rect(0, 0, pageWidth, 10, 'F');
-  
+  doc.rect(0, 0, pageWidth, 8, 'F');
+
+  // Informações de contato na faixa amarela (lado direito)
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(5.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text('CNPJ: 36.877.747/0001-70', pageWidth - 5, 2.5, { align: 'right' });
+  doc.text('Rua Duque de Caxias', pageWidth - 5, 4.5, { align: 'right' });
+  doc.text('N° 175 - Bom Jesus, GO', pageWidth - 5, 6.5, { align: 'right' });
+  doc.text('Telefone: (64) 3608-3944', pageWidth - 75, 4.5);
+  doc.text('E-mail: contato@cerradoconsultoria.agr.br', pageWidth - 75, 6.5);
+
   // Faixa verde com logo CERRADO
   doc.setFillColor(82, 115, 57);
-  doc.rect(0, 10, pageWidth, 35, 'F');
-  
-  // Diagonal branca no canto direito
+  doc.rect(0, 8, pageWidth, 37, 'F');
+
+  // Diagonal branca no canto direito superior
   doc.setFillColor(255, 255, 255);
   const diagPoints = [
-    [pageWidth * 0.7, 10],
-    [pageWidth, 10],
+    [pageWidth * 0.65, 8],
+    [pageWidth, 8],
     [pageWidth, 45]
   ];
   doc.triangle(diagPoints[0][0], diagPoints[0][1], diagPoints[1][0], diagPoints[1][1], diagPoints[2][0], diagPoints[2][1], 'F');
-  
+
   // Texto CERRADO (logo)
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(20);
+  doc.setFontSize(24);
   doc.setFont('helvetica', 'bold');
-  doc.text('CERRADO', 25, 30);
-  
+  doc.text('CERRADO', 20, 28);
+
   // Subtítulo
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
-  doc.text('Consultoria e Planejamento Agropecuário', 25, 36);
-  
-  // Informações de contato no topo (pequeno)
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(6.5);
-  doc.text('Rua Duque de Caxias', pageWidth - 10, 3, { align: 'right' });
-  doc.text('N° 175 - Bom Jesus, GO', pageWidth - 10, 6, { align: 'right' });
-  doc.text('CNPJ: 36.877.747/0001-70', pageWidth - 65, 3);
-  doc.text('Telefone: (64) 3608-3944', pageWidth - 65, 6);
-  doc.text('E-mail: contato@cerradoconsultoria.agr.br', pageWidth - 65, 9);
+  doc.text('Consultoria e Planejamento Agropecuário', 20, 35);
   
   // ===== TÍTULO DO DOCUMENTO =====
   let yPos = 52;

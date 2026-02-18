@@ -14,6 +14,30 @@ export default function CroquiBradesco() {
     municipio: "",
     areaHa: ""
   });
+
+  // Formata matrícula com pontos de milhar (ex: 6230 -> 6.230)
+  const formatarMatricula = (valor) => {
+    const apenasNumeros = valor.replace(/\D/g, '');
+    return apenasNumeros.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
+
+  // Formata área com vírgula decimal e ponto de milhar (ex: 2530.36 -> 2.530,36)
+  const formatarArea = (valor) => {
+    const apenasNumerosEPonto = valor.replace(/[^\d.,]/g, '').replace(',', '.');
+    const numero = parseFloat(apenasNumerosEPonto);
+    
+    if (isNaN(numero)) return '';
+    
+    return numero.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
+  // Remove formatação antes de enviar
+  const removerFormatacao = (valor) => {
+    return valor.replace(/\./g, '').replace(',', '.');
+  };
   
   const [arquivoKML, setArquivoKML] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -62,7 +86,7 @@ export default function CroquiBradesco() {
           fazendaNome: formulario.fazendaNome,
           matricula: formulario.matricula,
           municipio: formulario.municipio,
-          areaHa: parseFloat(formulario.areaHa)
+          areaHa: parseFloat(removerFormatacao(formulario.areaHa))
         }
       });
 
@@ -126,9 +150,12 @@ export default function CroquiBradesco() {
                 <Label htmlFor="matricula">Nº da Matrícula *</Label>
                 <Input
                   id="matricula"
-                  placeholder="Ex: 12345"
+                  placeholder="Ex: 12.345"
                   value={formulario.matricula}
-                  onChange={(e) => setFormulario({ ...formulario, matricula: e.target.value })}
+                  onChange={(e) => {
+                    const valorFormatado = formatarMatricula(e.target.value);
+                    setFormulario({ ...formulario, matricula: valorFormatado });
+                  }}
                 />
               </div>
             </div>
@@ -148,11 +175,15 @@ export default function CroquiBradesco() {
                 <Label htmlFor="areaHa">Área Desejada (ha) *</Label>
                 <Input
                   id="areaHa"
-                  type="number"
-                  step="0.01"
-                  placeholder="Ex: 110.00"
+                  placeholder="Ex: 110,00"
                   value={formulario.areaHa}
                   onChange={(e) => setFormulario({ ...formulario, areaHa: e.target.value })}
+                  onBlur={(e) => {
+                    const valorFormatado = formatarArea(e.target.value);
+                    if (valorFormatado) {
+                      setFormulario({ ...formulario, areaHa: valorFormatado });
+                    }
+                  }}
                 />
               </div>
             </div>

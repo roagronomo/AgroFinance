@@ -4,7 +4,8 @@ import * as turf from 'npm:@turf/turf@7.0.0';
 import proj4 from 'npm:proj4@2.11.0';
 import { DOMParser } from 'npm:xmldom@0.6.0';
 import { jsPDF } from 'npm:jspdf@2.5.2';
-import { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, AlignmentType, WidthType, HeadingLevel, BorderStyle } from 'npm:docx@8.5.0';
+import { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, AlignmentType, WidthType, HeadingLevel, BorderStyle, ImageRun } from 'npm:docx@8.5.0';
+import { createCanvas } from 'npm:canvas@2.11.2';
 
 // ========================================================================
 // PARTE 1: PROCESSAMENTO GEOESPACIAL
@@ -188,78 +189,250 @@ function extractVertices(polygonFeature, formatoCoordenadas) {
 }
 
 // ========================================================================
-// PARTE 3: GERAÇÃO DO DOCX PROFISSIONAL
+// PARTE 3: GERAÇÃO DA IMAGEM DO CROQUI
 // ========================================================================
 
-function generateProfessionalDOCX(params) {
-  const { fazendaNome, matricula, municipio, areaHa, vertices, formatoCoordenadas } = params;
+function generateCroquiImage(polygon, vertices) {
+  console.log('Gerando imagem do croqui...');
   
-  console.log('Gerando documento DOCX profissional...');
+  const canvasWidth = 1400;
+  const canvasHeight = 1000;
+  const canvas = createCanvas(canvasWidth, canvasHeight);
+  const ctx = canvas.getContext('2d');
   
-  // Criar tabela de coordenadas
+  // Fundo branco
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+  
+  // Calcula limites
+  const coords = polygon.geometry.coordinates[0];
+  const lons = coords.map(c => c[0]);
+  const lats = coords.map(c => c[1]);
+  const lonMin = Math.min(...lons), lonMax = Math.max(...lons);
+  const latMin = Math.min(...lats), latMax = Math.max(...lats);
+  
+  const lonRange = lonMax - lonMin;
+  const latRange = latMax - latMin;
+  const padding = 0.1;
+  const fLonMin = lonMin - lonRange * padding;
+  const fLonMax = lonMax + lonRange * padding;
+  const fLatMin = latMin - latRange * padding;
+  const fLatMax = latMax + latRange * padding;
+  
+  const graphPadding = 100;
+  const graphWidth = canvasWidth - 2 * graphPadding;
+  const graphHeight = canvasHeight - 2 * graphPadding;
+  
+  const toPixelX = lon => graphPadding + ((lon - fLonMin) / (fLonMax - fLonMin)) * graphWidth;
+  const toPixelY = lat => graphPadding + ((fLatMax - lat) / (fLatMax - fLatMin)) * graphHeight;
+  
+  // Grid
+  ctx.strokeStyle = '#DCDCDC';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 10; i++) {
+    const x = graphPadding + (i / 10) * graphWidth;
+    const y = graphPadding + (i / 10) * graphHeight;
+    ctx.beginPath();
+    ctx.moveTo(x, graphPadding);
+    ctx.lineTo(x, graphPadding + graphHeight);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(graphPadding, y);
+    ctx.lineTo(graphPadding + graphWidth, y);
+    ctx.stroke();
+  }
+  
+  // Borda
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(graphPadding, graphPadding, graphWidth, graphHeight);
+  
+  // Labels eixos
+  ctx.fillStyle = '#000000';
+  ctx.font = 'bold 24px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('Latitude (°)', 40, canvasHeight / 2);
+  ctx.fillText('Longitude (°)', canvasWidth / 2, canvasHeight - 20);
+  
+  // Valores eixo Y
+  ctx.font = '20px Arial';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const lat = fLatMin + (i / 4) * (fLatMax - fLatMin);
+    const y = graphPadding + graphHeight - (i / 4) * graphHeight;
+    ctx.fillText(lat.toFixed(3), graphPadding - 10, y + 5);
+  }
+  
+  // Valores eixo X
+  ctx.textAlign = 'center';
+  for (let i = 0; i <= 4; i++) {
+    const lon = fLonMin + (i / 4) * (fLonMax - fLonMin);
+    const x = graphPadding + (i / 4) * graphWidth;
+    ctx.fillText(lon.toFixed(3), x, graphPadding + graphHeight + 30);
+  }
+  
+  // Polígono
+  ctx.fillStyle = 'rgba(200, 220, 192, 0.8)';
+  ctx.strokeStyle = '#2D6A2E';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  coords.forEach((c, i) => {
+    const x = toPixelX(c[0]);
+    const y = toPixelY(c[1]);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  
+  // Vértices
+  ctx.fillStyle = '#1A4D1A';
+  ctx.font = 'bold 22px Arial';
+  vertices.forEach(v => {
+    const x = toPixelX(v.lon);
+    const y = toPixelY(v.lat);
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillText(v.label, x + 20, y - 10);
+  });
+  
+  // Bússola
+  const compassX = graphPadding + graphWidth - 100;
+  const compassY = graphPadding + 100;
+  const compassSize = 80;
+  
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(compassX, compassY, compassSize / 2, 0, Math.PI * 2);
+  ctx.stroke();
+  
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.moveTo(compassX, compassY - compassSize / 2);
+  ctx.lineTo(compassX - 15, compassY);
+  ctx.lineTo(compassX + 15, compassY);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.fillStyle = '#FFFFFF';
+  ctx.strokeStyle = '#000000';
+  ctx.beginPath();
+  ctx.moveTo(compassX, compassY + compassSize / 2);
+  ctx.lineTo(compassX - 15, compassY);
+  ctx.lineTo(compassX + 15, compassY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  
+  ctx.fillStyle = '#000000';
+  ctx.font = 'bold 40px Arial';
+  ctx.fillText('N', compassX, compassY - compassSize / 2 - 15);
+  
+  console.log('✓ Imagem do croqui gerada');
+  return canvas.toBuffer('image/png');
+}
+
+// ========================================================================
+// PARTE 4: GERAÇÃO DO DOCX PROFISSIONAL COM IMAGEM
+// ========================================================================
+
+async function generateProfessionalDOCX(params) {
+  const { fazendaNome, matricula, municipio, areaHa, vertices, polygon, formatoCoordenadas } = params;
+  
+  console.log('Gerando documento DOCX profissional com imagem...');
+  
+  // Gera a imagem do croqui
+  const croquiImageBuffer = generateCroquiImage(polygon, vertices);
+  
+  // Tabela com 6 colunas (3 colunas x 2 grupos)
   const tableRows = [
     new TableRow({
       children: [
         new TableCell({
-          children: [new Paragraph({ text: 'Vértice', alignment: AlignmentType.CENTER, bold: true })],
-          width: { size: 15, type: WidthType.PERCENTAGE },
-          shading: { fill: '3C5F36' }
+          children: [new Paragraph({ text: 'Vértice', alignment: AlignmentType.CENTER })],
+          width: { size: 16.66, type: WidthType.PERCENTAGE },
+          shading: { fill: '527339' }
         }),
         new TableCell({
-          children: [new Paragraph({ text: 'Latitude', alignment: AlignmentType.CENTER, bold: true })],
-          width: { size: 35, type: WidthType.PERCENTAGE },
-          shading: { fill: '3C5F36' }
+          children: [new Paragraph({ text: 'Latitude', alignment: AlignmentType.CENTER })],
+          width: { size: 16.66, type: WidthType.PERCENTAGE },
+          shading: { fill: '527339' }
         }),
         new TableCell({
-          children: [new Paragraph({ text: 'Longitude', alignment: AlignmentType.CENTER, bold: true })],
-          width: { size: 35, type: WidthType.PERCENTAGE },
-          shading: { fill: '3C5F36' }
+          children: [new Paragraph({ text: 'Longitude', alignment: AlignmentType.CENTER })],
+          width: { size: 16.66, type: WidthType.PERCENTAGE },
+          shading: { fill: '527339' }
+        }),
+        new TableCell({
+          children: [new Paragraph({ text: 'Vértice', alignment: AlignmentType.CENTER })],
+          width: { size: 16.66, type: WidthType.PERCENTAGE },
+          shading: { fill: '527339' }
+        }),
+        new TableCell({
+          children: [new Paragraph({ text: 'Latitude', alignment: AlignmentType.CENTER })],
+          width: { size: 16.66, type: WidthType.PERCENTAGE },
+          shading: { fill: '527339' }
+        }),
+        new TableCell({
+          children: [new Paragraph({ text: 'Longitude', alignment: AlignmentType.CENTER })],
+          width: { size: 16.66, type: WidthType.PERCENTAGE },
+          shading: { fill: '527339' }
         })
       ]
     })
   ];
   
-  vertices.forEach(v => {
+  const halfCount = Math.ceil(vertices.length / 2);
+  for (let i = 0; i < halfCount; i++) {
+    const v1 = vertices[i];
+    const v2 = i + halfCount < vertices.length ? vertices[i + halfCount] : null;
+    
     tableRows.push(new TableRow({
       children: [
-        new TableCell({ children: [new Paragraph({ text: v.label, alignment: AlignmentType.CENTER })] }),
-        new TableCell({ children: [new Paragraph({ text: v.latFormatted, alignment: AlignmentType.CENTER })] }),
-        new TableCell({ children: [new Paragraph({ text: v.lonFormatted, alignment: AlignmentType.CENTER })] })
+        new TableCell({ children: [new Paragraph({ text: v1.label, alignment: AlignmentType.CENTER })] }),
+        new TableCell({ children: [new Paragraph({ text: v1.latFormatted, alignment: AlignmentType.CENTER })] }),
+        new TableCell({ children: [new Paragraph({ text: v1.lonFormatted, alignment: AlignmentType.CENTER })] }),
+        new TableCell({ children: [new Paragraph({ text: v2 ? v2.label : '', alignment: AlignmentType.CENTER })] }),
+        new TableCell({ children: [new Paragraph({ text: v2 ? v2.latFormatted : '', alignment: AlignmentType.CENTER })] }),
+        new TableCell({ children: [new Paragraph({ text: v2 ? v2.lonFormatted : '', alignment: AlignmentType.CENTER })] })
       ]
     }));
-  });
+  }
   
   const doc = new Document({
     sections: [{
       properties: {},
       children: [
         new Paragraph({
-          text: `CROQUI DE LOCALIZAÇÃO`,
-          heading: HeadingLevel.HEADING_1,
+          text: `Croqui de Localização - ${fazendaNome}`,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 100 }
+        }),
+        new Paragraph({
+          text: `Matrícula nº ${matricula} | Município: ${municipio} | Área: ${areaHa.toFixed(2).replace('.', ',')} ha`,
           alignment: AlignmentType.CENTER,
           spacing: { after: 200 }
         }),
         new Paragraph({
-          text: `Fazenda: ${fazendaNome}`,
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          text: `Matrícula: ${matricula}`,
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          text: `Município: ${municipio}`,
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          text: `Área: ${areaHa.toFixed(2).replace('.', ',')} ha`,
-          spacing: { after: 300 }
+          children: [
+            new ImageRun({
+              data: croquiImageBuffer,
+              transformation: {
+                width: 500,
+                height: 357
+              }
+            })
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 200 }
         }),
         new Paragraph({
           text: `Coordenadas Geográficas ${formatoCoordenadas === 'gms' ? '(Graus, Minutos e Segundos)' : '(Graus Decimais)'} - Datum: SIRGAS 2000`,
-          heading: HeadingLevel.HEADING_2,
           alignment: AlignmentType.CENTER,
-          spacing: { after: 200 }
+          spacing: { after: 100 }
         }),
         new Table({
           rows: tableRows,
@@ -267,7 +440,12 @@ function generateProfessionalDOCX(params) {
         }),
         new Paragraph({
           text: '',
-          spacing: { after: 400 }
+          spacing: { after: 100 }
+        }),
+        new Paragraph({
+          text: `Área Total: ${areaHa.toFixed(2).replace('.', ',')} ha`,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 200 }
         }),
         new Paragraph({
           text: '________________________________________',
@@ -286,8 +464,7 @@ function generateProfessionalDOCX(params) {
         }),
         new Paragraph({
           text: 'Responsável Técnico',
-          alignment: AlignmentType.CENTER,
-          bold: true
+          alignment: AlignmentType.CENTER
         })
       ]
     }]
@@ -298,7 +475,7 @@ function generateProfessionalDOCX(params) {
 }
 
 // ========================================================================
-// PARTE 4: GERAÇÃO DO PDF PROFISSIONAL COM TEMPLATE TIMBRADO
+// PARTE 5: GERAÇÃO DO PDF PROFISSIONAL COM TEMPLATE TIMBRADO
 // ========================================================================
 
 function generateProfessionalPDF(params) {
@@ -658,7 +835,7 @@ function generateProfessionalPDF(params) {
 }
 
 // ========================================================================
-// PARTE 5: GERAÇÃO DO ARQUIVO KML AJUSTADO
+// PARTE 6: GERAÇÃO DO ARQUIVO KML AJUSTADO
 // ========================================================================
 
 function generateKMLString(params) {
@@ -692,7 +869,7 @@ function generateKMLString(params) {
 }
 
 // ========================================================================
-// PARTE 6: FUNÇÃO PRINCIPAL - ENDPOINT DENO
+// PARTE 7: FUNÇÃO PRINCIPAL - ENDPOINT DENO
 // ========================================================================
 
 Deno.serve(async (req) => {
@@ -731,13 +908,14 @@ Deno.serve(async (req) => {
     
     const geoResult = { polygon: simplifiedPolygon, vertices };
     
-    // PASSO 2: Gera o DOCX profissional
+    // PASSO 2: Gera o DOCX profissional com imagem
     const docxBuffer = await generateProfessionalDOCX({ 
       fazendaNome, 
       matricula, 
       municipio, 
       areaHa: finalAreaHa, 
       vertices,
+      polygon: simplifiedPolygon,
       formatoCoordenadas
     });
     

@@ -3,10 +3,10 @@ import { kml } from 'npm:@tmcw/togeojson@5.8.1';
 import * as turf from 'npm:@turf/turf@7.0.0';
 import proj4 from 'npm:proj4@2.11.0';
 import { DOMParser } from 'npm:xmldom@0.6.0';
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, ImageRun, AlignmentType, WidthType, VerticalAlign, Header, Footer, convertInchesToTwip } from 'npm:docx@8.5.0';
+import jsPDF from 'npm:jspdf@2.5.2';
 
 // ========================================================================
-// PARTE 1: PROCESSAMENTO GEOESPACIAL - Leitura e Simplificação do KML
+// PARTE 1: PROCESSAMENTO GEOESPACIAL
 // ========================================================================
 
 function parseKMLFromString(kmlContent) {
@@ -61,6 +61,7 @@ function simplifyPolygonDynamic(polygonFeature, targetAreaHa, maxPoints = 20, to
   const originalAreaHa = calcAreaHa(polygonFeature);
   
   console.log(`Simplificando polígono: ${originalPointCount} pontos, área original: ${originalAreaHa.toFixed(2)} ha, área alvo: ${targetAreaHa} ha`);
+  console.log(`✓ CONFIRMAÇÃO: Estamos ajustando o KML de ${originalAreaHa.toFixed(2)} ha para a área desejada de ${targetAreaHa} ha`);
   
   if (originalPointCount <= maxPoints) {
     console.log('Polígono já tem poucos pontos, apenas ajustando área...');
@@ -146,331 +147,325 @@ function adjustAreaToTarget(polygonFeature, targetAreaHa, toleranceHa = 2.0, max
 // PARTE 2: COORDENADAS E VÉRTICES
 // ========================================================================
 
-function getUTMZone(lon) { 
-  return Math.floor((lon + 180) / 6) + 1; 
+function formatCoordDecimal(decimal) {
+  return decimal.toFixed(6);
 }
 
-function toUTM(lon, lat) {
-  const zone = getUTMZone(lon);
-  const hemisphere = lat >= 0 ? 'north' : 'south';
-  const utmProj = `+proj=utm +zone=${zone} +${hemisphere} +datum=WGS84 +units=m +no_defs`;
-  const wgs84Proj = '+proj=longlat +datum=WGS84 +no_defs';
-  
-  const [easting, northing] = proj4(wgs84Proj, utmProj, [lon, lat]);
-  return { easting, northing, zone };
-}
-
-function formatCoord(decimal, suffix) {
+function formatCoordGMS(decimal, isLat) {
   const abs = Math.abs(decimal);
   const deg = Math.floor(abs);
   const minDec = (abs - deg) * 60;
   const min = Math.floor(minDec);
   const sec = ((minDec - min) * 60).toFixed(2);
-  return `${deg}°${String(min).padStart(2, '0')}'${String(sec).padStart(5, '0')}"${suffix}`;
+  
+  const direction = isLat ? (decimal >= 0 ? 'N' : 'S') : (decimal >= 0 ? 'E' : 'W');
+  return `${deg}°${String(min).padStart(2, '0')}'${String(sec).padStart(5, '0')}"${direction}`;
 }
 
-function extractVertices(polygonFeature) {
+function extractVertices(polygonFeature, formatoCoordenadas) {
   const coords = polygonFeature.geometry.coordinates[0].slice(0, -1);
-  console.log(`Extraindo ${coords.length} vértices...`);
+  console.log(`Extraindo ${coords.length} vértices no formato: ${formatoCoordenadas}...`);
   
   return coords.map((coord, i) => {
-    const utm = toUTM(coord[0], coord[1]);
-    return { 
+    const vertice = { 
       id: i + 1, 
-      label: `V${String(i + 1).padStart(2, '0')}`, 
+      label: `P${String(i + 1).padStart(2, '0')}`,
       lat: coord[1], 
-      lon: coord[0], 
-      latFormatted: formatCoord(coord[1], 'S'), 
-      lonFormatted: formatCoord(coord[0], 'W'), 
-      ...utm 
+      lon: coord[0]
     };
+    
+    if (formatoCoordenadas === 'gms') {
+      vertice.latFormatted = formatCoordGMS(coord[1], true);
+      vertice.lonFormatted = formatCoordGMS(coord[0], false);
+    } else {
+      vertice.latFormatted = formatCoordDecimal(coord[1]);
+      vertice.lonFormatted = formatCoordDecimal(coord[0]);
+    }
+    
+    return vertice;
   });
 }
 
 // ========================================================================
-// PARTE 3: GERAÇÃO DE IMAGEM SVG DO CROQUI
+// PARTE 3: GERAÇÃO DO PDF PROFISSIONAL COM TEMPLATE TIMBRADO
 // ========================================================================
 
-function generateCroquiSVG(geoResult, areaHa) {
-  console.log('Gerando imagem SVG do croqui...');
+function generateProfessionalPDF(params) {
+  const { fazendaNome, matricula, municipio, areaHa, vertices, polygon, formatoCoordenadas } = params;
   
-  const WIDTH = 1200;
-  const HEIGHT = 1300;
+  console.log('Gerando PDF profissional com template timbrado...');
   
-  const margin = { 
-    left: WIDTH * 0.12, 
-    right: WIDTH * 0.04, 
-    top: HEIGHT * 0.04, 
-    bottom: HEIGHT * 0.10 
-  };
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
   
-  const plotWidth = WIDTH - margin.left - margin.right;
-  const plotHeight = HEIGHT - margin.top - margin.bottom;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   
-  const coords = geoResult.polygon.geometry.coordinates[0];
+  // ===== CABEÇALHO TIMBRADO (NÃO MEXER) =====
+  // Faixa amarela superior
+  doc.setFillColor(255, 193, 7);
+  doc.rect(0, 0, pageWidth, 15, 'F');
+  
+  // Faixa verde escura superior
+  doc.setFillColor(60, 95, 54);
+  doc.rect(0, 15, pageWidth, 25, 'F');
+  
+  // Textos do cabeçalho
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Rua Duque de Caxias', pageWidth - 10, 22, { align: 'right' });
+  doc.text('N° 175 - Bom Jesus, GO', pageWidth - 10, 26, { align: 'right' });
+  doc.text('CNPJ: 36.877.747/0001-70', pageWidth - 10, 30, { align: 'right' });
+  doc.text('Telefone: (64) 3608-3944', pageWidth - 10, 34, { align: 'right' });
+  doc.text('E-mail: contato@cerradoconsultoria.agr.br', pageWidth - 10, 38, { align: 'right' });
+  
+  // ===== TÍTULO DO DOCUMENTO =====
+  let yPos = 50;
+  doc.setTextColor(60, 95, 54);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Croqui de Localização - ${fazendaNome}`, pageWidth / 2, yPos, { align: 'center' });
+  
+  yPos += 8;
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Matrícula nº ${matricula} | Município: ${municipio} | Área: ${areaHa.toFixed(2).replace('.', ',')} ha`, pageWidth / 2, yPos, { align: 'center' });
+  
+  // ===== GRÁFICO DO CROQUI COM GRID E BÚSSOLA =====
+  yPos += 10;
+  const graphX = 25;
+  const graphY = yPos;
+  const graphWidth = 160;
+  const graphHeight = 130;
+  
+  // Calcula os limites do polígono
+  const coords = polygon.geometry.coordinates[0];
   const lons = coords.map(c => c[0]);
   const lats = coords.map(c => c[1]);
   const lonMin = Math.min(...lons), lonMax = Math.max(...lons);
   const latMin = Math.min(...lats), latMax = Math.max(...lats);
   
-  const lonPad = (lonMax - lonMin) * 0.08;
-  const latPad = (latMax - latMin) * 0.08;
-  let fLonMin = lonMin - lonPad, fLonMax = lonMax + lonPad;
-  let fLatMin = latMin - latPad, fLatMax = latMax + latPad;
+  const lonRange = lonMax - lonMin;
+  const latRange = latMax - latMin;
+  const padding = 0.1;
+  const fLonMin = lonMin - lonRange * padding;
+  const fLonMax = lonMax + lonRange * padding;
+  const fLatMin = latMin - latRange * padding;
+  const fLatMax = latMax + latRange * padding;
   
-  const dataAspect = (fLonMax - fLonMin) / (fLatMax - fLatMin);
-  const plotAspect = plotWidth / plotHeight;
+  // Funções de conversão
+  const toPixelX = lon => graphX + ((lon - fLonMin) / (fLonMax - fLonMin)) * graphWidth;
+  const toPixelY = lat => graphY + ((fLatMax - lat) / (fLatMax - fLatMin)) * graphHeight;
   
-  if (dataAspect > plotAspect) {
-    const newLatRange = (fLonMax - fLonMin) / plotAspect;
-    const latCenter = (fLatMin + fLatMax) / 2;
-    fLatMin = latCenter - newLatRange / 2;
-    fLatMax = latCenter + newLatRange / 2;
-  } else {
-    const newLonRange = (fLatMax - fLatMin) * plotAspect;
-    const lonCenter = (fLonMin + fLonMax) / 2;
-    fLonMin = lonCenter - newLonRange / 2;
-    fLonMax = lonCenter + newLonRange / 2;
+  // Desenha o grid
+  doc.setDrawColor(220, 220, 220);
+  doc.setLineWidth(0.1);
+  for (let i = 0; i <= 10; i++) {
+    const x = graphX + (i / 10) * graphWidth;
+    const y = graphY + (i / 10) * graphHeight;
+    doc.line(x, graphY, x, graphY + graphHeight);
+    doc.line(graphX, y, graphX + graphWidth, y);
   }
   
-  const toPixelX = lon => margin.left + ((lon - fLonMin) / (fLonMax - fLonMin)) * plotWidth;
-  const toPixelY = lat => margin.top + ((fLatMax - lat) / (fLatMax - fLatMin)) * plotHeight;
+  // Desenha borda do gráfico
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.3);
+  doc.rect(graphX, graphY, graphWidth, graphHeight);
   
-  const polygonPoints = coords.map(c => `${toPixelX(c[0])},${toPixelY(c[1])}`).join(' ');
+  // Desenha os eixos com labels
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(7);
   
-  let verticesElements = '';
-  geoResult.vertices.forEach(v => {
+  // Label eixo Y (Latitude)
+  doc.text('Latitude (°)', 10, graphY + graphHeight / 2, { angle: 90, align: 'center' });
+  
+  // Valores do eixo Y
+  for (let i = 0; i <= 4; i++) {
+    const lat = fLatMin + (i / 4) * (fLatMax - fLatMin);
+    const y = graphY + graphHeight - (i / 4) * graphHeight;
+    doc.text(lat.toFixed(3), graphX - 3, y, { align: 'right' });
+  }
+  
+  // Label eixo X (Longitude)
+  doc.text('Longitude (°)', pageWidth / 2, graphY + graphHeight + 8, { align: 'center' });
+  
+  // Valores do eixo X
+  for (let i = 0; i <= 4; i++) {
+    const lon = fLonMin + (i / 4) * (fLonMax - fLonMin);
+    const x = graphX + (i / 4) * graphWidth;
+    doc.text(lon.toFixed(3), x, graphY + graphHeight + 4, { align: 'center' });
+  }
+  
+  // Desenha o polígono preenchido
+  doc.setFillColor(200, 220, 192);
+  doc.setDrawColor(45, 106, 46);
+  doc.setLineWidth(0.5);
+  
+  const polyPoints = coords.map(c => [toPixelX(c[0]), toPixelY(c[1])]);
+  doc.polygon(polyPoints, 'FD');
+  
+  // Desenha os vértices e labels
+  doc.setFillColor(26, 77, 26);
+  doc.setTextColor(26, 77, 26);
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
+  
+  vertices.forEach(v => {
     const x = toPixelX(v.lon);
     const y = toPixelY(v.lat);
-    verticesElements += `
-      <circle cx="${x}" cy="${y}" r="4" fill="#1a4d1a"/>
-      <text x="${x + 8}" y="${y - 8}" font-family="sans-serif" font-size="24" font-weight="bold" fill="#1a4d1a">${v.label}</text>
-    `;
+    doc.circle(x, y, 0.8, 'F');
+    doc.text(v.label, x + 2, y - 1);
   });
   
-  const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="${WIDTH}" height="${HEIGHT}" xmlns="http://www.w3.org/2000/svg">
-  <rect width="${WIDTH}" height="${HEIGHT}" fill="white"/>
+  // Desenha a bússola (indicador Norte)
+  const compassX = graphX + graphWidth - 15;
+  const compassY = graphY + 15;
   
-  <polygon points="${polygonPoints}" 
-           fill="rgba(200, 220, 192, 0.7)" 
-           stroke="#2d6a2e" 
-           stroke-width="3"/>
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.3);
+  doc.line(compassX, compassY, compassX, compassY - 10);
+  doc.line(compassX, compassY - 10, compassX - 2, compassY - 7);
+  doc.line(compassX, compassY - 10, compassX + 2, compassY - 7);
   
-  ${verticesElements}
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('N', compassX, compassY - 12, { align: 'center' });
   
-  <text x="${WIDTH / 2}" y="${HEIGHT - 20}" 
-        font-family="sans-serif" 
-        font-size="26" 
-        font-weight="bold" 
-        fill="#2d6a2e" 
-        text-anchor="middle">
-    Área: ${areaHa.toFixed(2).replace('.', ',')} ha
-  </text>
-</svg>`;
+  // ===== TABELA DE COORDENADAS =====
+  yPos = graphY + graphHeight + 15;
   
-  console.log('✓ SVG gerado com sucesso');
-  return svg;
-}
-
-// ========================================================================
-// PARTE 4: GERAÇÃO DO DOCUMENTO WORD (DOCX)
-// ========================================================================
-
-async function generateDocxBuffer(params) {
-  const { fazendaNome, matricula, municipio, areaHa, vertices, svgContent } = params;
-  const GREEN_DARK = '2d6a2e';
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  const coordLabel = formatoCoordenadas === 'gms' 
+    ? 'Coordenadas Geográficas (Graus, Minutos e Segundos) - Datum: SIRGAS 2000'
+    : 'Coordenadas Geográficas (Graus Decimais) - Datum: SIRGAS 2000';
+  doc.text(coordLabel, pageWidth / 2, yPos, { align: 'center' });
   
-  console.log('Gerando documento DOCX...');
+  yPos += 5;
   
-  const headerCell = text => new TableCell({ 
-    shading: { fill: GREEN_DARK }, 
-    verticalAlign: VerticalAlign.CENTER, 
-    children: [new Paragraph({ 
-      alignment: AlignmentType.CENTER, 
-      children: [new TextRun({ 
-        text, 
-        font: 'Calibri Light', 
-        size: 18, 
-        bold: true, 
-        color: 'FFFFFF' 
-      })] 
-    })] 
-  });
+  // Cabeçalho da tabela
+  const colWidth = 31.5;
+  let xPos = 10;
   
-  const dataCell = text => new TableCell({ 
-    verticalAlign: VerticalAlign.CENTER, 
-    children: [new Paragraph({ 
-      alignment: AlignmentType.CENTER, 
-      children: [new TextRun({ 
-        text, 
-        font: 'Calibri Light', 
-        size: 18 
-      })] 
-    })] 
-  });
+  doc.setFillColor(60, 95, 54);
+  doc.rect(xPos, yPos, colWidth, 6, 'F');
+  doc.rect(xPos + colWidth, yPos, colWidth, 6, 'F');
+  doc.rect(xPos + colWidth * 2, yPos, colWidth, 6, 'F');
+  doc.rect(xPos + colWidth * 3, yPos, colWidth, 6, 'F');
+  doc.rect(xPos + colWidth * 4, yPos, colWidth, 6, 'F');
+  doc.rect(xPos + colWidth * 5, yPos, colWidth, 6, 'F');
+  
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Vértice', xPos + colWidth / 2, yPos + 4, { align: 'center' });
+  doc.text('Latitude', xPos + colWidth * 1.5, yPos + 4, { align: 'center' });
+  doc.text('Longitude', xPos + colWidth * 2.5, yPos + 4, { align: 'center' });
+  doc.text('Vértice', xPos + colWidth * 3.5, yPos + 4, { align: 'center' });
+  doc.text('Latitude', xPos + colWidth * 4.5, yPos + 4, { align: 'center' });
+  doc.text('Longitude', xPos + colWidth * 5.5, yPos + 4, { align: 'center' });
+  
+  yPos += 6;
+  
+  // Dados da tabela (duas colunas)
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
   
   const halfCount = Math.ceil(vertices.length / 2);
-  const tableRows = [
-    new TableRow({ 
-      tableHeader: true, 
-      children: [
-        headerCell('Vértice'), 
-        headerCell('Latitude'), 
-        headerCell('Longitude'), 
-        headerCell('Vértice'), 
-        headerCell('Latitude'), 
-        headerCell('Longitude')
-      ] 
-    })
-  ];
   
   for (let i = 0; i < halfCount; i++) {
     const v1 = vertices[i];
     const v2 = i + halfCount < vertices.length ? vertices[i + halfCount] : null;
     
-    tableRows.push(new TableRow({ 
-      children: [
-        dataCell(v1.label), 
-        dataCell(v1.latFormatted), 
-        dataCell(v1.lonFormatted), 
-        dataCell(v2 ? v2.label : ''), 
-        dataCell(v2 ? v2.latFormatted : ''), 
-        dataCell(v2 ? v2.lonFormatted : '')
-      ] 
-    }));
+    const rowHeight = 5;
+    
+    // Primeira coluna de vértices
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.1);
+    doc.rect(xPos, yPos, colWidth, rowHeight);
+    doc.rect(xPos + colWidth, yPos, colWidth, rowHeight);
+    doc.rect(xPos + colWidth * 2, yPos, colWidth, rowHeight);
+    
+    doc.text(v1.label, xPos + colWidth / 2, yPos + 3.5, { align: 'center' });
+    doc.text(v1.latFormatted, xPos + colWidth * 1.5, yPos + 3.5, { align: 'center' });
+    doc.text(v1.lonFormatted, xPos + colWidth * 2.5, yPos + 3.5, { align: 'center' });
+    
+    // Segunda coluna de vértices
+    doc.rect(xPos + colWidth * 3, yPos, colWidth, rowHeight);
+    doc.rect(xPos + colWidth * 4, yPos, colWidth, rowHeight);
+    doc.rect(xPos + colWidth * 5, yPos, colWidth, rowHeight);
+    
+    if (v2) {
+      doc.text(v2.label, xPos + colWidth * 3.5, yPos + 3.5, { align: 'center' });
+      doc.text(v2.latFormatted, xPos + colWidth * 4.5, yPos + 3.5, { align: 'center' });
+      doc.text(v2.lonFormatted, xPos + colWidth * 5.5, yPos + 3.5, { align: 'center' });
+    }
+    
+    yPos += rowHeight;
   }
   
-  // Converte SVG para buffer
-  const svgBuffer = new TextEncoder().encode(svgContent);
+  // ===== ÁREA TOTAL =====
+  yPos += 5;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 0, 0);
+  doc.text(`Área Total: ${areaHa.toFixed(2).replace('.', ',')} ha`, pageWidth / 2, yPos, { align: 'center' });
   
-  const doc = new Document({
-    sections: [{
-      properties: { 
-        page: { 
-          margin: { 
-            top: convertInchesToTwip(0.8), 
-            bottom: convertInchesToTwip(0.6), 
-            left: convertInchesToTwip(0.8), 
-            right: convertInchesToTwip(0.8) 
-          } 
-        } 
-      },
-      headers: { 
-        default: new Header({ 
-          children: [new Paragraph({ 
-            alignment: AlignmentType.CENTER, 
-            children: [new TextRun({ 
-              text: 'CERRADO CONSULTORIA', 
-              font: 'Calibri Light', 
-              size: 18, 
-              bold: true, 
-              color: GREEN_DARK 
-            })] 
-          })] 
-        }) 
-      },
-      footers: { 
-        default: new Footer({ 
-          children: [new Paragraph({ 
-            alignment: AlignmentType.CENTER, 
-            children: [new TextRun({ 
-              text: 'Cerrado Consultoria, Gestão de Propriedades Rurais.', 
-              font: 'Calibri Light', 
-              size: 16, 
-              italics: true, 
-              color: '888888' 
-            })] 
-          })] 
-        }) 
-      },
-      children: [
-        new Paragraph({ 
-          alignment: AlignmentType.CENTER, 
-          spacing: { after: 100 }, 
-          children: [new TextRun({ 
-            text: 'CROQUI DE LOCALIZAÇÃO', 
-            font: 'Calibri Light', 
-            size: 28, 
-            bold: true, 
-            color: GREEN_DARK 
-          })] 
-        }),
-        new Paragraph({ 
-          alignment: AlignmentType.CENTER, 
-          spacing: { after: 60 }, 
-          children: [new TextRun({ 
-            text: `${fazendaNome} – Matrícula nº ${matricula}`, 
-            font: 'Calibri Light', 
-            size: 22, 
-            bold: true 
-          })] 
-        }),
-        new Paragraph({ 
-          alignment: AlignmentType.CENTER, 
-          spacing: { after: 150 }, 
-          children: [new TextRun({ 
-            text: `${municipio} – Área: ${areaHa.toFixed(2).replace('.', ',')} ha`, 
-            font: 'Calibri Light', 
-            size: 20 
-          })] 
-        }),
-        new Paragraph({ 
-          alignment: AlignmentType.CENTER, 
-          spacing: { after: 150 }, 
-          children: [new ImageRun({ 
-            data: svgBuffer, 
-            transformation: { width: 312, height: 340 },
-            type: 'svg'
-          })] 
-        }),
-        new Table({ 
-          width: { size: 100, type: WidthType.PERCENTAGE }, 
-          rows: tableRows 
-        }),
-        new Paragraph({ spacing: { before: 200 } }),
-        new Paragraph({ 
-          alignment: AlignmentType.CENTER, 
-          children: [new TextRun({ 
-            text: '________________________________________', 
-            font: 'Calibri Light', 
-            size: 20 
-          })] 
-        }),
-        new Paragraph({ 
-          alignment: AlignmentType.CENTER, 
-          children: [new TextRun({ 
-            text: 'Rodrigo Vieira de Moraes', 
-            font: 'Calibri Light', 
-            size: 20, 
-            bold: true 
-          })] 
-        }),
-        new Paragraph({ 
-          alignment: AlignmentType.CENTER, 
-          children: [new TextRun({ 
-            text: 'Engenheiro Agrônomo – CREA-GO 1021570580', 
-            font: 'Calibri Light', 
-            size: 18 
-          })] 
-        }),
-      ]
-    }]
-  });
+  // ===== ASSINATURA =====
+  yPos += 10;
+  doc.setLineWidth(0.3);
+  doc.line(pageWidth / 2 - 40, yPos, pageWidth / 2 + 40, yPos);
   
-  const buffer = await Packer.toBuffer(doc);
-  console.log('✓ Documento DOCX gerado com sucesso');
-  return buffer;
+  yPos += 4;
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Rodrigo Rodrigues Lopes do Nascimento', pageWidth / 2, yPos, { align: 'center' });
+  
+  yPos += 4;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text('CPF: 005.789.781-64 | CREA-GO: 24423/D', pageWidth / 2, yPos, { align: 'center' });
+  
+  yPos += 4;
+  doc.setFont('helvetica', 'bold');
+  doc.text('Responsável Técnico', pageWidth / 2, yPos, { align: 'center' });
+  
+  // ===== RODAPÉ TIMBRADO (NÃO MEXER) =====
+  const footerY = pageHeight - 20;
+  
+  // Faixa verde escura inferior
+  doc.setFillColor(60, 95, 54);
+  doc.rect(0, footerY, pageWidth, 20, 'F');
+  
+  // Textos do rodapé
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Rua Duque de Caxias', pageWidth / 2 - 60, footerY + 10, { align: 'left' });
+  doc.text('N° 175 - Bom Jesus, GO', pageWidth / 2 - 60, footerY + 14, { align: 'left' });
+  doc.text('CNPJ: 36.877.747/0001-70', pageWidth / 2 - 60, footerY + 18, { align: 'left' });
+  
+  doc.text('Telefone: (64) 3608-3944', pageWidth / 2 + 20, footerY + 12, { align: 'left' });
+  doc.text('E-mail: contato@cerradoconsultoria.agr.br', pageWidth / 2 + 20, footerY + 16, { align: 'left' });
+  
+  console.log('✓ PDF profissional gerado com sucesso');
+  return doc.output('arraybuffer');
 }
 
 // ========================================================================
-// PARTE 5: GERAÇÃO DO ARQUIVO KML FINAL
+// PARTE 4: GERAÇÃO DO ARQUIVO KML AJUSTADO
 // ========================================================================
 
 function generateKMLString(params) {
   const { polygon, fazendaNome } = params;
   
-  console.log('Gerando arquivo KML final...');
+  console.log('Gerando arquivo KML ajustado para a área desejada...');
   
   const coordString = polygon.geometry.coordinates[0]
     .map(c => `${c[0].toFixed(8)},${c[1].toFixed(8)},0`)
@@ -493,7 +488,7 @@ function generateKMLString(params) {
   </Document>
 </kml>`;
   
-  console.log('✓ Arquivo KML gerado com sucesso');
+  console.log('✓ Arquivo KML ajustado gerado com sucesso');
   return kmlStr;
 }
 
@@ -515,63 +510,54 @@ Deno.serve(async (req) => {
     }
     
     const { kmlContent, formData } = await req.json();
-    const { fazendaNome, matricula, municipio, areaHa, maxPoints = 20 } = formData;
+    const { fazendaNome, matricula, municipio, areaHa, maxPoints = 20, formatoCoordenadas = 'decimal' } = formData;
     
     console.log('Dados recebidos:');
     console.log(`  Fazenda: ${fazendaNome}`);
     console.log(`  Matrícula: ${matricula}`);
     console.log(`  Município: ${municipio}`);
     console.log(`  Área desejada: ${areaHa} ha`);
-    console.log(`  Max pontos: ${maxPoints}`);
+    console.log(`  Formato de coordenadas: ${formatoCoordenadas}`);
     
     // PASSO 1: Processa o KML e simplifica o polígono
     const polygonFeature = parseKMLFromString(kmlContent);
     const simplifiedPolygon = simplifyPolygonDynamic(polygonFeature, parseFloat(areaHa), parseInt(maxPoints));
-    const vertices = extractVertices(simplifiedPolygon);
+    const vertices = extractVertices(simplifiedPolygon, formatoCoordenadas);
     const finalAreaHa = calcAreaHa(simplifiedPolygon);
     
     console.log(`\n✓ Polígono processado:`);
     console.log(`  Vértices: ${vertices.length}`);
     console.log(`  Área final: ${finalAreaHa.toFixed(2)} ha`);
-    console.log(`  Diferença: ${Math.abs(finalAreaHa - parseFloat(areaHa)).toFixed(2)} ha`);
+    console.log(`  Diferença da área alvo: ${Math.abs(finalAreaHa - parseFloat(areaHa)).toFixed(2)} ha`);
     
     const geoResult = { polygon: simplifiedPolygon, vertices };
     
-    // PASSO 2: Gera o SVG
-    const svgContent = generateCroquiSVG(geoResult, finalAreaHa);
-    
-    // PASSO 3: Gera o documento DOCX
-    const docxBuffer = await generateDocxBuffer({ 
+    // PASSO 2: Gera o PDF profissional
+    const pdfBuffer = generateProfessionalPDF({ 
       fazendaNome, 
       matricula, 
       municipio, 
       areaHa: finalAreaHa, 
       vertices, 
-      svgContent 
+      polygon: simplifiedPolygon,
+      formatoCoordenadas
     });
     
-    // PASSO 4: Gera o KML final
+    // PASSO 3: Gera o KML ajustado
     const kmlString = generateKMLString({ ...formData, ...geoResult });
     const kmlBuffer = new TextEncoder().encode(kmlString);
     
-    // PASSO 5: Upload dos arquivos
+    // PASSO 4: Upload dos arquivos com nomes corretos
     console.log('\nFazendo upload dos arquivos gerados...');
-    const nomeBase = fazendaNome.replace(/\s+/g, '_');
+    const nomeBase = `Croqui_${fazendaNome.replace(/\s+/g, '_')}_Mat_${matricula}`;
     
-    const docxBlob = new Blob([docxBuffer], { 
-      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
-    });
-    const docxFile = new File([docxBlob], `Croqui_${nomeBase}_Mat_${matricula}.docx`);
-    const { file_url: docxUrl } = await base44.asServiceRole.integrations.Core.UploadFile({ file: docxFile });
-    console.log('  ✓ DOCX:', docxUrl);
-    
-    const svgBlob = new Blob([new TextEncoder().encode(svgContent)], { type: 'image/svg+xml' });
-    const svgFile = new File([svgBlob], `Croqui_${nomeBase}.svg`);
-    const { file_url: svgUrl } = await base44.asServiceRole.integrations.Core.UploadFile({ file: svgFile });
-    console.log('  ✓ SVG:', svgUrl);
+    const pdfBlob = new Blob([pdfBuffer], { type: 'application/pdf' });
+    const pdfFile = new File([pdfBlob], `${nomeBase}.pdf`);
+    const { file_url: pdfUrl } = await base44.asServiceRole.integrations.Core.UploadFile({ file: pdfFile });
+    console.log('  ✓ PDF:', pdfUrl);
     
     const kmlBlob = new Blob([kmlBuffer], { type: 'application/vnd.google-earth.kml+xml' });
-    const kmlFile = new File([kmlBlob], `Croqui_${nomeBase}.kml`);
+    const kmlFile = new File([kmlBlob], `${nomeBase}.kml`);
     const { file_url: kmlUrl } = await base44.asServiceRole.integrations.Core.UploadFile({ file: kmlFile });
     console.log('  ✓ KML:', kmlUrl);
     
@@ -582,17 +568,18 @@ Deno.serve(async (req) => {
     return Response.json({
       success: true,
       files: {
-        docx_url: docxUrl,
-        docx_filename: `Croqui_${nomeBase}_Mat_${matricula}.docx`,
-        svg_url: svgUrl,
-        svg_filename: `Croqui_${nomeBase}.svg`,
+        docx_url: pdfUrl,
+        docx_filename: `${nomeBase}.docx`,
+        pdf_url: pdfUrl,
+        pdf_filename: `${nomeBase}.pdf`,
         kml_url: kmlUrl,
-        kml_filename: `Croqui_${nomeBase}.kml`
+        kml_filename: `${nomeBase}.kml`
       },
       stats: {
         vertices_count: vertices.length,
         final_area_ha: parseFloat(finalAreaHa.toFixed(2)),
-        area_difference_ha: parseFloat(Math.abs(finalAreaHa - parseFloat(areaHa)).toFixed(2))
+        area_difference_ha: parseFloat(Math.abs(finalAreaHa - parseFloat(areaHa)).toFixed(2)),
+        coordinate_format: formatoCoordenadas
       }
     });
     

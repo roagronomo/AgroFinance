@@ -12,7 +12,8 @@ export default function CroquiBradesco() {
     fazendaNome: "",
     matricula: "",
     municipio: "",
-    areaHa: ""
+    areaHa: "",
+    formatoCoordenadas: "decimal" // "decimal" ou "gms"
   });
 
   // Formata matrícula com pontos de milhar (ex: 6230 -> 6.230)
@@ -86,7 +87,8 @@ export default function CroquiBradesco() {
           fazendaNome: formulario.fazendaNome,
           matricula: formulario.matricula,
           municipio: formulario.municipio,
-          areaHa: parseFloat(removerFormatacao(formulario.areaHa))
+          areaHa: parseFloat(removerFormatacao(formulario.areaHa)),
+          formatoCoordenadas: formulario.formatoCoordenadas
         }
       });
 
@@ -189,6 +191,32 @@ export default function CroquiBradesco() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="formatoCoordenadas">Formato das Coordenadas *</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  type="button"
+                  variant={formulario.formatoCoordenadas === "decimal" ? "default" : "outline"}
+                  onClick={() => setFormulario({ ...formulario, formatoCoordenadas: "decimal" })}
+                  className={formulario.formatoCoordenadas === "decimal" 
+                    ? "bg-green-600 hover:bg-green-700" 
+                    : ""}
+                >
+                  Graus Decimais
+                </Button>
+                <Button
+                  type="button"
+                  variant={formulario.formatoCoordenadas === "gms" ? "default" : "outline"}
+                  onClick={() => setFormulario({ ...formulario, formatoCoordenadas: "gms" })}
+                  className={formulario.formatoCoordenadas === "gms" 
+                    ? "bg-green-600 hover:bg-green-700" 
+                    : ""}
+                >
+                  Graus, Minutos e Segundos
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="kml">Arquivo KML *</Label>
               <Input
                 id="kml"
@@ -252,14 +280,14 @@ export default function CroquiBradesco() {
                 </Button>
 
                 <Button
-                  onClick={() => handleDownload(arquivosGerados.svg_url, arquivosGerados.svg_filename)}
+                  onClick={() => handleDownload(arquivosGerados.pdf_url, arquivosGerados.pdf_filename)}
                   variant="outline"
                   className="w-full justify-start text-left h-auto py-4"
                 >
-                  <Download className="w-5 h-5 mr-3 flex-shrink-0 text-green-600" />
+                  <Download className="w-5 h-5 mr-3 flex-shrink-0 text-red-600" />
                   <div>
-                    <p className="font-semibold">Imagem (SVG)</p>
-                    <p className="text-sm text-gray-600">{arquivosGerados.svg_filename}</p>
+                    <p className="font-semibold">Documento PDF</p>
+                    <p className="text-sm text-gray-600">{arquivosGerados.pdf_filename}</p>
                   </div>
                 </Button>
 
@@ -270,7 +298,7 @@ export default function CroquiBradesco() {
                 >
                   <Download className="w-5 h-5 mr-3 flex-shrink-0 text-orange-600" />
                   <div>
-                    <p className="font-semibold">Arquivo KML</p>
+                    <p className="font-semibold">Arquivo KML Ajustado</p>
                     <p className="text-sm text-gray-600">{arquivosGerados.kml_filename}</p>
                   </div>
                 </Button>

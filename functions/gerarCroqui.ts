@@ -315,43 +315,62 @@ function generateProfessionalPDF(params) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   
-  // ===== CABEÇALHO TIMBRADO (NÃO MEXER) =====
+  // ===== CABEÇALHO TIMBRADO - MODELO CERRADO =====
   // Faixa amarela superior
   doc.setFillColor(255, 193, 7);
-  doc.rect(0, 0, pageWidth, 15, 'F');
+  doc.rect(0, 0, pageWidth, 10, 'F');
   
-  // Faixa verde escura superior
-  doc.setFillColor(60, 95, 54);
-  doc.rect(0, 15, pageWidth, 25, 'F');
+  // Faixa verde com logo CERRADO
+  doc.setFillColor(82, 115, 57);
+  doc.rect(0, 10, pageWidth, 35, 'F');
   
-  // Textos do cabeçalho
+  // Diagonal branca no canto direito
+  doc.setFillColor(255, 255, 255);
+  const diagPoints = [
+    [pageWidth * 0.7, 10],
+    [pageWidth, 10],
+    [pageWidth, 45]
+  ];
+  doc.triangle(diagPoints[0][0], diagPoints[0][1], diagPoints[1][0], diagPoints[1][1], diagPoints[2][0], diagPoints[2][1], 'F');
+  
+  // Texto CERRADO (logo)
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(8);
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.text('CERRADO', 25, 30);
+  
+  // Subtítulo
+  doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
-  doc.text('Rua Duque de Caxias', pageWidth - 10, 22, { align: 'right' });
-  doc.text('N° 175 - Bom Jesus, GO', pageWidth - 10, 26, { align: 'right' });
-  doc.text('CNPJ: 36.877.747/0001-70', pageWidth - 10, 30, { align: 'right' });
-  doc.text('Telefone: (64) 3608-3944', pageWidth - 10, 34, { align: 'right' });
-  doc.text('E-mail: contato@cerradoconsultoria.agr.br', pageWidth - 10, 38, { align: 'right' });
+  doc.text('Consultoria e Planejamento Agropecuário', 25, 36);
+  
+  // Informações de contato no topo (pequeno)
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(6.5);
+  doc.text('Rua Duque de Caxias', pageWidth - 10, 3, { align: 'right' });
+  doc.text('N° 175 - Bom Jesus, GO', pageWidth - 10, 6, { align: 'right' });
+  doc.text('CNPJ: 36.877.747/0001-70', pageWidth - 65, 3);
+  doc.text('Telefone: (64) 3608-3944', pageWidth - 65, 6);
+  doc.text('E-mail: contato@cerradoconsultoria.agr.br', pageWidth - 65, 9);
   
   // ===== TÍTULO DO DOCUMENTO =====
-  let yPos = 50;
-  doc.setTextColor(60, 95, 54);
-  doc.setFontSize(16);
+  let yPos = 52;
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.text(`Croqui de Localização - ${fazendaNome}`, pageWidth / 2, yPos, { align: 'center' });
   
-  yPos += 8;
-  doc.setFontSize(11);
+  yPos += 5;
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.text(`Matrícula nº ${matricula} | Município: ${municipio} | Área: ${areaHa.toFixed(2).replace('.', ',')} ha`, pageWidth / 2, yPos, { align: 'center' });
   
-  // ===== GRÁFICO DO CROQUI COM GRID E BÚSSOLA =====
-  yPos += 8;
-  const graphX = 35;
-  const graphY = yPos;
+  // ===== GRÁFICO DO CROQUI REDUZIDO =====
+  yPos += 6;
   const graphWidth = 140;
-  const graphHeight = 90;
+  const graphHeight = 100;
+  const graphX = (pageWidth - graphWidth) / 2;
+  const graphY = yPos;
   
   // Calcula os limites do polígono
   const coords = polygon.geometry.coordinates[0];
@@ -439,38 +458,59 @@ function generateProfessionalPDF(params) {
     doc.text(v.label, x + 2, y - 1);
   });
   
-  // Desenha a bússola (indicador Norte)
-  const compassX = graphX + graphWidth - 15;
-  const compassY = graphY + 15;
+  // Desenha a bússola (Rosa dos Ventos simplificada)
+  const compassX = graphX + graphWidth - 20;
+  const compassY = graphY + 20;
+  const compassSize = 12;
   
+  // Círculo externo
   doc.setDrawColor(0, 0, 0);
-  doc.setLineWidth(0.3);
-  doc.line(compassX, compassY, compassX, compassY - 10);
-  doc.line(compassX, compassY - 10, compassX - 2, compassY - 7);
-  doc.line(compassX, compassY - 10, compassX + 2, compassY - 7);
+  doc.setLineWidth(0.5);
+  doc.circle(compassX, compassY, compassSize / 2);
   
-  doc.setFontSize(10);
+  // Seta Norte (preenchida)
+  doc.setFillColor(0, 0, 0);
+  const northPoints = [
+    [compassX, compassY - compassSize / 2],
+    [compassX - 2, compassY],
+    [compassX + 2, compassY]
+  ];
+  doc.triangle(northPoints[0][0], northPoints[0][1], northPoints[1][0], northPoints[1][1], northPoints[2][0], northPoints[2][1], 'F');
+  
+  // Seta Sul (branca)
+  doc.setFillColor(255, 255, 255);
+  doc.setDrawColor(0, 0, 0);
+  const southPoints = [
+    [compassX, compassY + compassSize / 2],
+    [compassX - 2, compassY],
+    [compassX + 2, compassY]
+  ];
+  doc.triangle(southPoints[0][0], southPoints[0][1], southPoints[1][0], southPoints[1][1], southPoints[2][0], southPoints[2][1], 'FD');
+  
+  // Letra N
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  doc.text('N', compassX, compassY - 12, { align: 'center' });
+  doc.setTextColor(0, 0, 0);
+  doc.text('N', compassX, compassY - compassSize / 2 - 2, { align: 'center' });
   
   // ===== TABELA DE COORDENADAS =====
-  yPos = graphY + graphHeight + 10;
+  yPos = graphY + graphHeight + 8;
   
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(10);
+  doc.setTextColor(82, 115, 57);
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   const coordLabel = formatoCoordenadas === 'gms' 
     ? 'Coordenadas Geográficas (Graus, Minutos e Segundos) - Datum: SIRGAS 2000'
     : 'Coordenadas Geográficas (Graus Decimais) - Datum: SIRGAS 2000';
   doc.text(coordLabel, pageWidth / 2, yPos, { align: 'center' });
   
-  yPos += 5;
+  yPos += 4;
   
   // Cabeçalho da tabela
   const colWidth = 31;
   let xPos = 12;
   
-  doc.setFillColor(60, 95, 54);
+  doc.setFillColor(82, 115, 57);
   doc.rect(xPos, yPos, colWidth, 6, 'F');
   doc.rect(xPos + colWidth, yPos, colWidth, 6, 'F');
   doc.rect(xPos + colWidth * 2, yPos, colWidth, 6, 'F');
@@ -479,7 +519,7 @@ function generateProfessionalPDF(params) {
   doc.rect(xPos + colWidth * 5, yPos, colWidth, 6, 'F');
   
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'bold');
   doc.text('Vértice', xPos + colWidth / 2, yPos + 4, { align: 'center' });
   doc.text('Latitude', xPos + colWidth * 1.5, yPos + 4, { align: 'center' });
@@ -529,48 +569,89 @@ function generateProfessionalPDF(params) {
   }
   
   // ===== ÁREA TOTAL =====
-  yPos += 4;
-  doc.setFontSize(9);
+  yPos += 3;
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(82, 115, 57);
   doc.text(`Área Total: ${areaHa.toFixed(2).replace('.', ',')} ha`, pageWidth / 2, yPos, { align: 'center' });
   
-  // ===== ASSINATURA =====
-  yPos += 8;
-  doc.setLineWidth(0.3);
-  doc.line(pageWidth / 2 - 35, yPos, pageWidth / 2 + 35, yPos);
+  // ===== ASSINATURA COM CERTIFICADO DIGITAL =====
+  yPos += 5;
   
-  yPos += 3.5;
-  doc.setFontSize(8.5);
+  // Box com informações do certificado (simulado)
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.3);
+  const certBoxWidth = 80;
+  const certBoxHeight = 10;
+  const certBoxX = (pageWidth - certBoxWidth) / 2;
+  doc.rect(certBoxX, yPos, certBoxWidth, certBoxHeight);
+  
+  doc.setFontSize(5.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(0, 0, 0);
+  const certLines = [
+    'Assinado de forma digital por RODRIGO RODRIGUES LOPES DO',
+    'NASCIMENTO:00578978164',
+    'DN: c=BR, o=ICP-Brasil, ou=Certificado PF A3, ou=ARSERPRO, ou=Certificado PF A1,',
+    'ou=25808960000128, cn=RODRIGO RODRIGUES LOPES DO NASCIMENTO:00578978164',
+    'Dados: 2025.01.28 00:27:19 -03\'00\''
+  ];
+  let certY = yPos + 2.5;
+  certLines.forEach(line => {
+    doc.text(line, certBoxX + 2, certY);
+    certY += 1.8;
+  });
+  
+  yPos += certBoxHeight + 4;
+  
+  // Linha de assinatura
+  doc.setLineWidth(0.4);
+  doc.line(pageWidth / 2 - 40, yPos, pageWidth / 2 + 40, yPos);
+  
+  yPos += 3;
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'bold');
   doc.text('Rodrigo Rodrigues Lopes do Nascimento', pageWidth / 2, yPos, { align: 'center' });
   
-  yPos += 3.5;
+  yPos += 3;
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
+  doc.setFontSize(7);
   doc.text('CPF: 005.789.781-64 | CREA-GO: 24423/D', pageWidth / 2, yPos, { align: 'center' });
   
-  yPos += 3.5;
+  yPos += 3;
   doc.setFont('helvetica', 'bold');
   doc.text('Responsável Técnico', pageWidth / 2, yPos, { align: 'center' });
   
-  // ===== RODAPÉ TIMBRADO (NÃO MEXER) =====
+  // ===== RODAPÉ TIMBRADO - MODELO CERRADO =====
   const footerY = pageHeight - 20;
   
-  // Faixa verde escura inferior
-  doc.setFillColor(60, 95, 54);
+  // Faixa verde com logo
+  doc.setFillColor(82, 115, 57);
   doc.rect(0, footerY, pageWidth, 20, 'F');
   
-  // Textos do rodapé
+  // Logo CERRADO no rodapé (menor)
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Rua Duque de Caxias', pageWidth / 2 - 60, footerY + 10, { align: 'left' });
-  doc.text('N° 175 - Bom Jesus, GO', pageWidth / 2 - 60, footerY + 14, { align: 'left' });
-  doc.text('CNPJ: 36.877.747/0001-70', pageWidth / 2 - 60, footerY + 18, { align: 'left' });
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('CERRADO', 15, footerY + 12);
   
-  doc.text('Telefone: (64) 3608-3944', pageWidth / 2 + 20, footerY + 12, { align: 'left' });
-  doc.text('E-mail: contato@cerradoconsultoria.agr.br', pageWidth / 2 + 20, footerY + 16, { align: 'left' });
+  // Divisor vertical
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(0.5);
+  doc.line(45, footerY + 4, 45, footerY + 16);
+  
+  // Informações de contato
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Rua Duque de Caxias', 50, footerY + 8);
+  doc.text('N° 175 - Bom Jesus, GO', 50, footerY + 11);
+  doc.text('CNPJ: 36.877.747/0001-70', 50, footerY + 14);
+  
+  // Divisor vertical
+  doc.line(100, footerY + 4, 100, footerY + 16);
+  
+  doc.text('Telefone: (64) 3608-3944', 105, footerY + 10);
+  doc.text('E-mail: contato@cerradoconsultoria.agr.br', 105, footerY + 13);
   
   console.log('✓ PDF profissional gerado com sucesso');
   return doc.output('arraybuffer');

@@ -747,58 +747,11 @@ function generateProfessionalPDF(params) {
   }
   
   // ===== ÁREA TOTAL =====
-  yPos += 3;
-  doc.setFontSize(10);
+  yPos += 4;
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(82, 115, 57);
   doc.text(`Área Total: ${areaHa.toFixed(2).replace('.', ',')} ha`, pageWidth / 2, yPos, { align: 'center' });
-  
-  // ===== ASSINATURA COM CERTIFICADO DIGITAL =====
-  yPos += 5;
-  
-  // Box com informações do certificado (simulado)
-  doc.setDrawColor(0, 0, 0);
-  doc.setLineWidth(0.3);
-  const certBoxWidth = 80;
-  const certBoxHeight = 10;
-  const certBoxX = (pageWidth - certBoxWidth) / 2;
-  doc.rect(certBoxX, yPos, certBoxWidth, certBoxHeight);
-  
-  doc.setFontSize(5.5);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(0, 0, 0);
-  const certLines = [
-    'Assinado de forma digital por RODRIGO RODRIGUES LOPES DO',
-    'NASCIMENTO:00578978164',
-    'DN: c=BR, o=ICP-Brasil, ou=Certificado PF A3, ou=ARSERPRO, ou=Certificado PF A1,',
-    'ou=25808960000128, cn=RODRIGO RODRIGUES LOPES DO NASCIMENTO:00578978164',
-    'Dados: 2025.01.28 00:27:19 -03\'00\''
-  ];
-  let certY = yPos + 2.5;
-  certLines.forEach(line => {
-    doc.text(line, certBoxX + 2, certY);
-    certY += 1.8;
-  });
-  
-  yPos += certBoxHeight + 4;
-  
-  // Linha de assinatura
-  doc.setLineWidth(0.4);
-  doc.line(pageWidth / 2 - 40, yPos, pageWidth / 2 + 40, yPos);
-  
-  yPos += 3;
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Rodrigo Rodrigues Lopes do Nascimento', pageWidth / 2, yPos, { align: 'center' });
-  
-  yPos += 3;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
-  doc.text('CPF: 005.789.781-64 | CREA-GO: 24423/D', pageWidth / 2, yPos, { align: 'center' });
-  
-  yPos += 3;
-  doc.setFont('helvetica', 'bold');
-  doc.text('Responsável Técnico', pageWidth / 2, yPos, { align: 'center' });
   
   // ===== RODAPÉ TIMBRADO - MODELO CERRADO =====
   const footerY = pageHeight - 20;

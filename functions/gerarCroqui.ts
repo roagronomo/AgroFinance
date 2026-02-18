@@ -403,72 +403,123 @@ async function generateProfessionalDOCX(params) {
   }
   
   const doc = new Document({
-    sections: [{
-      properties: {},
-      children: [
-        new Paragraph({
-          text: `Croqui de Localização - ${fazendaNome}`,
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          text: `Matrícula nº ${matricula} | Município: ${municipio} | Área: ${areaHa.toFixed(2).replace('.', ',')} ha`,
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 200 }
-        }),
-        new Paragraph({
-          children: [
-            new ImageRun({
-              data: croquiImageBuffer,
-              transformation: {
-                width: 500,
-                height: 357
-              }
-            })
-          ],
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 200 }
-        }),
-        new Paragraph({
-          text: `Coordenadas Geográficas ${formatoCoordenadas === 'gms' ? '(Graus, Minutos e Segundos)' : '(Graus Decimais)'} - Datum: SIRGAS 2000`,
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 100 }
-        }),
-        new Table({
-          rows: tableRows,
-          width: { size: 100, type: WidthType.PERCENTAGE }
-        }),
-        new Paragraph({
-          text: '',
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          text: `Área Total: ${areaHa.toFixed(2).replace('.', ',')} ha`,
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 200 }
-        }),
-        new Paragraph({
-          text: '________________________________________',
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 100 }
-        }),
-        new Paragraph({
-          text: 'Rodrigo Rodrigues Lopes do Nascimento',
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 50 }
-        }),
-        new Paragraph({
-          text: 'CPF: 005.789.781-64 | CREA-GO: 24423/D',
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 50 }
-        }),
-        new Paragraph({
-          text: 'Responsável Técnico',
-          alignment: AlignmentType.CENTER
-        })
-      ]
-    }]
-  });
+      sections: [{
+        properties: {
+          page: {
+            margin: {
+              top: 720,
+              right: 720,
+              bottom: 720,
+              left: 720
+            }
+          }
+        },
+        children: [
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Croqui de Localização - ${fazendaNome}`,
+                bold: true,
+                size: 28
+              })
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 100 }
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Matrícula nº ${matricula} | Município: ${municipio} | Área: ${areaHa.toFixed(2).replace('.', ',')} ha`,
+                size: 20
+              })
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 200 }
+          }),
+          new Paragraph({
+            children: [
+              new ImageRun({
+                data: croquiImageBuffer,
+                transformation: {
+                  width: 500,
+                  height: 357
+                }
+              })
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 200 }
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Coordenadas Geográficas ${formatoCoordenadas === 'gms' ? '(Graus, Minutos e Segundos)' : '(Graus Decimais)'} - Datum: SIRGAS 2000`,
+                bold: true,
+                size: 20,
+                color: '527339'
+              })
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 100 }
+          }),
+          new Table({
+            rows: tableRows,
+            width: { size: 100, type: WidthType.PERCENTAGE }
+          }),
+          new Paragraph({
+            text: '',
+            spacing: { after: 150 }
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Área Total: ${areaHa.toFixed(2).replace('.', ',')} ha`,
+                bold: true,
+                size: 24,
+                color: '527339'
+              })
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 300 }
+          }),
+          new Paragraph({
+            text: '________________________________________',
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 100 }
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Rodrigo Rodrigues Lopes do Nascimento',
+                bold: true,
+                size: 20
+              })
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 80 }
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'CPF: 005.789.781-64 | CREA-GO: 24423/D',
+                size: 18
+              })
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 80 }
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Responsável Técnico',
+                bold: true,
+                size: 18
+              })
+            ],
+            alignment: AlignmentType.CENTER
+          })
+        ]
+      }]
+    });
   
   console.log('✓ Documento DOCX gerado com sucesso');
   return Packer.toBuffer(doc);

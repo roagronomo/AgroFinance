@@ -753,36 +753,60 @@ function generateProfessionalPDF(params) {
   doc.setTextColor(82, 115, 57);
   doc.text(`Área Total: ${areaHa.toFixed(2).replace('.', ',')} ha`, pageWidth / 2, yPos, { align: 'center' });
   
-  // ===== RODAPÉ TIMBRADO - MODELO CERRADO =====
-  const footerY = pageHeight - 20;
-  
+  // ===== ASSINATURA (SEM CERTIFICADO DIGITAL) =====
+  yPos += 8;
+
+  // Linha de assinatura
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.4);
+  doc.line(pageWidth / 2 - 50, yPos, pageWidth / 2 + 50, yPos);
+
+  yPos += 4;
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Rodrigo Rodrigues Lopes do Nascimento', pageWidth / 2, yPos, { align: 'center' });
+
+  yPos += 4;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text('CPF: 005.789.781-64 | CREA-GO: 24423/D', pageWidth / 2, yPos, { align: 'center' });
+
+  yPos += 4;
+  doc.setFont('helvetica', 'bold');
+  doc.text('Responsável Técnico', pageWidth / 2, yPos, { align: 'center' });
+
+  // ===== RODAPÉ TIMBRADO - MODELO CERRADO EXATO =====
+  const footerY = pageHeight - 17;
+
   // Faixa verde com logo
   doc.setFillColor(82, 115, 57);
-  doc.rect(0, footerY, pageWidth, 20, 'F');
-  
-  // Logo CERRADO no rodapé (menor)
+  doc.rect(0, footerY, pageWidth, 17, 'F');
+
+  // Logo CERRADO no rodapé (esquerda)
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(11);
+  doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text('CERRADO', 15, footerY + 12);
-  
+  doc.text('CERRADO', 25, footerY + 11);
+
   // Divisor vertical
   doc.setDrawColor(255, 255, 255);
   doc.setLineWidth(0.5);
-  doc.line(45, footerY + 4, 45, footerY + 16);
-  
-  // Informações de contato
+  doc.line(65, footerY + 3, 65, footerY + 14);
+
+  // Informações de contato (centro)
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
-  doc.text('Rua Duque de Caxias', 50, footerY + 8);
-  doc.text('N° 175 - Bom Jesus, GO', 50, footerY + 11);
-  doc.text('CNPJ: 36.877.747/0001-70', 50, footerY + 14);
-  
+  doc.text('Rua Duque de Caxias', 70, footerY + 7);
+  doc.text('N° 175 - Bom Jesus, GO', 70, footerY + 10);
+  doc.text('CNPJ: 36.877.747/0001-70', 70, footerY + 13);
+
   // Divisor vertical
-  doc.line(100, footerY + 4, 100, footerY + 16);
-  
-  doc.text('Telefone: (64) 3608-3944', 105, footerY + 10);
-  doc.text('E-mail: contato@cerradoconsultoria.agr.br', 105, footerY + 13);
+  doc.line(125, footerY + 3, 125, footerY + 14);
+
+  // Telefone e email (direita)
+  doc.text('Telefone: (64) 3608-3944', 130, footerY + 9);
+  doc.text('E-mail: contato@cerradoconsultoria.agr.br', 130, footerY + 12);
   
   console.log('✓ PDF profissional gerado com sucesso');
   return doc.output('arraybuffer');

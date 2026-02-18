@@ -532,7 +532,7 @@ function generateProfessionalPDF(params) {
   doc.text('Consultoria e Planejamento Agropecuário', 20, 35);
   
   // ===== TÍTULO DO DOCUMENTO =====
-  let yPos = 52;
+  let yPos = 50;
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');

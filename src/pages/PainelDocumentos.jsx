@@ -453,12 +453,75 @@ export default function PainelDocumentos() {
 
       <EstatisticasDocs stats={stats} isLoading={isLoading} />
 
+      {/* Grid: Tabela + Painel Lateral */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <TabelaDocumentos documentos={documentosFiltrados.slice(0, 15)} isLoading={isLoading} onAction={handleAction} />
         </div>
-        <div>
+        <div className="space-y-6">
+          {/* Alertas */}
           <AlertasDocumentos documentos={documentos} />
+
+          {/* Ações Rápidas */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold text-gray-800">Ações Rápidas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: "Nova Certidão", tipo: "Certidão", color: "bg-blue-50 text-blue-600 hover:bg-blue-100" },
+                  { label: "Novo Contrato", tipo: "Contrato", color: "bg-green-50 text-green-600 hover:bg-green-100" },
+                  { label: "Carta Anuência", tipo: "Carta de Anuência", color: "bg-yellow-50 text-yellow-600 hover:bg-yellow-100" },
+                  { label: "Novo Laudo", tipo: "Laudo Técnico", color: "bg-red-50 text-red-600 hover:bg-red-100" },
+                ].map((acao, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setEditandoDoc(null);
+                      setFormData({
+                        nome_documento: "", tipo_documento: acao.tipo, data_emissao: "", data_vencimento: "",
+                        status_documento: "Vigente", cliente_id: "", imovel_id: "", arquivo_pdf: "", observacoes: "", dados_extracao_ia: ""
+                      });
+                      setModalAberto(true);
+                    }}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border border-transparent transition-all duration-200 ${acao.color}`}
+                  >
+                    <FileText className="w-5 h-5" />
+                    <span className="text-xs font-medium">{acao.label}</span>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Resumo por Tipo */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold text-gray-800">Resumo por Tipo</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {["Certidão", "Contrato", "Carta de Anuência", "Laudo Técnico", "ART"].map((tipo) => {
+                const count = documentos.filter(d => d.tipo_documento === tipo).length;
+                const cores = {
+                  "Certidão": "bg-blue-500",
+                  "Contrato": "bg-green-500",
+                  "Carta de Anuência": "bg-yellow-500",
+                  "Laudo Técnico": "bg-red-500",
+                  "ART": "bg-purple-500"
+                };
+                return (
+                  <div key={tipo} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2.5 h-2.5 rounded-full ${cores[tipo]}`} />
+                      <span className="text-sm text-gray-600">{tipo}</span>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-800">{count}</span>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
         </div>
       </div>
 

@@ -184,6 +184,7 @@ export default function Layout({ children, currentPageName }) {
   const [openSections, setOpenSections] = useState({
     "Cadastro": true,
     "Projetos": true,
+    "Gestão Documental": true,
     "Financiamentos": true
   });
 

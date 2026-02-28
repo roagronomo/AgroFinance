@@ -114,14 +114,20 @@ const navigationSections = [
       url: createPageUrl("CroquiBradesco"),
       icon: FileText,
     },
+    ]
+    },
+    {
+    title: "Gestão Documental",
+    icon: FolderCheck,
+    items: [
     {
       title: "Painel de Documentos",
       url: createPageUrl("PainelDocumentos"),
       icon: FileText,
     },
-  ]
-  },
-  {
+    ]
+    },
+    {
     title: "Financiamentos",
     icon: Wallet,
     items: [

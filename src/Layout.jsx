@@ -100,20 +100,25 @@ const navigationSections = [
     ]
   },
   {
-    title: "Projetos",
-    icon: ClipboardCheck,
-    items: [
-      {
-        title: "Checklist",
-        url: createPageUrl("Checklist"),
-        icon: ClipboardCheck,
-      },
-      {
-        title: "Croqui Bradesco",
-        url: createPageUrl("CroquiBradesco"),
-        icon: FileText,
-      },
-    ]
+  title: "Projetos",
+  icon: ClipboardCheck,
+  items: [
+    {
+      title: "Checklist",
+      url: createPageUrl("Checklist"),
+      icon: ClipboardCheck,
+    },
+    {
+      title: "Croqui Bradesco",
+      url: createPageUrl("CroquiBradesco"),
+      icon: FileText,
+    },
+    {
+      title: "Painel de Documentos",
+      url: createPageUrl("PainelDocumentos"),
+      icon: FileText,
+    },
+  ]
   },
   {
     title: "Financiamentos",

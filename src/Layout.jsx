@@ -22,7 +22,8 @@ import {
   ChevronRight,
   FolderOpen,
   Wallet,
-  Bell
+  Bell,
+  FolderCheck
 } from "lucide-react";
 import {
   Sidebar,

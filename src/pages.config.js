@@ -65,10 +65,10 @@ import GerenciamentoARTs from './pages/GerenciamentoARTs';
 import Home from './pages/Home';
 import NovoProjeto from './pages/NovoProjeto';
 import OutrosServicos from './pages/OutrosServicos';
+import PainelDocumentos from './pages/PainelDocumentos';
 import ProducaoAgricola from './pages/ProducaoAgricola';
 import TodosProjetos from './pages/TodosProjetos';
 import Vencimentos from './pages/Vencimentos';
-import PainelDocumentos from './pages/PainelDocumentos';
 import __Layout from './Layout.jsx';
 
 
@@ -91,10 +91,10 @@ export const PAGES = {
     "Home": Home,
     "NovoProjeto": NovoProjeto,
     "OutrosServicos": OutrosServicos,
+    "PainelDocumentos": PainelDocumentos,
     "ProducaoAgricola": ProducaoAgricola,
     "TodosProjetos": TodosProjetos,
     "Vencimentos": Vencimentos,
-    "PainelDocumentos": PainelDocumentos,
 }
 
 export const pagesConfig = {

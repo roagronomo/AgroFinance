@@ -316,8 +316,6 @@ const FormularioART = ({ artInicial = null, onSalvar, onCancelar }) => {
     obra_proprietario_cpf_cnpj: '',
     obra_argumentacao: '',
     obra_custo_medio: 0,
-    anexos_kml: [],
-    anexos_car_pdf: [],
     ...artInicial,
     anexos_kml: artInicial?.anexos_kml || [],
     anexos_car_pdf: artInicial?.anexos_car_pdf || [],

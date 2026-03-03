@@ -194,8 +194,8 @@ function extractVertices(polygonFeature, formatoCoordenadas) {
 function generateCroquiImage(polygon, vertices) {
   console.log('Gerando imagem do croqui...');
   
-  const canvasWidth = 1400;
-  const canvasHeight = 1000;
+  const canvasWidth = 800;
+  const canvasHeight = 600;
   const canvas = createCanvas(canvasWidth, canvasHeight);
   const ctx = canvas.getContext('2d');
   

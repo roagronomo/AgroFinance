@@ -409,7 +409,7 @@ const SidebarMenuButton = React.forwardRef(function SidebarMenuButton(
       data-size={_size}
       data-active={_isActive}
       className={cn(sidebarMenuButtonVariants({ variant: _variant, size: _size }), className)}
-      {...props}
+      {...rest}
     />
   )
 

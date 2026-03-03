@@ -1,7 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { kml } from 'npm:@tmcw/togeojson@5.8.1';
 import * as turf from 'npm:@turf/turf@7.0.0';
-import proj4 from 'npm:proj4@2.11.0';
 import { DOMParser } from 'npm:xmldom@0.6.0';
 import { jsPDF } from 'npm:jspdf@2.5.2';
 import { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, AlignmentType, WidthType, HeadingLevel, BorderStyle, ImageRun } from 'npm:docx@8.5.0';

@@ -287,7 +287,7 @@ function generateCroquiImage(polygon, vertices) {
   
   // Vértices
   ctx.fillStyle = '#1A4D1A';
-  ctx.font = 'bold 22px Arial';
+  ctx.font = 'bold 9px Arial';
   vertices.forEach(v => {
     const x = toPixelX(v.lon);
     const y = toPixelY(v.lat);

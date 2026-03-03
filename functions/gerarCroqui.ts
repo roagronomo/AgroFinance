@@ -111,7 +111,7 @@ function simplifyPolygonDynamic(polygonFeature, targetAreaHa, maxPoints = 20, to
   return adjustAreaToTarget(best.polygon, targetAreaHa, toleranceHa);
 }
 
-function adjustAreaToTarget(polygonFeature, targetAreaHa, toleranceHa = 2.0, maxIterations = 15) {
+function adjustAreaToTarget(polygonFeature, targetAreaHa, toleranceHa = 2.0, maxIterations = 8) {
   let current = JSON.parse(JSON.stringify(polygonFeature));
   
   console.log(`Ajustando área para ${targetAreaHa} ha (tolerância: ${toleranceHa} ha)...`);

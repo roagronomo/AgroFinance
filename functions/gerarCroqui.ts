@@ -879,8 +879,13 @@ function generateKMLString(params) {
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
     <name>${fazendaNome}</name>
+    <Style id="fazendaStyle">
+      <LineStyle><color>ff0000ff</color><width>3</width></LineStyle>
+      <PolyStyle><color>00000000</color></PolyStyle>
+    </Style>
     <Placemark>
       <name>${fazendaNome}</name>
+      <styleUrl>#fazendaStyle</styleUrl>
       <Polygon>
         <outerBoundaryIs>
           <LinearRing>

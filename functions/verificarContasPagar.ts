@@ -4,6 +4,27 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
+    // Horário de Brasília (UTC-3) - CORRIGIDO
+    const agora = new Date();
+    const agoraBrasilia = new Date(agora.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    const horaBrasilia = agoraBrasilia.getHours();
+    const minutoBrasilia = agoraBrasilia.getMinutes();
+    
+    console.log(`[DIAGNÓSTICO] Horário UTC: ${agora.toISOString()}`);
+    console.log(`[DIAGNÓSTICO] Horário Brasília: ${String(horaBrasilia).padStart(2,'0')}:${String(minutoBrasilia).padStart(2,'0')}`);
+
+    // GUARD: Só enviar mensagens entre 6:00 e 6:59 da manhã (horário de Brasília)
+    // Isso garante que mesmo se o agendamento disparar em horário errado (ex: 9:30 BRT),
+    // as mensagens NÃO serão enviadas fora da janela correta.
+    if (horaBrasilia !== 6) {
+      console.log(`[GUARD] Fora do horário de envio (6:00-6:59 BRT). Hora atual BRT: ${horaBrasilia}:${String(minutoBrasilia).padStart(2,'0')}. Abortando.`);
+      return Response.json({
+        success: true,
+        message: `Fora do horário de envio. Hora BRT: ${horaBrasilia}:${String(minutoBrasilia).padStart(2,'0')}. Envio só ocorre entre 6:00 e 6:59 BRT.`,
+        lembretesEnviados: 0
+      });
+    }
+
     console.log('Iniciando verificação de contas a pagar...');
 
     // Buscar todas as contas ativas e não pagas
@@ -12,11 +33,6 @@ Deno.serve(async (req) => {
       pago: false 
     }, 'data_vencimento');
 
-    // Horário de Brasília (UTC-3)
-    const agora = new Date();
-    // Brasília está a UTC-3, então precisamos subtrair 3 horas do UTC
-    const agoraBrasilia = new Date(agora.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-    
     const hoje = new Date(agoraBrasilia);
     hoje.setHours(0, 0, 0, 0);
 
@@ -173,7 +189,7 @@ _Lembrete automático - AgroFinance_`;
 
           await base44.asServiceRole.entities.ContaPagar.update(conta.id, updateData);
           lembretesEnviados++;
-          console.log(`Lembrete enviado: ${conta.descricao}`);
+          console.log(`Lembrete enviado: ${conta.descricao} (tipo: ${deveEnviarNoDia ? 'DIA' : 'ANTECIPADO'})`);
         } else {
           erros.push({
             conta: conta.descricao,

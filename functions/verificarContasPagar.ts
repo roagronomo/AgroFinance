@@ -41,7 +41,17 @@ Deno.serve(async (req) => {
     console.log(`[DIAGNÓSTICO] Horário UTC: ${agora.toISOString()}`);
     console.log(`[DIAGNÓSTICO] Horário Brasília: ${String(horaBrasilia).padStart(2,'0')}:${String(minutoBrasilia).padStart(2,'0')}`);
 
-    // GUARD DESATIVADO TEMPORARIAMENTE PARA TESTE
+    // GUARD: Só enviar mensagens nos horários corretos (horário de Brasília)
+    // 06:00-06:59 BRT = Notificação de dia do vencimento
+    // 16:00-16:59 BRT = Aviso antecipado
+    if (horaBrasilia !== 6 && horaBrasilia !== 16) {
+      console.log(`[GUARD] Fora do horário de envio. Hora BRT: ${horaBrasilia}:${String(minutoBrasilia).padStart(2,'0')}. Envio às 6h e 16h BRT.`);
+      return Response.json({
+        success: true,
+        message: `Fora do horário de envio. Hora BRT: ${horaBrasilia}:${String(minutoBrasilia).padStart(2,'0')}. Envio às 6h e 16h BRT.`,
+        lembretesEnviados: 0
+      });
+    }
 
     console.log('Iniciando verificação de contas a pagar...');
 

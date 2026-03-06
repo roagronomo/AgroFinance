@@ -265,6 +265,7 @@ export default function PainelDocumentos() {
   const [editandoDoc, setEditandoDoc] = useState(null);
   const [salvando, setSalvando] = useState(false);
   const [extraindoIA, setExtraindoIA] = useState(false);
+  const [modalImportacaoAberto, setModalImportacaoAberto] = useState(false);
 
   const formInicial = {
     nome_documento: "", tipo_documento: "", data_emissao: "", data_vencimento: "",

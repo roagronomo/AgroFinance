@@ -648,10 +648,17 @@ CAMPOS A EXTRAIR:
                   <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Certidão">Certidão</SelectItem>
-                    <SelectItem value="Contrato">Contrato</SelectItem>
+                    <SelectItem value="CCIR">CCIR</SelectItem>
+                    <SelectItem value="CIB">CIB</SelectItem>
+                    <SelectItem value="ITR">ITR</SelectItem>
+                    <SelectItem value="CAR - Recibo">CAR - Recibo</SelectItem>
+                    <SelectItem value="CAR - Demonstrativo">CAR - Demonstrativo</SelectItem>
+                    <SelectItem value="Contrato de Arrendamento">Contrato de Arrendamento</SelectItem>
+                    <SelectItem value="Aditivo">Aditivo</SelectItem>
                     <SelectItem value="Carta de Anuência">Carta de Anuência</SelectItem>
                     <SelectItem value="Laudo Técnico">Laudo Técnico</SelectItem>
                     <SelectItem value="ART">ART</SelectItem>
+                    <SelectItem value="Validação de Assinatura">Validação de Assinatura</SelectItem>
                     <SelectItem value="Outro">Outro</SelectItem>
                   </SelectContent>
                 </Select>

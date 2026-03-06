@@ -7,10 +7,16 @@ Deno.serve(async (req) => {
     // Autenticar como service role para acesso admin
     const servicosComBoleto = await base44.asServiceRole.entities.OutroServico.list("-data_vencimento_boleto");
     
-    console.log(`✅ Total de serviços encontrados: ${servicosComBoleto.length}`);
+    console.log(`Total de serviços encontrados: ${servicosComBoleto.length}`);
     
-    // Data de hoje
-    const hoje = new Date();
+    // Horário de Brasília (UTC-3)
+    const agora = new Date();
+    const agoraBrasilia = new Date(agora.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+    
+    console.log(`[DIAGNÓSTICO] UTC: ${agora.toISOString()} | BRT: ${String(agoraBrasilia.getHours()).padStart(2,'0')}:${String(agoraBrasilia.getMinutes()).padStart(2,'0')}`);
+
+    // Data de hoje (horário de Brasília)
+    const hoje = new Date(agoraBrasilia);
     hoje.setHours(0, 0, 0, 0);
     
     // Data daqui a 3 dias (para aviso antecipado)
@@ -38,6 +44,7 @@ Deno.serve(async (req) => {
         }
         
         const dataVencimento = new Date(servico.data_vencimento_boleto + 'T00:00:00');
+        dataVencimento.setHours(0, 0, 0, 0);
         
         // Enviar lembrete se vencer hoje OU daqui a 3 dias
         const deveLembrar = (
@@ -64,18 +71,18 @@ Deno.serve(async (req) => {
               try {
                 await base44.asServiceRole.integrations.Core.SendEmail({
                   to: cliente.email,
-                  subject: `🔔 Lembrete: Boleto vence ${mensagemVencimento}`,
+                  subject: `Lembrete: Boleto vence ${mensagemVencimento}`,
                   body: `
 Olá ${cliente.nome},
 
 Este é um lembrete automático sobre o vencimento de um boleto:
 
-📋 Serviço: ${servico.descricao_servico}
-💰 Valor: R$ ${servico.valor_receber.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-📅 Vencimento: ${new Date(servico.data_vencimento_boleto).toLocaleDateString('pt-BR')}
-⏰ Status: Vence ${mensagemVencimento}
+Serviço: ${servico.descricao_servico}
+Valor: R$ ${servico.valor_receber.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+Vencimento: ${new Date(servico.data_vencimento_boleto).toLocaleDateString('pt-BR')}
+Status: Vence ${mensagemVencimento}
 
-${servico.banco ? `🏦 Banco: ${servico.banco}` : ''}
+${servico.banco ? `Banco: ${servico.banco}` : ''}
 
 Por favor, providencie o pagamento para evitar atrasos.
 
@@ -84,9 +91,9 @@ Equipe AgroFinance
                   `.trim()
                 });
                 enviadoEmail = true;
-                console.log(`✅ E-mail enviado para ${cliente.email}`);
+                console.log(`E-mail enviado para ${cliente.email}`);
               } catch (error) {
-                console.error(`❌ Erro ao enviar e-mail:`, error);
+                console.error(`Erro ao enviar e-mail:`, error);
               }
             }
             
@@ -113,9 +120,9 @@ _Mensagem automática - AgroFinance_`;
                   mensagem: mensagemWhatsApp
                 });
                 enviadoWhatsApp = true;
-                console.log(`✅ WhatsApp enviado para ${servico.telefone_contato}`);
+                console.log(`WhatsApp enviado para ${servico.telefone_contato}`);
               } catch (error) {
-                console.error(`❌ Erro ao enviar WhatsApp:`, error);
+                console.error(`Erro ao enviar WhatsApp:`, error);
               }
             }
             
@@ -125,16 +132,16 @@ _Mensagem automática - AgroFinance_`;
                 lembrete_enviado: true
               });
               lembreteEnviados++;
-              console.log(`✅ Lembrete enviado para ${cliente.nome} - Email: ${enviadoEmail}, WhatsApp: ${enviadoWhatsApp}`);
+              console.log(`Lembrete enviado para ${cliente.nome} - Email: ${enviadoEmail}, WhatsApp: ${enviadoWhatsApp}`);
             } else {
-              console.warn(`⚠️ Cliente sem e-mail ou celular cadastrado: ${servico.cliente_nome}`);
+              console.warn(`Cliente sem e-mail ou celular cadastrado: ${servico.cliente_nome}`);
             }
           } else {
-            console.warn(`⚠️ Cliente não encontrado: ${servico.cliente_nome}`);
+            console.warn(`Cliente não encontrado: ${servico.cliente_nome}`);
           }
         }
       } catch (error) {
-        console.error(`❌ Erro ao processar serviço ${servico.id}:`, error);
+        console.error(`Erro ao processar serviço ${servico.id}:`, error);
         erros.push({ servico_id: servico.id, erro: error.message });
       }
     }
@@ -147,7 +154,7 @@ _Mensagem automática - AgroFinance_`;
     });
     
   } catch (error) {
-    console.error("❌ Erro geral na verificação:", error);
+    console.error("Erro geral na verificação:", error);
     return Response.json({ 
       success: false, 
       error: error.message 

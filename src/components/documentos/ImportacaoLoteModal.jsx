@@ -90,32 +90,44 @@ export default function ImportacaoLoteModal({ open, onClose, clientes, imoveis, 
 
       try {
         // 1. Upload do PDF
-        const { file_url } = await base44.integrations.Core.UploadFile({ file: arq.file });
+        let file_url;
+        try {
+          const uploadResult = await base44.integrations.Core.UploadFile({ file: arq.file });
+          file_url = uploadResult.file_url;
+        } catch (uploadErr) {
+          throw new Error(`Upload falhou: ${uploadErr.message}`);
+        }
 
         // 2. Extração com IA
-        const resultado = await base44.integrations.Core.InvokeLLM({
-          prompt: `Analise este documento PDF e extraia as seguintes informações em formato JSON:
-          - tipo_documento: tipo do documento (Certidão, Contrato, Carta de Anuência, Laudo Técnico, ART, Outro)
-          - nome_sugerido: nome descritivo para o documento (ex: "Certidão Matrícula 12.345 - Faz. Santa Maria")
-          - data_emissao: data de emissão no formato YYYY-MM-DD (se encontrada)
-          - data_vencimento: data de vencimento no formato YYYY-MM-DD (se encontrada)
-          - resumo: resumo breve do conteúdo em até 200 caracteres
-          - matricula_numero: número da matrícula do imóvel mencionado no documento (ex: "27.692" ou "12345"), retorne apenas os dígitos e pontos, sem texto adicional. Se não encontrar, retorne null.
-          - nome_cliente: nome completo do proprietário/cliente mencionado no documento. Se não encontrar, retorne null.`,
-          file_urls: [file_url],
-          response_json_schema: {
-            type: "object",
-            properties: {
-              tipo_documento: { type: "string" },
-              nome_sugerido: { type: "string" },
-              data_emissao: { type: "string" },
-              data_vencimento: { type: "string" },
-              resumo: { type: "string" },
-              matricula_numero: { type: "string" },
-              nome_cliente: { type: "string" }
+        let resultado = {};
+        try {
+          resultado = await base44.integrations.Core.InvokeLLM({
+            prompt: `Analise este documento PDF e extraia as seguintes informações em formato JSON:
+            - tipo_documento: tipo do documento (Certidão, Contrato, Carta de Anuência, Laudo Técnico, ART, Outro)
+            - nome_sugerido: nome descritivo para o documento (ex: "Certidão Matrícula 12.345 - Faz. Santa Maria")
+            - data_emissao: data de emissão no formato YYYY-MM-DD (se encontrada, senão null)
+            - data_vencimento: data de vencimento no formato YYYY-MM-DD (se encontrada, senão null)
+            - resumo: resumo breve do conteúdo em até 200 caracteres
+            - matricula_numero: número da matrícula do imóvel mencionado (ex: "27.692"), apenas dígitos e pontos. Se não encontrar, null.
+            - nome_cliente: nome completo do proprietário/cliente mencionado. Se não encontrar, null.`,
+            file_urls: [file_url],
+            response_json_schema: {
+              type: "object",
+              properties: {
+                tipo_documento: { type: "string" },
+                nome_sugerido: { type: "string" },
+                data_emissao: { type: "string" },
+                data_vencimento: { type: "string" },
+                resumo: { type: "string" },
+                matricula_numero: { type: "string" },
+                nome_cliente: { type: "string" }
+              }
             }
-          }
-        });
+          }) || {};
+        } catch (iaErr) {
+          console.warn("IA falhou, usando dados padrão:", iaErr.message);
+          resultado = {};
+        }
 
         const cliente_id = matchCliente(clientes, resultado?.nome_cliente);
         const imovel_id = matchImovel(imoveis, resultado?.matricula_numero, cliente_id);

@@ -153,15 +153,9 @@ ${conta.codigo_barras && !conta.recorrente ? `\n🔢 *Código de Barras:*\n\`${c
 _Lembrete automático - AgroFinance_`;
         }
 
-        const response = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
-          numero: destino,
-          mensagem: mensagem
-        });
+        await enviarWhatsApp(destino, mensagem);
 
-        // A resposta pode vir direto ou em response.data
-        const resultado = response?.data || response;
-
-        if (resultado?.success) {
+        {
           // Atualizar o status do lembrete
           const updateData = {};
           if (deveEnviarNoDia) {

@@ -14,8 +14,9 @@ import { toast } from "sonner";
 import { 
   FileText, CheckCircle2, AlertTriangle, XCircle, 
   Plus, Search, MoreHorizontal, Bell, Loader2, Sparkles,
-  Pencil, Trash2, ExternalLink, Calendar
+  Pencil, Trash2, ExternalLink, Calendar, Upload
 } from "lucide-react";
+import ImportacaoLoteModal from "@/components/documentos/ImportacaoLoteModal";
 import { format, differenceInDays, parseISO } from "date-fns";
 
 // ============================================================

@@ -147,7 +147,7 @@ export default function ImportacaoLoteModal({ open, onClose, clientes, imoveis, 
   };
 
   const salvarTodos = async () => {
-    const paraS alvar = arquivos.filter(a => a.status === STATUS.CONCLUIDO && a.nome_documento.trim());
+    const paraSalvar = arquivos.filter(a => a.status === STATUS.CONCLUIDO && a.nome_documento.trim());
     if (paraSalvar.length === 0) { toast.error("Nenhum documento válido para salvar"); return; }
     setSalvando(true);
     try {

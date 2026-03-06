@@ -352,14 +352,34 @@ export default function PainelDocumentos() {
     setExtraindoIA(true);
     try {
       const resultado = await base44.integrations.Core.InvokeLLM({
-        prompt: `Analise este documento PDF e extraia as seguintes informações em formato JSON:
-        - tipo_documento: tipo do documento (Certidão, Contrato, Carta de Anuência, Laudo Técnico, ART, Outro)
-        - nome_sugerido: nome descritivo para o documento (ex: "Certidão Matrícula 12.345 - Faz. Santa Maria")
-        - data_emissao: data de emissão no formato YYYY-MM-DD (se encontrada)
-        - data_vencimento: data de vencimento no formato YYYY-MM-DD (se encontrada)
-        - resumo: resumo breve do conteúdo em até 200 caracteres
-        - matricula_numero: número da matrícula do imóvel mencionado no documento (ex: "27.692" ou "12345"), retorne apenas os dígitos e pontos, sem texto adicional. Se não encontrar, retorne null.
-        - nome_cliente: nome completo do proprietário/cliente mencionado no documento. Se não encontrar, retorne null.`,
+        prompt: `Analise este documento PDF e extraia as seguintes informações em formato JSON.
+
+REGRAS DE CLASSIFICAÇÃO DO TIPO DE DOCUMENTO:
+- "Certidão": contém palavra "certidão", emitida por cartório/órgão público, ex: certidão de matrícula, certidão negativa, certidão de ônus
+- "CCIR": contém "CCIR", "Certificado de Cadastro de Imóvel Rural", emitido pelo INCRA, possui número do CCIR e campo de exercício (ano)
+- "CIB": contém "CIB", "Certificado de Imóvel do BRASIL" ou cadastro INCRA, código SNCR/CIB
+- "ITR": contém "ITR", "Imposto Territorial Rural", "DIAT", "DITR", emitido pela Receita Federal
+- "CAR - Recibo": contém "CAR", "Cadastro Ambiental Rural" e a palavra "Recibo de Inscrição" ou "protocolo de inscrição"
+- "CAR - Demonstrativo": contém "CAR", "Cadastro Ambiental Rural" e a palavra "Demonstrativo" ou "Boletim"
+- "Contrato de Arrendamento": menciona "contrato", "arrendamento", "arrendador", "arrendatário"
+- "Aditivo": menciona "aditivo", "termo aditivo", referencia a contrato anterior
+- "Carta de Anuência": contém "anuência", "concordância", emitida por proprietário autorizando uso
+- "Laudo Técnico": contém "laudo", "avaliação técnica", "vistoria", emitido por engenheiro/perito
+- "ART": contém "ART", "Anotação de Responsabilidade Técnica", emitida pelo CREA
+- "Validação de Assinatura": contém "validação", "assinatura digital", "certificado digital", "ICP-Brasil"
+- "Outro": qualquer documento que não se encaixe nas categorias acima
+
+CAMPOS A EXTRAIR:
+- tipo_documento: classificar conforme regras acima (use EXATAMENTE um dos tipos listados)
+- nome_sugerido: nome descritivo para o documento (ex: "CCIR 2024 - Faz. Santa Maria", "Contrato de Arrendamento - João Silva")
+- data_emissao: data de emissão no formato YYYY-MM-DD (se encontrada, senão null)
+- data_vencimento: data de vencimento no formato YYYY-MM-DD (se encontrada, senão null)
+- data_inicio_contrato: data de início do contrato no formato YYYY-MM-DD (apenas para Contrato de Arrendamento e Aditivo, senão null)
+- data_fim_contrato: data de fim/vencimento do contrato no formato YYYY-MM-DD (apenas para Contrato de Arrendamento e Aditivo, senão null)
+- exercicio: ano do exercício como string (apenas para CCIR, ex: "2024", senão null)
+- resumo: resumo breve do conteúdo em até 200 caracteres
+- matricula_numero: número da matrícula do imóvel mencionado no documento (ex: "27.692"), apenas dígitos e pontos. Se não encontrar, null.
+- nome_cliente: nome completo do proprietário/cliente mencionado no documento. Se não encontrar, null.`,
         file_urls: [formData.arquivo_pdf],
         response_json_schema: {
           type: "object",
@@ -368,6 +388,9 @@ export default function PainelDocumentos() {
             nome_sugerido: { type: "string" },
             data_emissao: { type: "string" },
             data_vencimento: { type: "string" },
+            data_inicio_contrato: { type: "string" },
+            data_fim_contrato: { type: "string" },
+            exercicio: { type: "string" },
             resumo: { type: "string" },
             matricula_numero: { type: "string" },
             nome_cliente: { type: "string" }

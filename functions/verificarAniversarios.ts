@@ -76,18 +76,8 @@ Deno.serve(async (req) => {
         if (cliente.whatsapp_cliente && cliente.cartao_aniversario_url) {
           try {
             console.log(`Enviando cartão para WhatsApp: ${cliente.whatsapp_cliente}`);
-            
-            const cartaoResponse = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
-              numero: cliente.whatsapp_cliente,
-              imagem_url: cliente.cartao_aniversario_url
-            });
-            
-            if (cartaoResponse.success) {
-              console.log(`Cartão enviado para o cliente ${cliente.nome} em ${cliente.whatsapp_cliente}`);
-            } else {
-              console.error(`Erro ao enviar cartão: ${JSON.stringify(cartaoResponse)}`);
-              erros.push({ cliente: cliente.nome, tipo: 'cartão', erro: cartaoResponse.error });
-            }
+            await enviarWhatsApp(cliente.whatsapp_cliente, null, cliente.cartao_aniversario_url);
+            console.log(`Cartão enviado para o cliente ${cliente.nome} em ${cliente.whatsapp_cliente}`);
           } catch (imgError) {
             console.error(`Exceção ao enviar cartão para ${cliente.nome}:`, imgError);
             erros.push({ cliente: cliente.nome, tipo: 'cartão', erro: imgError.message });
@@ -114,17 +104,13 @@ Deno.serve(async (req) => {
         
         console.log(`Enviando lembrete para escritório: ${destino}`);
         
-        const response = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
-          numero: destino,
-          mensagem: mensagem
-        });
-        
-        if (response.success) {
+        try {
+          await enviarWhatsApp(destino, mensagem);
           enviados++;
           console.log(`Lembrete do escritório enviado para ${cliente.nome}`);
-        } else {
-          erros.push({ cliente: cliente.nome, tipo: 'lembrete_escritorio', erro: response.error });
-          console.error(`Erro ao enviar lembrete do escritório:`, response.error);
+        } catch (sendError) {
+          erros.push({ cliente: cliente.nome, tipo: 'lembrete_escritorio', erro: sendError.message });
+          console.error(`Erro ao enviar lembrete do escritório:`, sendError.message);
         }
       } catch (error) {
         erros.push({ cliente: cliente.nome, erro: error.message });

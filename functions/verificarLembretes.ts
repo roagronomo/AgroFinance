@@ -161,42 +161,27 @@ _Lembrete automático - AgroFinance_`;
         
         // 1. Enviar para telefone individual
         if (lembrete.telefone_contato) {
-          const responseTelefone = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
-            numero: lembrete.telefone_contato,
-            mensagem: mensagem
-          });
-
-          if (!responseTelefone.success) {
-            erros.push({
-              lembrete: lembrete.descricao,
-              erro: `Telefone: ${responseTelefone.error || 'Erro desconhecido'}`
-            });
-            console.error(`Erro ao enviar para telefone ${lembrete.descricao}:`, responseTelefone.error);
-          } else {
+          try {
+            await enviarWhatsApp(lembrete.telefone_contato, mensagem);
             console.log(`Lembrete enviado para telefone: ${lembrete.descricao} (tipo: ${deveEnviarNoDia ? 'DIA' : deveEnviar10MinAntes ? '10MIN' : deveEnviarExtra ? 'EXTRA' : 'ANTECIPADO'})`);
             lembretesEnviados++;
             enviouComSucesso = true;
+          } catch (sendError) {
+            erros.push({ lembrete: lembrete.descricao, erro: `Telefone: ${sendError.message}` });
+            console.error(`Erro ao enviar para telefone ${lembrete.descricao}:`, sendError.message);
           }
-
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
 
         // 2. Enviar para grupo (se configurado)
         if (lembrete.grupo_whatsapp_id && lembrete.grupo_whatsapp_id.trim() !== '') {
-          const responseGrupo = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
-            numero: lembrete.grupo_whatsapp_id,
-            mensagem: mensagem
-          });
-
-          if (!responseGrupo.success) {
-            erros.push({
-              lembrete: lembrete.descricao,
-              erro: `Grupo: ${responseGrupo.error || 'Erro desconhecido'}`
-            });
-            console.error(`Erro ao enviar para grupo ${lembrete.descricao}:`, responseGrupo.error);
-          } else {
+          try {
+            await enviarWhatsApp(lembrete.grupo_whatsapp_id, mensagem);
             console.log(`Lembrete enviado para grupo: ${lembrete.descricao}`);
             enviouComSucesso = true;
+          } catch (sendError) {
+            erros.push({ lembrete: lembrete.descricao, erro: `Grupo: ${sendError.message}` });
+            console.error(`Erro ao enviar para grupo ${lembrete.descricao}:`, sendError.message);
           }
         }
 

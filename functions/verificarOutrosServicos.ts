@@ -88,22 +88,10 @@ ${servico.banco ? `🏦 *Banco:* ${servico.banco}\n` : ''}📅 *Data de Execuç�
 
 _Lembrete automático - AgroFinance_`;
 
-        const response = await base44.asServiceRole.functions.invoke('enviarWhatsAppEvolution', {
-          numero: servico.telefone_contato,
-          mensagem: mensagem
-        });
-
-        const resultado = response?.data || response;
-
-        if (resultado?.success) {
-          await base44.asServiceRole.entities.OutroServico.update(servico.id, {
-            lembrete_enviado: true
-          });
-          lembretesEnviados++;
-          console.log(`Lembrete enviado: ${servico.descricao_servico} - ${servico.cliente_nome}`);
-        } else {
-          erros.push({ servico: servico.descricao_servico, erro: resultado?.error || 'Erro desconhecido' });
-        }
+        await enviarWhatsApp(servico.telefone_contato, mensagem);
+        await base44.asServiceRole.entities.OutroServico.update(servico.id, { lembrete_enviado: true });
+        lembretesEnviados++;
+        console.log(`Lembrete enviado: ${servico.descricao_servico} - ${servico.cliente_nome}`);
 
       } catch (error) {
         erros.push({ servico: servico.descricao_servico, erro: error.message });

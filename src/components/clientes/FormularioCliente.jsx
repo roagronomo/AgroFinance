@@ -659,30 +659,6 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
                     />
                   </div>
 
-                  {/* Seção 1: Lembrete para o Escritório */}
-                  <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500 shadow-sm">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-sm">🔔</span>
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-800">Aviso para o Escritório</h4>
-                        <p className="text-xs text-gray-500">Lembrete enviado às 7h da manhã</p>
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-gray-700 font-medium">Telefone/WhatsApp</Label>
-                      <Input
-                        type="tel"
-                        value={formatCelular(formData.aniversario_telefone_contato || "")}
-                        onChange={(e) => handleInputChange('aniversario_telefone_contato', e.target.value)}
-                        placeholder="(00) 00000-0000"
-                        maxLength={15}
-                        className="h-9 text-sm"
-                      />
-                    </div>
-                  </div>
-
                   {/* Seção 2: Envio do Cartão para o Cliente */}
                   <div className="bg-white rounded-lg p-4 border-l-4 border-green-500 shadow-sm">
                     <div className="flex items-center gap-2 mb-3">

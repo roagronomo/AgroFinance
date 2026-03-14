@@ -532,6 +532,97 @@ export default function DespesasPrivadas() {
         </Card>
       )}
 
+      {showGerenciarPix && (
+        <AlertDialog open={showGerenciarPix} onOpenChange={(open) => {
+          if (!open) { setShowGerenciarPix(false); setFormChavePix({ descricao: "", chave: "", tipo: "cpf" }); setEditingChavePix(null); }
+        }}>
+          <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-blue-600" /> Gerenciar Chaves PIX
+              </AlertDialogTitle>
+              <AlertDialogDescription>Cadastre suas chaves PIX para usar ao criar despesas</AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="space-y-4">
+              <form onSubmit={handleSalvarChavePix} className="space-y-3 border rounded-lg p-4 bg-blue-50">
+                <div>
+                  <Label>Descrição *</Label>
+                  <Input value={formChavePix.descricao} onChange={(e) => setFormChavePix(f => ({ ...f, descricao: e.target.value }))} placeholder="Ex: Banco Itaú - Nome" required />
+                </div>
+                <div>
+                  <Label>Tipo de Chave *</Label>
+                  <Select value={formChavePix.tipo} onValueChange={(value) => setFormChavePix(f => ({ ...f, tipo: value, chave: "" }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cpf">CPF</SelectItem>
+                      <SelectItem value="cnpj">CNPJ</SelectItem>
+                      <SelectItem value="email">E-mail</SelectItem>
+                      <SelectItem value="telefone">Telefone/Celular</SelectItem>
+                      <SelectItem value="aleatoria">Chave Aleatória</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Chave PIX *</Label>
+                  <Input value={formChavePix.chave} onChange={(e) => setFormChavePix(f => ({ ...f, chave: formatarChavePixPorTipo(e.target.value, f.tipo) }))} placeholder={formChavePix.tipo === 'cpf' ? '000.000.000-00' : formChavePix.tipo === 'cnpj' ? '00.000.000/0000-00' : formChavePix.tipo === 'email' ? 'seu@email.com' : formChavePix.tipo === 'telefone' ? '(00) 00000-0000' : 'Cole a chave aleatória'} required />
+                </div>
+                <div className="flex gap-2">
+                  <Button type="submit" size="sm" className="bg-blue-600 hover:bg-blue-700">{editingChavePix ? "Atualizar" : "Adicionar"}</Button>
+                  {editingChavePix && (
+                    <Button type="button" size="sm" variant="outline" onClick={() => { setFormChavePix({ descricao: "", chave: "", tipo: "cpf" }); setEditingChavePix(null); }}>Cancelar</Button>
+                  )}
+                  <Button type="button" size="sm" variant="outline" onClick={() => { setShowGerenciarPix(false); setFormChavePix({ descricao: "", chave: "", tipo: "cpf" }); setEditingChavePix(null); }} className="ml-auto">Fechar</Button>
+                </div>
+              </form>
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold text-gray-700">Chaves Cadastradas ({chavesPix.length})</h3>
+                {chavesPix.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-4">Nenhuma chave cadastrada</p>
+                ) : (
+                  (() => {
+                    const grupos = chavesPix.reduce((acc, chave) => {
+                      const nome = chave.descricao || "Sem descrição";
+                      if (!acc[nome]) acc[nome] = [];
+                      acc[nome].push(chave);
+                      return acc;
+                    }, {});
+                    return Object.entries(grupos).map(([nome, chavesGrupo]) => {
+                      const aberto = gruposPixExpandidos[nome] || false;
+                      return (
+                        <div key={nome} className="border rounded-lg overflow-hidden">
+                          <div className="flex items-center justify-between p-3 bg-blue-50 cursor-pointer hover:bg-blue-100" onClick={() => setGruposPixExpandidos(p => ({ ...p, [nome]: !aberto }))}>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-gray-900">{nome}</span>
+                              <span className="px-2 py-0.5 rounded-full text-xs bg-blue-200 text-blue-800">{chavesGrupo.length}</span>
+                            </div>
+                          </div>
+                          {aberto && (
+                            <div className="divide-y bg-white">
+                              {chavesGrupo.map(chave => (
+                                <div key={chave.id} className="flex items-center justify-between p-3 hover:bg-gray-50">
+                                  <div>
+                                    <p className="text-sm text-gray-600 font-mono">{chave.chave}</p>
+                                    <p className="text-xs text-gray-400">Tipo: {chave.tipo || 'CPF'}</p>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button variant="ghost" size="icon" onClick={() => { setEditingChavePix(chave); setFormChavePix({ descricao: chave.descricao || "", chave: chave.chave, tipo: chave.tipo || "cpf" }); }} className="text-blue-600 h-8 w-8"><Edit className="w-3 h-3" /></Button>
+                                    <Button variant="ghost" size="icon" onClick={() => handleExcluirChavePix(chave.id)} className="text-red-600 h-8 w-8"><Trash2 className="w-3 h-3" /></Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    });
+                  })()
+                )}
+              </div>
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
       <AlertDialog open={showGruposWhatsApp} onOpenChange={(open) => !open && setShowGruposWhatsApp(false)}>
         <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <AlertDialogHeader>

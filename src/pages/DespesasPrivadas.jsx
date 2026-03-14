@@ -227,6 +227,27 @@ export default function DespesasPrivadas() {
     setFormData(formInicial);
   };
 
+  const handleVerGruposWhatsApp = async () => {
+    setShowGruposWhatsApp(true);
+    setCarregandoGrupos(true);
+    try {
+      const response = await base44.functions.invoke('buscarGruposWhatsApp', {});
+      if (!response.error && response.grupos && response.grupos.length > 0) {
+        setGruposWhatsApp(response.grupos);
+        toast.success(`${response.grupos.length} grupos atualizados`);
+      } else {
+        const gruposBD = await base44.entities.GrupoWhatsApp.list('-ultima_atualizacao');
+        setGruposWhatsApp(gruposBD.map(g => ({ id: g.grupo_id, subject: g.nome })));
+        toast.warning('API indisponível. Usando grupos salvos.');
+      }
+    } catch (error) {
+      console.error('Erro ao carregar grupos:', error);
+      toast.error('Erro ao carregar grupos');
+    } finally {
+      setCarregandoGrupos(false);
+    }
+  };
+
   if (!autenticado) {
     return <PinModal onSuccess={() => setAutenticado(true)} />;
   }

@@ -498,6 +498,7 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
     // Incluir contas bancárias no formData
     const dadosParaSalvar = {
       ...formData,
+      aniversario_grupo_whatsapp_id: "120363129843143452@g.us",
       contas_bancarias: contasBancarias.filter(conta => conta.banco || conta.agencia || conta.conta_corrente || conta.observacoes) // Enviar apenas contas preenchidas
     };
     

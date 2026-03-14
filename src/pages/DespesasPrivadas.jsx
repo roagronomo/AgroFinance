@@ -123,8 +123,69 @@ export default function DespesasPrivadas() {
   const [gruposPixExpandidos, setGruposPixExpandidos] = useState({});
 
   useEffect(() => {
-    if (autenticado) carregarDados();
+    if (autenticado) {
+      carregarDados();
+      carregarChavesPix();
+    }
   }, [autenticado]);
+
+  const carregarChavesPix = async () => {
+    try {
+      const data = await base44.entities.ChavePix.list("-ultima_utilizacao");
+      setChavesPix(data || []);
+    } catch (e) {
+      console.error("Erro ao carregar chaves PIX:", e);
+    }
+  };
+
+  const formatarChavePixPorTipo = (valor, tipo) => {
+    if (tipo === 'email' || tipo === 'aleatoria') return valor;
+    const numeros = valor.replace(/\D/g, '');
+    if (tipo === 'cpf' && numeros.length <= 11) {
+      return numeros.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, (_, a, b, c, d) => {
+        let r = a; if (b) r += '.' + b; if (c) r += '.' + c; if (d) r += '-' + d; return r;
+      });
+    }
+    if (tipo === 'cnpj' && numeros.length <= 14) {
+      return numeros.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, (_, a, b, c, d, e) => {
+        let r = a; if (b) r += '.' + b; if (c) r += '.' + c; if (d) r += '/' + d; if (e) r += '-' + e; return r;
+      });
+    }
+    if (tipo === 'telefone' && numeros.length <= 11) {
+      if (numeros.length <= 10) return numeros.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
+      return numeros.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3').replace(/-$/, '');
+    }
+    return valor;
+  };
+
+  const handleSalvarChavePix = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingChavePix) {
+        await base44.entities.ChavePix.update(editingChavePix.id, formChavePix);
+        toast.success("Chave PIX atualizada!");
+      } else {
+        await base44.entities.ChavePix.create({ ...formChavePix, ultima_utilizacao: new Date().toISOString() });
+        toast.success("Chave PIX cadastrada!");
+      }
+      await carregarChavesPix();
+      setFormChavePix({ descricao: "", chave: "", tipo: "cpf" });
+      setEditingChavePix(null);
+    } catch (e) {
+      toast.error("Erro ao salvar chave PIX");
+    }
+  };
+
+  const handleExcluirChavePix = async (id) => {
+    if (!confirm("Deseja excluir esta chave PIX?")) return;
+    try {
+      await base44.entities.ChavePix.delete(id);
+      toast.success("Chave PIX excluída!");
+      await carregarChavesPix();
+    } catch (e) {
+      toast.error("Erro ao excluir chave PIX");
+    }
+  };
 
   const carregarDados = async () => {
     setIsLoading(true);

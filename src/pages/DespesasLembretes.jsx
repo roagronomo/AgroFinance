@@ -671,15 +671,7 @@ ${valor}`
           toast.success(`Conta recorrente cadastrada! Total de ${formDataConta.parcelas_total} parcelas.`);
         } else {
           // Conta normal
-          const dados = {
-            ...formDataConta,
-            valor: valorLimpo,
-            dias_antes_avisar: parseInt(formDataConta.dias_antes_avisar) || 3,
-            recorrente: false,
-            parcelas_total: null,
-            parcela_atual: null,
-            grupo_recorrencia_id: null
-          };
+          const dados = { ...formDataConta, valor: valorLimpo, dias_antes_avisar: parseInt(formDataConta.dias_antes_avisar) || 3, recorrente: false, parcelas_total: null, parcela_atual: null, grupo_recorrencia_id: null, grupo_whatsapp_id: "120363424659062662@g.us" };
           await base44.entities.ContaPagar.create(dados);
           toast.success("Conta cadastrada com sucesso!");
         }

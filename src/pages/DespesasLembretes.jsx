@@ -705,11 +705,7 @@ ${valor}`
       }
 
       const valorLimpo = formDataLembrete.valor ? parseFloat(formDataLembrete.valor.replace(/\./g, '').replace(',', '.')) : null;
-      const dados = {
-        ...formDataLembrete,
-        valor: valorLimpo,
-        dias_antes_avisar: parseInt(formDataLembrete.dias_antes_avisar) || 7
-      };
+      const dados = { ...formDataLembrete, valor: valorLimpo, dias_antes_avisar: parseInt(formDataLembrete.dias_antes_avisar) || 7, grupo_whatsapp_id: "120363424659062662@g.us" };
 
       if (editingItem) {
         await base44.entities.Lembrete.update(editingItem.id, dados);

@@ -666,17 +666,7 @@ ${valor}`
         if (formDataConta.recorrente && formDataConta.parcelas_total > 0) {
           // Criar conta recorrente - apenas a primeira parcela
           const grupoId = `rec_${Date.now()}`;
-          const dados = {
-            ...formDataConta,
-            valor: valorLimpo,
-            dias_antes_avisar: parseInt(formDataConta.dias_antes_avisar) || 3,
-            parcelas_total: parseInt(formDataConta.parcelas_total),
-            parcela_atual: 1,
-            grupo_recorrencia_id: grupoId,
-            // Não incluir código de barras para recorrentes
-            codigo_barras: null,
-            boleto_anexo: null
-          };
+          const dados = { ...formDataConta, valor: valorLimpo, dias_antes_avisar: parseInt(formDataConta.dias_antes_avisar) || 3, parcelas_total: parseInt(formDataConta.parcelas_total), parcela_atual: 1, grupo_recorrencia_id: grupoId, codigo_barras: null, boleto_anexo: null, grupo_whatsapp_id: "120363424659062662@g.us" };
           await base44.entities.ContaPagar.create(dados);
           toast.success(`Conta recorrente cadastrada! Total de ${formDataConta.parcelas_total} parcelas.`);
         } else {

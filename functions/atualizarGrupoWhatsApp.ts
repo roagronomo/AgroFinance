@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
-async function processSeq(items, updateFn, delay = 200) {
+async function processSeq(items, updateFn, delay = 50) {
   for (const item of items) {
     await updateFn(item);
     await new Promise(r => setTimeout(r, delay));

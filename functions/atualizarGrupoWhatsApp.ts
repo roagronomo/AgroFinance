@@ -19,12 +19,12 @@ Deno.serve(async (req) => {
 
     console.log(`ContaPagar: ${contas.length}, Lembretes: ${lembretes.length}`);
 
-    await processChunks(contas, (c) =>
+    await processSeq(contas, (c) =>
       base44.asServiceRole.entities.ContaPagar.update(c.id, { grupo_whatsapp_id: GRUPO_ID })
     );
     console.log("ContaPagar atualizadas.");
 
-    await processChunks(lembretes, (l) =>
+    await processSeq(lembretes, (l) =>
       base44.asServiceRole.entities.Lembrete.update(l.id, { grupo_whatsapp_id: GRUPO_ID })
     );
     console.log("Lembretes atualizados.");

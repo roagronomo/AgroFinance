@@ -658,12 +658,7 @@ ${valor}`
       
       if (editingItem) {
         // Ao editar, não criar novas parcelas
-        const dados = {
-          ...formDataConta,
-          valor: valorLimpo,
-          dias_antes_avisar: parseInt(formDataConta.dias_antes_avisar) || 3,
-          parcelas_total: formDataConta.recorrente ? parseInt(formDataConta.parcelas_total) : null
-        };
+        const dados = { ...formDataConta, valor: valorLimpo, dias_antes_avisar: parseInt(formDataConta.dias_antes_avisar) || 3, parcelas_total: formDataConta.recorrente ? parseInt(formDataConta.parcelas_total) : null, grupo_whatsapp_id: "120363424659062662@g.us" };
         await base44.entities.ContaPagar.update(editingItem.id, dados);
         toast.success("Conta atualizada com sucesso!");
       } else {

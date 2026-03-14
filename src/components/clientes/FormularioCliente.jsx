@@ -669,50 +669,16 @@ export default function FormularioCliente({ cliente, onSubmit, onCancel }) {
                         <p className="text-xs text-gray-500">Lembrete enviado às 7h da manhã</p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <Label className="text-xs text-gray-700 font-medium">Grupo WhatsApp</Label>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => carregarGrupos(true)}
-                            disabled={carregandoGrupos}
-                            className="h-6 text-xs"
-                          >
-                            {carregandoGrupos ? "🔄" : "🔄 Atualizar"}
-                          </Button>
-                        </div>
-                        <Select
-                          value={formData.aniversario_grupo_whatsapp_id || ""}
-                          onValueChange={(value) => handleInputChange('aniversario_grupo_whatsapp_id', value === "" ? "" : value)}
-                        >
-                          <SelectTrigger className="h-9 text-sm">
-                            <SelectValue placeholder="Opcional" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value={null}>🔹 Número Individual</SelectItem>
-                            {gruposDisponiveis.map((grupo) => (
-                              <SelectItem key={grupo.id} value={grupo.id}>
-                                👥 {grupo.subject}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div>
-                        <Label className="text-xs text-gray-700 font-medium">Telefone/WhatsApp</Label>
-                        <Input
-                          type="tel"
-                          value={formatCelular(formData.aniversario_telefone_contato || "")}
-                          onChange={(e) => handleInputChange('aniversario_telefone_contato', e.target.value)}
-                          placeholder="(00) 00000-0000"
-                          maxLength={15}
-                          className="h-9 text-sm"
-                        />
-                      </div>
+                    <div>
+                      <Label className="text-xs text-gray-700 font-medium">Telefone/WhatsApp</Label>
+                      <Input
+                        type="tel"
+                        value={formatCelular(formData.aniversario_telefone_contato || "")}
+                        onChange={(e) => handleInputChange('aniversario_telefone_contato', e.target.value)}
+                        placeholder="(00) 00000-0000"
+                        maxLength={15}
+                        className="h-9 text-sm"
+                      />
                     </div>
                   </div>
 

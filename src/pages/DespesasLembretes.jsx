@@ -1608,9 +1608,6 @@ ${valor}`
             <CreditCard className="w-4 h-4 mr-2" />
             Chaves PIX
           </Button>
-          <Button onClick={handleVerGruposWhatsApp} variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
-            👥 Ver Grupos WhatsApp
-          </Button>
           <Button onClick={() => { setShowForm(true); setTipoForm("conta"); }} className="bg-green-600 hover:bg-green-700">
             <Plus className="w-4 h-4 mr-2" />
             Nova Conta

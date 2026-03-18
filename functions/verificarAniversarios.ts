@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
         if (cliente.whatsapp_cliente && cliente.cartao_aniversario_url) {
           try {
             console.log(`Enviando cartão para WhatsApp: ${cliente.whatsapp_cliente}`);
-            await enviarWhatsApp(cliente.whatsapp_cliente, null, cliente.cartao_aniversario_url);
+            await enviarCartaoCliente(cliente.whatsapp_cliente, cliente.cartao_aniversario_url);
             console.log(`Cartão enviado para o cliente ${cliente.nome} em ${cliente.whatsapp_cliente}`);
           } catch (imgError) {
             console.error(`Exceção ao enviar cartão para ${cliente.nome}:`, imgError);

@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
         console.log(`Enviando lembrete para escritório: ${destino}`);
         
         try {
-          await enviarWhatsApp(destino, mensagem);
+          await enviarLembreteEscritorio(destino, mensagem);
           enviados++;
           console.log(`Lembrete do escritório enviado para ${cliente.nome}`);
         } catch (sendError) {

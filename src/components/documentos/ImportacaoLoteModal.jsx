@@ -95,8 +95,15 @@ function gerarNomeSugerido(tipo, matricula, dataEmissao, dataVencimento, exercic
       return `Recibo CAR ${m}`;
     case "CIB":
       return dataDoc ? `CIB ${m}-${dataDoc}` : `CIB ${m}`;
-    case "Contrato de Arrendamento":
-      return dataDoc ? `Contrato Arrendamento ${m}-${dataDoc}` : `Contrato Arrendamento ${m}`;
+    case "Contrato de Arrendamento": {
+      // subtipo detectado via textos combinados (nome arquivo + nome sugerido + observações)
+      const textoContrato = [nomeArquivoOriginal || "", nomeSugeridoIA || "", observacoesIA || ""].join(" ").toLowerCase();
+      let subtipoContrato = "Arrendamento";
+      if (textoContrato.includes("comodato")) subtipoContrato = "Comodato";
+      else if (textoContrato.includes("parceria")) subtipoContrato = "Parceria";
+      else if (textoContrato.includes("aditivo")) subtipoContrato = "Aditivo";
+      return dataDoc ? `Contrato ${subtipoContrato} ${m}-${dataDoc}` : `Contrato ${subtipoContrato} ${m}`;
+    }
     case "Validação de Assinatura":
       return dataDoc ? `Inexig. Ambiental ${m}` : `Inexig. Ambiental ${m}`;
     default:

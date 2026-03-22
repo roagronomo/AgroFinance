@@ -76,7 +76,7 @@ function formatarData(dataStr) {
   } catch { return null; }
 }
 
-function gerarNomeSugerido(tipo, matricula, dataEmissao, dataVencimento, exercicio) {
+function gerarNomeSugerido(tipo, matricula, dataEmissao, dataVencimento, exercicio, nomeArquivoOriginal, nomeSugeridoIA, observacoesIA) {
   const m = matricula ? `M-${matricula}` : null;
   const dataDoc = formatarData(dataEmissao) || formatarData(dataVencimento);
 

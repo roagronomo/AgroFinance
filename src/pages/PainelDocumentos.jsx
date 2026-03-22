@@ -699,7 +699,7 @@ CAMPOS A EXTRAIR:
                   <SelectTrigger><SelectValue placeholder="Selecione o imóvel..." /></SelectTrigger>
                   <SelectContent>
                     {imoveis.filter(i => i.nome_imovel).map(i => (
-                      <SelectItem key={i.id} value={i.id}>{i.nome_imovel}{i.municipio ? ` - ${i.municipio}` : ''}</SelectItem>
+                     <SelectItem key={i.id} value={i.id}>{labelImovel(i)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

@@ -155,6 +155,9 @@ export default function ImportacaoLoteModal({ open, onClose, clientes, imoveis, 
     let processados = 0;
 
     const lista = [...arquivos];
+    let clienteReferencia = "";
+    let imovelReferencia = "";
+
     for (let i = 0; i < lista.length; i++) {
       const arq = lista[i];
       // Marca como processando

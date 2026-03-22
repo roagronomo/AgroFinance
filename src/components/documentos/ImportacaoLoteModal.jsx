@@ -428,7 +428,13 @@ CAMPOS A EXTRAIR:
                   {a.observacoes && (
                     <div>
                       <label className="text-xs font-medium text-gray-600">Observações (IA)</label>
-                      <Input className="h-8 text-sm mt-1" value={a.observacoes} onChange={e => atualizarCampo(a.id, 'observacoes', e.target.value)} />
+                      <textarea
+                        className="w-full mt-1 rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
+                        style={{ whiteSpace: 'pre-wrap', lineHeight: '1.7', minHeight: '60px' }}
+                        value={a.observacoes}
+                        onChange={e => atualizarCampo(a.id, 'observacoes', e.target.value)}
+                        rows={3}
+                      />
                     </div>
                   )}
                 </div>

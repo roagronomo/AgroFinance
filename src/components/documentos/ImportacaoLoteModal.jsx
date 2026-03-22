@@ -33,39 +33,49 @@ function detectarTipoDocumento(nomeArquivo, nomeSugerido, observacoes) {
     .join(" ")
     .toLowerCase();
 
-  if ((textos.includes("cnd") && textos.includes("itr")) ||
-      (textos.includes("certidão negativa") && textos.includes("itr")) ||
-      textos.includes("imposto territorial rural")) return "ITR";
+  // 1. Contrato — mais específico, vem PRIMEIRO
+  if (textos.includes("contrato") || textos.includes("comodato") ||
+      textos.includes("parceria") || textos.includes("arrendamento")) return "Contrato de Arrendamento";
 
-  if (textos.includes("ccir") || textos.includes("certificado de cadastro de imóvel rural") ||
-      textos.includes("certificado de cadastro de imovel rural")) return "CCIR";
-
-  if (textos.includes("cib") || textos.includes("cadastro imobiliário brasileiro") ||
-      textos.includes("cadastro imobiliario brasileiro") || textos.includes("nirf")) return "CIB";
-
-  if (textos.includes("car") && textos.includes("recibo")) return "CAR - Recibo";
-  if (textos.includes("car") && textos.includes("demonstrativo")) return "CAR - Demonstrativo";
-
-  if (textos.includes("contrato") && textos.includes("arrendamento")) return "Contrato de Arrendamento";
-  if (textos.includes("aditivo")) return "Aditivo";
-  if (textos.includes("carta") && textos.includes("anuência")) return "Carta de Anuência";
-  if (textos.includes("laudo")) return "Laudo Técnico";
-  if (textos.includes("art")) return "ART";
-
-  // Validação de assinatura tem prioridade antes de Ambiental
+  // 2. Validação de Assinatura
   if (textos.includes("validação") || textos.includes("validacao") ||
       textos.includes("assinatura digital") || textos.includes("certificado digital") ||
       textos.includes("icp-brasil")) return "Validação de Assinatura";
 
+  // 3. CCIR
+  if (textos.includes("ccir") || textos.includes("certificado de cadastro de imóvel rural") ||
+      textos.includes("certificado de cadastro de imovel rural")) return "CCIR";
+
+  // 4. CND ITR / ITR
+  if ((textos.includes("cnd") && textos.includes("itr")) ||
+      (textos.includes("certidão negativa") && textos.includes("itr")) ||
+      textos.includes("imposto territorial rural")) return "ITR";
+
+  // 5. CIB
+  if (textos.includes("cib") || textos.includes("cadastro imobiliário brasileiro") ||
+      textos.includes("cadastro imobiliario brasileiro") || textos.includes("nirf")) return "CIB";
+
+  // 6. CAR
+  if (textos.includes("car") && textos.includes("recibo")) return "CAR - Recibo";
+  if (textos.includes("car") && textos.includes("demonstrativo")) return "CAR - Demonstrativo";
+  if (textos.includes("recibo car") || textos.includes("cadastro ambiental rural")) return "CAR - Recibo";
+
+  // 7. Ambiental
   if (textos.includes("inexig") || textos.includes("inexigibilidade") ||
       textos.includes("ambiental") || textos.includes("semad") ||
       textos.includes("apf") || textos.includes("licenciamento ambiental") ||
       textos.includes("titulo ambiental") || textos.includes("título ambiental")) return "Ambiental";
 
-  if (textos.includes("inteiro teor") ||
-      (textos.includes("certidão") && textos.includes("matrícula"))) return "Certidão";
+  // 8. Certidão
+  if (textos.includes("certidão") || textos.includes("certidao") ||
+      textos.includes("inteiro teor")) return "Certidão";
 
-  return "Certidão";
+  // 9. Outros casos específicos
+  if (textos.includes("aditivo")) return "Aditivo";
+  if (textos.includes("carta") && textos.includes("anuência")) return "Carta de Anuência";
+  if (textos.includes("laudo")) return "Laudo Técnico";
+
+  return "Outro";
 }
 
 function matchCliente(clientes, nomeCliente) {

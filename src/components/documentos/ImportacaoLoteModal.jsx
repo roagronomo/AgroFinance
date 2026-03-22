@@ -290,6 +290,11 @@ CAMPOS A EXTRAIR:
           resultado?.resumo
         ) || resultado?.nome_sugerido || arq.nome.replace('.pdf', '');
 
+        // Para CCIR, calcula vencimento automático: 30/09 do ano seguinte ao exercício
+        const dataVencimento = tipo === "CCIR"
+          ? (calcularVencimentoCCIR(arq.nome, nomeSugerido, resultado?.exercicio) || resultado?.data_vencimento || "")
+          : (resultado?.data_vencimento || "");
+
         setArquivos(prev => prev.map(a => a.id === arq.id ? {
           ...a,
           status: STATUS.CONCLUIDO,
@@ -297,7 +302,7 @@ CAMPOS A EXTRAIR:
           nome_documento: nomeSugerido,
           tipo_documento: tipo,
           data_emissao: resultado?.data_emissao || "",
-          data_vencimento: resultado?.data_vencimento || "",
+          data_vencimento: dataVencimento,
           data_inicio_contrato: resultado?.data_inicio_contrato || "",
           data_fim_contrato: resultado?.data_fim_contrato || "",
           exercicio: resultado?.exercicio || "",

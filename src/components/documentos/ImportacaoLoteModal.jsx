@@ -36,6 +36,42 @@ function matchCliente(clientes, nomeCliente) {
   return encontrado?.id || "";
 }
 
+function formatarData(dataStr) {
+  if (!dataStr) return null;
+  try {
+    const [ano, mes, dia] = dataStr.split('-');
+    return `${dia}-${mes}-${ano}`;
+  } catch { return null; }
+}
+
+function gerarNomeSugerido(tipo, matricula, dataEmissao, dataVencimento, exercicio) {
+  const m = matricula ? `M-${matricula}` : null;
+  const dataDoc = formatarData(dataEmissao) || formatarData(dataVencimento);
+
+  if (!m) return null;
+
+  switch (tipo) {
+    case "Certidão":
+      return dataDoc ? `Certidão Inteiro Teor ${m}-${dataDoc}` : `Certidão Inteiro Teor ${m}`;
+    case "CCIR":
+      return exercicio ? `CCIR ${m} - Ex. ${exercicio}` : `CCIR ${m}`;
+    case "ITR":
+      return dataDoc ? `CND ITR ${m} - Val. ${dataDoc}` : `CND ITR ${m}`;
+    case "CAR - Demonstrativo":
+      return `CAR ${m}`;
+    case "CAR - Recibo":
+      return `Recibo CAR ${m}`;
+    case "CIB":
+      return dataDoc ? `CIB ${m}-${dataDoc}` : `CIB ${m}`;
+    case "Contrato de Arrendamento":
+      return dataDoc ? `Contrato Arrendamento ${m}-${dataDoc}` : `Contrato Arrendamento ${m}`;
+    case "Validação de Assinatura":
+      return dataDoc ? `Inexig. Ambiental ${m}` : `Inexig. Ambiental ${m}`;
+    default:
+      return null;
+  }
+}
+
 function matchImovel(imoveis, matriculaNume, clienteId) {
   if (!matriculaNume) return "";
   const matriculaNorm = String(matriculaNume).replace(/\D/g, '');

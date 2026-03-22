@@ -17,6 +17,7 @@ import {
   Pencil, Trash2, ExternalLink, Calendar, Upload
 } from "lucide-react";
 import ImportacaoLoteModal from "@/components/documentos/ImportacaoLoteModal";
+import { labelImovel } from "@/lib/formatImovel";
 import { format, differenceInDays, parseISO } from "date-fns";
 
 // ============================================================

@@ -227,8 +227,16 @@ CAMPOS A EXTRAIR:
           resultado = {};
         }
 
-        const cliente_id = matchCliente(clientes, resultado?.nome_cliente);
-        const imovel_id = matchImovel(imoveis, resultado?.matricula_numero, cliente_id);
+        const cliente_id_detectado = matchCliente(clientes, resultado?.nome_cliente);
+        const imovel_id_detectado = matchImovel(imoveis, resultado?.matricula_numero, cliente_id_detectado);
+
+        // Usa o detectado se houver, senão herda do primeiro documento que identificou
+        const cliente_id = cliente_id_detectado || clienteReferencia;
+        const imovel_id = imovel_id_detectado || imovelReferencia;
+
+        // Salva como referência se for o primeiro a identificar
+        if (cliente_id && !clienteReferencia) clienteReferencia = cliente_id;
+        if (imovel_id && !imovelReferencia) imovelReferencia = imovel_id;
 
         const tipo = detectarTipoDocumento(arq.nome, resultado?.nome_sugerido, resultado?.resumo) || resultado?.tipo_documento || "";
         const nomeSugerido = gerarNomeSugerido(

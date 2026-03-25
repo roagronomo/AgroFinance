@@ -13,6 +13,8 @@ import { ptBR } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import AutocompleteInput from "../components/common/AutocompleteInput";
+import GerenciarPixDialog from "../components/despesas/GerenciarPixDialog";
+import ContaDuplicadaDialog from "../components/despesas/ContaDuplicadaDialog";
 import {
   AlertDialog,
   AlertDialogAction,

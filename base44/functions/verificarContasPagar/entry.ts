@@ -41,17 +41,22 @@ Deno.serve(async (req) => {
     console.log(`[DIAGNÓSTICO] Horário UTC: ${agora.toISOString()}`);
     console.log(`[DIAGNÓSTICO] Horário Brasília: ${String(horaBrasilia).padStart(2,'0')}:${String(minutoBrasilia).padStart(2,'0')}`);
 
-    // GUARD: Só enviar mensagens nos horários corretos (horário de Brasília)
-    // 06:00-06:59 BRT = Notificação de dia do vencimento
-    // 16:00-16:59 BRT = Aviso antecipado
-    if (horaBrasilia !== 6 && horaBrasilia !== 16) {
-      console.log(`[GUARD] Fora do horário de envio. Hora BRT: ${horaBrasilia}:${String(minutoBrasilia).padStart(2,'0')}. Envio às 6h e 16h BRT.`);
+    // Determinar o modo de execução pelo horário BRT
+    // 06:00-06:59 BRT = Notificação de dia do vencimento (lembrete_enviado)
+    // 16:00-16:59 BRT = Aviso antecipado (lembrete_antecipado_enviado)
+    const modoNoDia = horaBrasilia === 6;
+    const modoAntecipado = horaBrasilia === 16;
+
+    if (!modoNoDia && !modoAntecipado) {
+      console.log(`[GUARD] Fora do horário de envio. Hora BRT: ${horaBrasilia}:${String(minutoBrasilia).padStart(2,'0')}. Envio às 6h (dia) e 16h (antecipado) BRT.`);
       return Response.json({
         success: true,
-        message: `Fora do horário de envio. Hora BRT: ${horaBrasilia}:${String(minutoBrasilia).padStart(2,'0')}. Envio às 6h e 16h BRT.`,
+        message: `Fora do horário de envio. Hora BRT: ${horaBrasilia}:${String(minutoBrasilia).padStart(2,'0')}.`,
         lembretesEnviados: 0
       });
     }
+
+    console.log(`[MODO] ${modoNoDia ? 'LEMBRETE DO DIA' : 'LEMBRETE ANTECIPADO'} (${horaBrasilia}h BRT)`);
 
     console.log('Iniciando verificação de contas a pagar...');
 

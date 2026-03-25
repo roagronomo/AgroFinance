@@ -645,48 +645,62 @@ ${valor}`
     }
   };
 
-  const handleSubmitConta = async (e) => {
-    e.preventDefault();
+  const executarSalvarConta = async (dadosSalvar) => {
     try {
-      const valorLimpo = parseFloat(formDataConta.valor.replace(/\./g, '').replace(',', '.'));
-      
-      // Atualizar data de última utilização da chave PIX se foi selecionada
-      if (formDataConta.chave_pix && formDataConta.chave_pix.trim()) {
-        const chaveExiste = chavesPix.find(c => c.chave === formDataConta.chave_pix);
-        if (chaveExiste) {
-          await base44.entities.ChavePix.update(chaveExiste.id, {
-            ultima_utilizacao: new Date().toISOString()
-          });
-        }
-      }
-      
-      if (editingItem) {
-        // Ao editar, não criar novas parcelas
-        const dados = { ...formDataConta, valor: valorLimpo, dias_antes_avisar: parseInt(formDataConta.dias_antes_avisar) || 3, parcelas_total: formDataConta.recorrente ? parseInt(formDataConta.parcelas_total) : null, grupo_whatsapp_id: "120363424659062662@g.us" };
-        await base44.entities.ContaPagar.update(editingItem.id, dados);
+      if (dadosSalvar.editingId) {
+        await base44.entities.ContaPagar.update(dadosSalvar.editingId, dadosSalvar.dados);
         toast.success("Conta atualizada com sucesso!");
+      } else if (dadosSalvar.recorrente) {
+        await base44.entities.ContaPagar.create(dadosSalvar.dados);
+        toast.success(`Conta recorrente cadastrada! Total de ${dadosSalvar.dados.parcelas_total} parcelas.`);
       } else {
-        // Ao criar nova conta
-        if (formDataConta.recorrente && formDataConta.parcelas_total > 0) {
-          // Criar conta recorrente - apenas a primeira parcela
-          const grupoId = `rec_${Date.now()}`;
-          const dados = { ...formDataConta, valor: valorLimpo, dias_antes_avisar: parseInt(formDataConta.dias_antes_avisar) || 3, parcelas_total: parseInt(formDataConta.parcelas_total), parcela_atual: 1, grupo_recorrencia_id: grupoId, codigo_barras: null, boleto_anexo: null, grupo_whatsapp_id: "120363424659062662@g.us" };
-          await base44.entities.ContaPagar.create(dados);
-          toast.success(`Conta recorrente cadastrada! Total de ${formDataConta.parcelas_total} parcelas.`);
-        } else {
-          // Conta normal
-          const dados = { ...formDataConta, valor: valorLimpo, dias_antes_avisar: parseInt(formDataConta.dias_antes_avisar) || 3, recorrente: false, parcelas_total: null, parcela_atual: null, grupo_recorrencia_id: null, grupo_whatsapp_id: "120363424659062662@g.us" };
-          await base44.entities.ContaPagar.create(dados);
-          toast.success("Conta cadastrada com sucesso!");
-        }
+        await base44.entities.ContaPagar.create(dadosSalvar.dados);
+        toast.success("Conta cadastrada com sucesso!");
       }
-
       await carregarDados();
       handleCancelar();
     } catch (error) {
       console.error("Erro ao salvar conta:", error);
       toast.error("Erro ao salvar conta");
     }
+  };
+
+  const handleSubmitConta = async (e) => {
+    e.preventDefault();
+    const valorLimpo = parseFloat(formDataConta.valor.replace(/\./g, '').replace(',', '.'));
+
+    if (formDataConta.chave_pix && formDataConta.chave_pix.trim()) {
+      const chaveExiste = chavesPix.find(c => c.chave === formDataConta.chave_pix);
+      if (chaveExiste) {
+        await base44.entities.ChavePix.update(chaveExiste.id, { ultima_utilizacao: new Date().toISOString() });
+      }
+    }
+
+    let dadosSalvar;
+    if (editingItem) {
+      dadosSalvar = { editingId: editingItem.id, recorrente: false, dados: { ...formDataConta, valor: valorLimpo, dias_antes_avisar: parseInt(formDataConta.dias_antes_avisar) || 3, parcelas_total: formDataConta.recorrente ? parseInt(formDataConta.parcelas_total) : null, grupo_whatsapp_id: "120363424659062662@g.us" } };
+    } else if (formDataConta.recorrente && formDataConta.parcelas_total > 0) {
+      const grupoId = `rec_${Date.now()}`;
+      dadosSalvar = { editingId: null, recorrente: true, dados: { ...formDataConta, valor: valorLimpo, dias_antes_avisar: parseInt(formDataConta.dias_antes_avisar) || 3, parcelas_total: parseInt(formDataConta.parcelas_total), parcela_atual: 1, grupo_recorrencia_id: grupoId, codigo_barras: null, boleto_anexo: null, grupo_whatsapp_id: "120363424659062662@g.us" } };
+    } else {
+      dadosSalvar = { editingId: null, recorrente: false, dados: { ...formDataConta, valor: valorLimpo, dias_antes_avisar: parseInt(formDataConta.dias_antes_avisar) || 3, recorrente: false, parcelas_total: null, parcela_atual: null, grupo_recorrencia_id: null, grupo_whatsapp_id: "120363424659062662@g.us" } };
+    }
+
+    // Verificar duplicata apenas ao criar nova conta
+    if (!editingItem) {
+      const duplicada = contasAtivas.find(c =>
+        c.descricao?.toLowerCase().trim() === formDataConta.descricao?.toLowerCase().trim() &&
+        c.valor === valorLimpo &&
+        !c.pago
+      );
+      if (duplicada) {
+        setContaDuplicada(duplicada);
+        setPendingSaveConta(dadosSalvar);
+        return;
+      }
+    }
+
+    await executarSalvarConta(dadosSalvar);
   };
 
   const handleSubmitLembrete = async (e) => {

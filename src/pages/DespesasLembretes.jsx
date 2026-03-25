@@ -1418,180 +1418,79 @@ ${valor}`
                 <form onSubmit={handleSubmitLembrete} className="space-y-4">
                   <div>
                     <Label>Descrição *</Label>
-                    <AutocompleteInput
-                      value={formDataLembrete.descricao}
-                      onChange={(e) => setFormDataLembrete({...formDataLembrete, descricao: e.target.value})}
-                      onBlur={() => handleCorrecaoOrtografica('descricao', 'lembrete')}
-                      placeholder="Ex: Consórcio - Encerramento do Grupo"
-                      suggestions={sugestoes.descricoes}
-                      required
-                      disabled={corrigindoTexto.descricao}
-                    />
+                    <AutocompleteInput value={formDataLembrete.descricao} onChange={(e) => setFormDataLembrete({...formDataLembrete, descricao: e.target.value})} onBlur={() => handleCorrecaoOrtografica('descricao', 'lembrete')} placeholder="Ex: Consórcio - Encerramento do Grupo" suggestions={sugestoes.descricoes} required disabled={corrigindoTexto.descricao} />
                     {corrigindoTexto.descricao && <p className="text-xs text-blue-600 mt-1">✨ Corrigindo...</p>}
                   </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <Label className="text-xs text-gray-600">Valor (R$)</Label>
-                      <Input
-                        value={formDataLembrete.valor}
-                        onChange={(e) => handleValorChange(e.target.value, 'lembrete')}
-                        placeholder="0,00"
-                        className="h-9"
-                      />
+                      <Input value={formDataLembrete.valor} onChange={(e) => handleValorChange(e.target.value, 'lembrete')} placeholder="0,00" className="h-9" />
                     </div>
-
                     <div>
                       <Label className="text-xs text-gray-600">Data do Evento *</Label>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={`w-full justify-start text-left font-normal h-9 ${!formDataLembrete.data_evento && "text-muted-foreground"}`}
-                          >
+                          <Button variant="outline" className={`w-full justify-start text-left font-normal h-9 ${!formDataLembrete.data_evento && "text-muted-foreground"}`}>
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {formDataLembrete.data_evento ? format(new Date(formDataLembrete.data_evento + 'T00:00:00'), 'dd/MM/yyyy') : "Selecione a data"}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            locale={ptBR}
-                            selected={formDataLembrete.data_evento ? new Date(formDataLembrete.data_evento + 'T00:00:00') : undefined}
-                            onSelect={(date) => {
-                              if (!date) return;
-                              const dataFormatada = format(date, 'yyyy-MM-dd');
-                              setFormDataLembrete({...formDataLembrete, data_evento: dataFormatada});
-                            }}
-                            disabled={(date) => {
-                              const hoje = new Date();
-                              hoje.setHours(0, 0, 0, 0);
-                              return date < hoje;
-                            }}
-                            initialFocus
-                          />
+                          <Calendar mode="single" locale={ptBR} selected={formDataLembrete.data_evento ? new Date(formDataLembrete.data_evento + 'T00:00:00') : undefined} onSelect={(date) => { if (!date) return; setFormDataLembrete({...formDataLembrete, data_evento: format(date, 'yyyy-MM-dd')}); }} disabled={(date) => { const hoje = new Date(); hoje.setHours(0,0,0,0); return date < hoje; }} initialFocus />
                         </PopoverContent>
                       </Popover>
                     </div>
-
                     <div>
                       <Label className="text-xs text-gray-600">Hora (⏰ Aviso 10min antes)</Label>
-                      <Input
-                        type="time"
-                        value={formDataLembrete.hora_evento}
-                        onChange={(e) => setFormDataLembrete({...formDataLembrete, hora_evento: e.target.value})}
-                        placeholder="HH:MM"
-                        className="h-9"
-                      />
+                      <Input type="time" value={formDataLembrete.hora_evento} onChange={(e) => setFormDataLembrete({...formDataLembrete, hora_evento: e.target.value})} placeholder="HH:MM" className="h-9" />
                     </div>
                   </div>
-
                   <div>
                     <Label>Link de Acesso da Live/Evento</Label>
-                    <Input
-                      type="url"
-                      value={formDataLembrete.link_acesso}
-                      onChange={(e) => setFormDataLembrete({...formDataLembrete, link_acesso: e.target.value})}
-                      placeholder="https://..."
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      🔗 Será incluído no WhatsApp
-                    </p>
+                    <Input type="url" value={formDataLembrete.link_acesso} onChange={(e) => setFormDataLembrete({...formDataLembrete, link_acesso: e.target.value})} placeholder="https://..." />
+                    <p className="text-xs text-gray-500 mt-1">🔗 Será incluído no WhatsApp</p>
                   </div>
-
                   <div className="border rounded-lg p-3 bg-purple-50">
                     <Label className="text-sm font-semibold text-purple-900 mb-2 block">⏰ Aviso Extra (Opcional)</Label>
-                    <Select
-                      value={formDataLembrete.aviso_extra_minutos ? String(formDataLembrete.aviso_extra_minutos) : "nenhum"}
-                      onValueChange={(value) => setFormDataLembrete({
-                        ...formDataLembrete, 
-                        aviso_extra_minutos: value === "nenhum" ? null : parseInt(value)
-                      })}
-                    >
-                      <SelectTrigger className="h-9">
-                        <SelectValue placeholder="Nenhum aviso extra" />
-                      </SelectTrigger>
+                    <Select value={formDataLembrete.aviso_extra_minutos ? String(formDataLembrete.aviso_extra_minutos) : "nenhum"} onValueChange={(value) => setFormDataLembrete({...formDataLembrete, aviso_extra_minutos: value === "nenhum" ? null : parseInt(value)})}>
+                      <SelectTrigger className="h-9"><SelectValue placeholder="Nenhum aviso extra" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="nenhum">Nenhum (só 10min antes)</SelectItem>
                         <SelectItem value="30">⏰ 30 minutos antes</SelectItem>
                         <SelectItem value="60">⏰ 1 hora antes</SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-gray-600 mt-2">
-                      💡 Além do aviso fixo de 10 minutos antes, você pode configurar um aviso extra
-                    </p>
+                    <p className="text-xs text-gray-600 mt-2">💡 Além do aviso fixo de 10 minutos antes, você pode configurar um aviso extra</p>
                   </div>
-
                   <div className="space-y-3">
                     <div>
                       <Label className="text-xs text-gray-600">Avisar quantos dias antes? *</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        max="365"
-                        value={formDataLembrete.dias_antes_avisar}
-                        onChange={(e) => setFormDataLembrete({...formDataLembrete, dias_antes_avisar: e.target.value})}
-                        required
-                        className="h-9 w-20"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Aviso X dias antes (09h) + 10min antes + {formDataLembrete.aviso_extra_minutos ? (formDataLembrete.aviso_extra_minutos >= 60 ? '1h antes' : `${formDataLembrete.aviso_extra_minutos}min antes`) : 'nenhum extra'}
-                      </p>
+                      <Input type="number" min="1" max="365" value={formDataLembrete.dias_antes_avisar} onChange={(e) => setFormDataLembrete({...formDataLembrete, dias_antes_avisar: e.target.value})} required className="h-9 w-20" />
+                      <p className="text-xs text-gray-500 mt-1">Aviso X dias antes (09h) + 10min antes + {formDataLembrete.aviso_extra_minutos ? (formDataLembrete.aviso_extra_minutos >= 60 ? '1h antes' : `${formDataLembrete.aviso_extra_minutos}min antes`) : 'nenhum extra'}</p>
                     </div>
-
-                    {/* Destino da Notificação oculto - grupo fixo definido ao salvar */}
                   </div>
-
                   <div>
                     <Label>Observações</Label>
-                    <Textarea
-                      value={formDataLembrete.observacoes}
-                      onChange={(e) => setFormDataLembrete({...formDataLembrete, observacoes: e.target.value})}
-                      onBlur={() => handleCorrecaoOrtografica('observacoes', 'lembrete')}
-                      rows={3}
-                      disabled={corrigindoTexto.observacoes}
-                    />
+                    <Textarea value={formDataLembrete.observacoes} onChange={(e) => setFormDataLembrete({...formDataLembrete, observacoes: e.target.value})} onBlur={() => handleCorrecaoOrtografica('observacoes', 'lembrete')} rows={3} disabled={corrigindoTexto.observacoes} />
                     {corrigindoTexto.observacoes && <p className="text-xs text-blue-600 mt-1">✨ Corrigindo...</p>}
                   </div>
-
                   <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="ativo-lembrete"
-                      checked={formDataLembrete.ativo}
-                      onChange={(e) => setFormDataLembrete({...formDataLembrete, ativo: e.target.checked})}
-                      className="w-4 h-4"
-                    />
-                    <Label htmlFor="ativo-lembrete" className="cursor-pointer">
-                      Ativo (receberá notificações)
-                    </Label>
+                    <input type="checkbox" id="ativo-lembrete" checked={formDataLembrete.ativo} onChange={(e) => setFormDataLembrete({...formDataLembrete, ativo: e.target.checked})} className="w-4 h-4" />
+                    <Label htmlFor="ativo-lembrete" className="cursor-pointer">Ativo (receberá notificações)</Label>
                   </div>
-
                   <div className="flex gap-3">
-                    <Button type="submit" className="bg-green-600 hover:bg-green-700">
-                      {editingItem ? "Atualizar" : "Cadastrar"}
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={enviarTesteWhatsAppLembrete}
-                      disabled={!formDataLembrete.telefone_contato || enviandoTeste}
-                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                    >
-                      {enviandoTeste ? "Enviando..." : "📱 Testar"}
-                    </Button>
-                    <Button type="button" variant="outline" onClick={handleCancelar}>
-                      Cancelar
-                    </Button>
+                    <Button type="submit" className="bg-green-600 hover:bg-green-700">{editingItem ? "Atualizar" : "Cadastrar"}</Button>
+                    <Button type="button" variant="outline" onClick={enviarTesteWhatsAppLembrete} disabled={!formDataLembrete.telefone_contato || enviandoTeste} className="border-blue-600 text-blue-600 hover:bg-blue-50">{enviandoTeste ? "Enviando..." : "📱 Testar"}</Button>
+                    <Button type="button" variant="outline" onClick={handleCancelar}>Cancelar</Button>
                   </div>
-                  </form>
-                  </CardContent>
-                  </Card>
-                  </TabsContent>
-                  </Tabs>
-                  </div>
-                  );
-                  }
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          </Tabs>
+          </div>
+          );
+          }
 
   return (
     <div className="p-6 space-y-4">
@@ -1599,32 +1498,17 @@ ${valor}`
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Despesas e Lembretes</h1>
-          <p className="text-gray-500 mt-1">
-            {contasAtivas.length} conta(s) ativa(s) • {lembretesAtivos.length} lembrete(s) ativo(s)
-          </p>
+          <p className="text-gray-500 mt-1">{contasAtivas.length} conta(s) ativa(s) • {lembretesAtivos.length} lembrete(s) ativo(s)</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => setShowGerenciarPix(true)} variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
-            <CreditCard className="w-4 h-4 mr-2" />
-            Chaves PIX
-          </Button>
-          <Button onClick={() => { setShowForm(true); setTipoForm("conta"); }} className="bg-green-600 hover:bg-green-700">
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Conta
-          </Button>
-          <Button onClick={() => { setShowForm(true); setTipoForm("lembrete"); }} variant="outline">
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Lembrete
-          </Button>
+          <Button onClick={() => setShowGerenciarPix(true)} variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50"><CreditCard className="w-4 h-4 mr-2" />Chaves PIX</Button>
+          <Button onClick={() => { setShowForm(true); setTipoForm("conta"); }} className="bg-green-600 hover:bg-green-700"><Plus className="w-4 h-4 mr-2" />Nova Conta</Button>
+          <Button onClick={() => { setShowForm(true); setTipoForm("lembrete"); }} variant="outline"><Plus className="w-4 h-4 mr-2" />Novo Lembrete</Button>
         </div>
       </div>
 
       {isLoading ? (
-        <Card>
-          <CardContent className="p-8 text-center text-gray-500">
-            Carregando...
-          </CardContent>
-        </Card>
+        <Card><CardContent className="p-8 text-center text-gray-500">Carregando...</CardContent></Card>
       ) : (
         <Tabs defaultValue="contas" className="w-full">
           <TabsList>
@@ -1636,12 +1520,7 @@ ${valor}`
 
           <TabsContent value="contas" className="space-y-4 mt-4">
             {contasAtivas.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center text-gray-500">
-                  <DollarSign className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p>Nenhuma conta a pagar cadastrada</p>
-                </CardContent>
-              </Card>
+              <Card><CardContent className="p-8 text-center text-gray-500"><DollarSign className="w-12 h-12 mx-auto mb-3 text-gray-300" /><p>Nenhuma conta a pagar cadastrada</p></CardContent></Card>
             ) : (
               contasAtivas.map((conta) => {
                 const diasRestantes = calcularDiasRestantes(conta.data_vencimento);
@@ -1652,66 +1531,25 @@ ${valor}`
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <h3 className="text-lg font-semibold text-gray-900">{conta.descricao}</h3>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusCor(diasRestantes)}`}>
-                              {getStatusTexto(diasRestantes)}
-                            </span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusCor(diasRestantes)}`}>{getStatusTexto(diasRestantes)}</span>
                           </div>
                           <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                           <span className="flex items-center gap-1">
-                             <CalendarIcon className="w-4 h-4" />
-                             {formatarDataSegura(conta.data_vencimento)}
-                           </span>
-                           <span className="font-semibold text-red-600">
-                             💰 R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                           </span>
-                           {conta.recorrente && (
-                             <span className="text-purple-600 font-medium">
-                               💳 Recorrente {conta.parcela_atual}/{conta.parcelas_total}
-                             </span>
-                           )}
-                           {conta.fornecedor && <span>🏢 {conta.fornecedor}</span>}
-                           {conta.categoria && <span className="text-blue-600">📂 {conta.categoria}</span>}
-                           {conta.codigo_barras && <span className="text-green-600">🔢 Código extraído</span>}
-                           {conta.recibo_anexo && (
-                             <span className="text-purple-600">📄 Recibo anexado</span>
-                           )}
-                           </div>
-                           {conta.observacoes && (
-                            <p className="text-sm text-gray-500 mt-2">{conta.observacoes}</p>
-                           )}
-                           </div>
-                           <div className="flex gap-2">
-                           <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleEditarConta(conta)}
-                            className="text-blue-600 hover:text-blue-700"
-                            title="Editar"
-                           >
-                            <Edit className="w-4 h-4" />
-                           </Button>
-                           <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => setDialogAnexarRecibo(conta.id)}
-                            className="text-purple-600 hover:text-purple-700"
-                            title="Anexar recibo"
-                           >
-                            <FileText className="w-4 h-4" />
-                           </Button>
-                           <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => setDialogMarcarPago(conta.id)}
-                            className="text-green-600 hover:text-green-700"
-                            title="Marcar como pago"
-                           >
-                            <Check className="w-4 h-4" />
-                           </Button>
-                           <Button variant="ghost" size="icon" onClick={() => setDialogExcluir({ id: conta.id, tipo: 'conta' })} className="text-red-600">
-                            <Trash2 className="w-4 h-4" />
-                           </Button>
-                           </div>
+                            <span className="flex items-center gap-1"><CalendarIcon className="w-4 h-4" />{formatarDataSegura(conta.data_vencimento)}</span>
+                            <span className="font-semibold text-red-600">💰 R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                            {conta.recorrente && <span className="text-purple-600 font-medium">💳 Recorrente {conta.parcela_atual}/{conta.parcelas_total}</span>}
+                            {conta.fornecedor && <span>🏢 {conta.fornecedor}</span>}
+                            {conta.categoria && <span className="text-blue-600">📂 {conta.categoria}</span>}
+                            {conta.codigo_barras && <span className="text-green-600">🔢 Código extraído</span>}
+                            {conta.recibo_anexo && <span className="text-purple-600">📄 Recibo anexado</span>}
+                          </div>
+                          {conta.observacoes && <p className="text-sm text-gray-500 mt-2">{conta.observacoes}</p>}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => handleEditarConta(conta)} className="text-blue-600 hover:text-blue-700" title="Editar"><Edit className="w-4 h-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => setDialogAnexarRecibo(conta.id)} className="text-purple-600 hover:text-purple-700" title="Anexar recibo"><FileText className="w-4 h-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => setDialogMarcarPago(conta.id)} className="text-green-600 hover:text-green-700" title="Marcar como pago"><Check className="w-4 h-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => setDialogExcluir({ id: conta.id, tipo: 'conta' })} className="text-red-600"><Trash2 className="w-4 h-4" /></Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -1722,12 +1560,7 @@ ${valor}`
 
           <TabsContent value="lembretes" className="space-y-4 mt-4">
             {lembretesAtivos.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center text-gray-500">
-                  <Bell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p>Nenhum lembrete cadastrado</p>
-                </CardContent>
-              </Card>
+              <Card><CardContent className="p-8 text-center text-gray-500"><Bell className="w-12 h-12 mx-auto mb-3 text-gray-300" /><p>Nenhum lembrete cadastrado</p></CardContent></Card>
             ) : (
               lembretesAtivos.map((lembrete) => {
                 const diasRestantes = calcularDiasRestantes(lembrete.data_evento);
@@ -1738,96 +1571,44 @@ ${valor}`
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <h3 className="text-lg font-semibold text-gray-900">{lembrete.descricao}</h3>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusCor(diasRestantes)}`}>
-                              {getStatusTexto(diasRestantes)}
-                            </span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusCor(diasRestantes)}`}>{getStatusTexto(diasRestantes)}</span>
                           </div>
                           <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                            <span className="flex items-center gap-1">
-                              <CalendarIcon className="w-4 h-4" />
-                              {formatarDataSegura(lembrete.data_evento)}
-                            </span>
-                            {lembrete.hora_evento && (
-                              <span className="flex items-center gap-1">
-                                ⏰ {lembrete.hora_evento}
-                              </span>
-                            )}
-                            {lembrete.valor && (
-                              <span className="font-semibold text-green-600">
-                                💰 R$ {lembrete.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                              </span>
-                            )}
-                            {lembrete.link_acesso && (
-                              <span className="text-blue-600">🔗 Link disponível</span>
-                            )}
+                            <span className="flex items-center gap-1"><CalendarIcon className="w-4 h-4" />{formatarDataSegura(lembrete.data_evento)}</span>
+                            {lembrete.hora_evento && <span>⏰ {lembrete.hora_evento}</span>}
+                            {lembrete.valor && <span className="font-semibold text-green-600">💰 R$ {lembrete.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>}
+                            {lembrete.link_acesso && <span className="text-blue-600">🔗 Link disponível</span>}
                             <span>🔔 {lembrete.dias_antes_avisar} dia(s) antes</span>
                           </div>
-                          {lembrete.observacoes && (
-                            <p className="text-sm text-gray-500 mt-2">{lembrete.observacoes}</p>
-                          )}
+                          {lembrete.observacoes && <p className="text-sm text-gray-500 mt-2">{lembrete.observacoes}</p>}
                         </div>
                         <div className="flex gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleEditarLembrete(lembrete)}
-                            className="text-blue-600 hover:text-blue-700"
-                            title="Editar"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => setDialogExcluir({ id: lembrete.id, tipo: 'lembrete' })} 
-                            className="text-red-600"
-                            title="Excluir"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleEditarLembrete(lembrete)} className="text-blue-600 hover:text-blue-700" title="Editar"><Edit className="w-4 h-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => setDialogExcluir({ id: lembrete.id, tipo: 'lembrete' })} className="text-red-600" title="Excluir"><Trash2 className="w-4 h-4" /></Button>
                         </div>
-                        </div>
-                        </CardContent>
-                        </Card>
-                        );
-                        })
-                        )}
-                        </TabsContent>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </TabsContent>
 
           <TabsContent value="pagas" className="space-y-4 mt-4">
             {contasPagas.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center text-gray-500">
-                  <Check className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p>Nenhuma conta paga</p>
-                </CardContent>
-              </Card>
+              <Card><CardContent className="p-8 text-center text-gray-500"><Check className="w-12 h-12 mx-auto mb-3 text-gray-300" /><p>Nenhuma conta paga</p></CardContent></Card>
             ) : (
               Object.entries(contasPagasAgrupadas).map(([descricao, contas]) => (
                 <Card key={descricao} className="overflow-hidden">
                   <CardContent className="p-0">
-                    {/* Cabeçalho do grupo */}
-                    <div 
-                      className="flex items-center justify-between p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
-                      onClick={() => toggleGrupo(descricao)}
-                    >
+                    <div className="flex items-center justify-between p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => toggleGrupo(descricao)}>
                       <div className="flex items-center gap-3 flex-1">
-                        {gruposExpandidos[descricao] ? (
-                          <ChevronDown className="w-5 h-5 text-gray-500" />
-                        ) : (
-                          <ChevronRight className="w-5 h-5 text-gray-500" />
-                        )}
+                        {gruposExpandidos[descricao] ? <ChevronDown className="w-5 h-5 text-gray-500" /> : <ChevronRight className="w-5 h-5 text-gray-500" />}
                         <h3 className="text-lg font-semibold text-gray-700">{descricao}</h3>
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          {contas.length} {contas.length === 1 ? 'pagamento' : 'pagamentos'}
-                        </span>
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">{contas.length} {contas.length === 1 ? 'pagamento' : 'pagamentos'}</span>
                       </div>
-                      <div className="text-sm text-gray-600 font-semibold">
-                        Total: R$ {contas.reduce((sum, c) => sum + c.valor, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </div>
+                      <div className="text-sm text-gray-600 font-semibold">Total: R$ {contas.reduce((sum, c) => sum + c.valor, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
                     </div>
-
-                    {/* Lista de contas do grupo */}
                     {gruposExpandidos[descricao] && (
                       <div className="divide-y">
                         {contas.map((conta) => (
@@ -1835,75 +1616,23 @@ ${valor}`
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
-                                  {conta.recorrente && (
-                                    <span className="text-xs text-purple-600 font-medium">
-                                      💳 Parcela {conta.parcela_atual}/{conta.parcelas_total}
-                                    </span>
-                                  )}
-                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    ✓ Pago
-                                  </span>
+                                  {conta.recorrente && <span className="text-xs text-purple-600 font-medium">💳 Parcela {conta.parcela_atual}/{conta.parcelas_total}</span>}
+                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">✓ Pago</span>
                                 </div>
                                 <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                                 <span>📅 Vencimento: {formatarDataSegura(conta.data_vencimento)}</span>
-                                  {conta.data_pagamento && (
-                                          <span>✅ Pago em: {formatarDataSegura(conta.data_pagamento)}</span>
-                                        )}
+                                  <span>📅 Vencimento: {formatarDataSegura(conta.data_vencimento)}</span>
+                                  {conta.data_pagamento && <span>✅ Pago em: {formatarDataSegura(conta.data_pagamento)}</span>}
                                   <span className="font-semibold text-green-700">💰 R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                                   {conta.fornecedor && <span>🏢 {conta.fornecedor}</span>}
                                   {conta.categoria && <span className="text-blue-600">📂 {conta.categoria}</span>}
                                 </div>
                               </div>
                               <div className="flex gap-2">
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  onClick={() => handleReutilizarConta(conta)}
-                                  className="text-green-600 hover:text-green-700"
-                                  title="Usar como rascunho"
-                                >
-                                  <Copy className="w-4 h-4" />
-                                </Button>
-                                {conta.boleto_anexo && (
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    onClick={() => handleDownloadAnexo(conta.boleto_anexo.url, conta.boleto_anexo.file_name)}
-                                    className="text-blue-600 hover:text-blue-700"
-                                    title="Baixar boleto"
-                                  >
-                                    <Download className="w-4 h-4" />
-                                  </Button>
-                                )}
-                                {conta.recibo_anexo && (
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    onClick={() => handleDownloadAnexo(conta.recibo_anexo.url, conta.recibo_anexo.file_name)}
-                                    className="text-purple-600 hover:text-purple-700"
-                                    title="Baixar recibo"
-                                  >
-                                    <FileText className="w-4 h-4" />
-                                  </Button>
-                                )}
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  onClick={() => setDialogDesmarcarPago(conta.id)}
-                                  className="text-orange-600 hover:text-orange-700"
-                                  title="Retornar para a pagar"
-                                >
-                                  <Undo2 className="w-4 h-4" />
-                                </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  onClick={() => setDialogExcluir({ id: conta.id, tipo: 'conta' })} 
-                                  className="text-red-600 hover:text-red-700"
-                                  title="Excluir"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
+                                <Button variant="ghost" size="icon" onClick={() => handleReutilizarConta(conta)} className="text-green-600 hover:text-green-700" title="Usar como rascunho"><Copy className="w-4 h-4" /></Button>
+                                {conta.boleto_anexo && <Button variant="ghost" size="icon" onClick={() => handleDownloadAnexo(conta.boleto_anexo.url, conta.boleto_anexo.file_name)} className="text-blue-600 hover:text-blue-700" title="Baixar boleto"><Download className="w-4 h-4" /></Button>}
+                                {conta.recibo_anexo && <Button variant="ghost" size="icon" onClick={() => handleDownloadAnexo(conta.recibo_anexo.url, conta.recibo_anexo.file_name)} className="text-purple-600 hover:text-purple-700" title="Baixar recibo"><FileText className="w-4 h-4" /></Button>}
+                                <Button variant="ghost" size="icon" onClick={() => setDialogDesmarcarPago(conta.id)} className="text-orange-600 hover:text-orange-700" title="Retornar para a pagar"><Undo2 className="w-4 h-4" /></Button>
+                                <Button variant="ghost" size="icon" onClick={() => setDialogExcluir({ id: conta.id, tipo: 'conta' })} className="text-red-600 hover:text-red-700" title="Excluir"><Trash2 className="w-4 h-4" /></Button>
                               </div>
                             </div>
                           </div>
@@ -1918,94 +1647,47 @@ ${valor}`
 
           <TabsContent value="lembretes-concluidos" className="space-y-4 mt-4">
             {lembretesConcluidos.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center text-gray-500">
-                  <Bell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p>Nenhum lembrete concluído</p>
-                </CardContent>
-              </Card>
+              <Card><CardContent className="p-8 text-center text-gray-500"><Bell className="w-12 h-12 mx-auto mb-3 text-gray-300" /><p>Nenhum lembrete concluído</p></CardContent></Card>
             ) : (
-              lembretesConcluidos.map((lembrete) => {
-                const diasRestantes = calcularDiasRestantes(lembrete.data_evento);
-                return (
-                  <Card key={lembrete.id} className="hover:shadow-md transition-shadow bg-gray-50">
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-500 line-through">{lembrete.descricao}</h3>
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-600">
-                              Concluído
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                            <span className="flex items-center gap-1">
-                              <CalendarIcon className="w-4 h-4" />
-                              {lembrete.data_evento ? format(new Date(lembrete.data_evento + 'T00:00:00'), 'dd/MM/yyyy') : '⚠️ SEM DATA'}
-                            </span>
-                            {lembrete.hora_evento && (
-                              <span className="flex items-center gap-1">
-                                ⏰ {lembrete.hora_evento}
-                              </span>
-                            )}
-                            {lembrete.valor && (
-                              <span className="font-semibold text-gray-600">
-                                💰 R$ {lembrete.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                              </span>
-                            )}
-                          </div>
-                          {lembrete.observacoes && (
-                            <p className="text-sm text-gray-400 mt-2">{lembrete.observacoes}</p>
-                          )}
-                          {lembrete.data_conclusao && (
-                            <p className="text-xs text-gray-400 mt-2">
-                              Concluído em: {(() => {
-                                try {
-                                  const data = new Date(lembrete.data_conclusao);
-                                  if (isNaN(data.getTime())) return '⚠️ DATA INVÁLIDA';
-                                  return format(data, 'dd/MM/yyyy HH:mm');
-                                } catch {
-                                  return '⚠️ DATA INVÁLIDA';
-                                }
-                              })()}
-                            </p>
-                          )}
+              lembretesConcluidos.map((lembrete) => (
+                <Card key={lembrete.id} className="hover:shadow-md transition-shadow bg-gray-50">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-lg font-semibold text-gray-500 line-through">{lembrete.descricao}</h3>
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-600">Concluído</span>
                         </div>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => setDialogExcluir({ id: lembrete.id, tipo: 'lembrete' })} 
-                            className="text-red-600"
-                            title="Excluir"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                          <span className="flex items-center gap-1"><CalendarIcon className="w-4 h-4" />{lembrete.data_evento ? format(new Date(lembrete.data_evento + 'T00:00:00'), 'dd/MM/yyyy') : '⚠️ SEM DATA'}</span>
+                          {lembrete.hora_evento && <span>⏰ {lembrete.hora_evento}</span>}
+                          {lembrete.valor && <span className="font-semibold text-gray-600">💰 R$ {lembrete.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>}
                         </div>
+                        {lembrete.observacoes && <p className="text-sm text-gray-400 mt-2">{lembrete.observacoes}</p>}
+                        {lembrete.data_conclusao && <p className="text-xs text-gray-400 mt-2">Concluído em: {(() => { try { const d = new Date(lembrete.data_conclusao); return isNaN(d.getTime()) ? '⚠️ DATA INVÁLIDA' : format(d, 'dd/MM/yyyy HH:mm'); } catch { return '⚠️ DATA INVÁLIDA'; } })()}</p>}
                       </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => setDialogExcluir({ id: lembrete.id, tipo: 'lembrete' })} className="text-red-600" title="Excluir"><Trash2 className="w-4 h-4" /></Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
             )}
           </TabsContent>
-          </Tabs>
-          )}
+        </Tabs>
+      )}
 
-          {/* Dialog Marcar como Pago */}
+      {/* Dialog Marcar como Pago */}
       <AlertDialog open={!!dialogMarcarPago} onOpenChange={(open) => !open && setDialogMarcarPago(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Marcar como Pago</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja marcar esta conta como paga? Esta ação moverá a conta para a aba "Pagas".
-            </AlertDialogDescription>
+            <AlertDialogDescription>Tem certeza que deseja marcar esta conta como paga? Esta ação moverá a conta para a aba "Pagas".</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleMarcarPago} className="bg-green-600 hover:bg-green-700">
-              Confirmar
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleMarcarPago} className="bg-green-600 hover:bg-green-700">Confirmar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -2015,15 +1697,11 @@ ${valor}`
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Retornar para Contas a Pagar</AlertDialogTitle>
-            <AlertDialogDescription>
-              Deseja retornar esta conta para "Contas a Pagar"? A conta voltará a aparecer na lista de contas pendentes.
-            </AlertDialogDescription>
+            <AlertDialogDescription>Deseja retornar esta conta para "Contas a Pagar"?</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDesmarcarPago} className="bg-orange-600 hover:bg-orange-700">
-              Retornar
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleDesmarcarPago} className="bg-orange-600 hover:bg-orange-700">Retornar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -2033,15 +1711,11 @@ ${valor}`
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir {dialogExcluir?.tipo === 'conta' ? 'Conta' : 'Lembrete'}</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir {dialogExcluir?.tipo === 'conta' ? 'esta conta' : 'este lembrete'}? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
+            <AlertDialogDescription>Tem certeza que deseja excluir {dialogExcluir?.tipo === 'conta' ? 'esta conta' : 'este lembrete'}? Esta ação não pode ser desfeita.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleExcluir} className="bg-red-600 hover:bg-red-700">
-              Excluir
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleExcluir} className="bg-red-600 hover:bg-red-700">Excluir</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -2051,33 +1725,12 @@ ${valor}`
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Anexar Recibo de Pagamento</AlertDialogTitle>
-            <AlertDialogDescription>
-              Selecione o arquivo do recibo de pagamento desta conta.
-            </AlertDialogDescription>
+            <AlertDialogDescription>Selecione o arquivo do recibo de pagamento desta conta.</AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4">
-            <label className={`flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-md cursor-pointer transition-colors ${
-              uploadingReciboRapido
-                ? 'bg-gray-50 border-gray-300 cursor-not-allowed'
-                : 'border-gray-300 hover:bg-gray-50 hover:border-purple-400'
-            }`}>
-              <input
-                type="file"
-                onChange={handleAnexarReciboRapido}
-                disabled={uploadingReciboRapido}
-                className="hidden"
-              />
-              {uploadingReciboRapido ? (
-                <>
-                  <Upload className="w-5 h-5 text-gray-400 animate-pulse" />
-                  <span className="text-gray-600">Enviando...</span>
-                </>
-              ) : (
-                <>
-                  <FileText className="w-5 h-5 text-purple-600" />
-                  <span className="text-gray-700">Clique para selecionar o arquivo</span>
-                </>
-              )}
+            <label className={`flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-md cursor-pointer transition-colors ${uploadingReciboRapido ? 'bg-gray-50 border-gray-300 cursor-not-allowed' : 'border-gray-300 hover:bg-gray-50 hover:border-purple-400'}`}>
+              <input type="file" onChange={handleAnexarReciboRapido} disabled={uploadingReciboRapido} className="hidden" />
+              {uploadingReciboRapido ? (<><Upload className="w-5 h-5 text-gray-400 animate-pulse" /><span className="text-gray-600">Enviando...</span></>) : (<><FileText className="w-5 h-5 text-purple-600" /><span className="text-gray-700">Clique para selecionar o arquivo</span></>)}
             </label>
           </div>
           <AlertDialogFooter>
@@ -2086,57 +1739,30 @@ ${valor}`
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Dialog Ver Grupos WhatsApp */}
+      {/* Dialog Grupos WhatsApp */}
       <AlertDialog open={showGruposWhatsApp} onOpenChange={(open) => !open && setShowGruposWhatsApp(false)}>
         <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              👥 Grupos do WhatsApp Disponíveis
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              IDs dos grupos para usar nas configurações de lembretes e contas
-            </AlertDialogDescription>
+            <AlertDialogTitle>👥 Grupos do WhatsApp Disponíveis</AlertDialogTitle>
+            <AlertDialogDescription>IDs dos grupos para usar nas configurações de lembretes e contas</AlertDialogDescription>
           </AlertDialogHeader>
-
           <div className="space-y-3">
             {carregandoGrupos ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-                <p className="text-sm text-gray-500 mt-2">Carregando grupos...</p>
-              </div>
+              <div className="text-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div><p className="text-sm text-gray-500 mt-2">Carregando grupos...</p></div>
             ) : gruposWhatsApp.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Nenhum grupo encontrado</p>
-              </div>
+              <div className="text-center py-8"><p className="text-gray-500">Nenhum grupo encontrado</p></div>
             ) : (
               gruposWhatsApp.map((grupo) => (
                 <div key={grupo.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{grupo.subject}</h3>
-                      <p className="text-xs text-gray-500 mt-1 font-mono break-all">{grupo.id}</p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        navigator.clipboard.writeText(grupo.id);
-                        toast.success("ID copiado!");
-                      }}
-                      className="shrink-0"
-                    >
-                      <Copy className="w-3 h-3 mr-1" />
-                      Copiar ID
-                    </Button>
+                    <div className="flex-1"><h3 className="font-semibold text-gray-900">{grupo.subject}</h3><p className="text-xs text-gray-500 mt-1 font-mono break-all">{grupo.id}</p></div>
+                    <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(grupo.id); toast.success("ID copiado!"); }} className="shrink-0"><Copy className="w-3 h-3 mr-1" />Copiar ID</Button>
                   </div>
                 </div>
               ))
             )}
           </div>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel>Fechar</AlertDialogCancel>
-          </AlertDialogFooter>
+          <AlertDialogFooter><AlertDialogCancel>Fechar</AlertDialogCancel></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
@@ -2144,53 +1770,24 @@ ${valor}`
       <AlertDialog open={!!lembreteConflitante} onOpenChange={(open) => !open && setLembreteConflitante(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-amber-600">
-              ⚠️ Lembrete Já Existe
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Já existe um lembrete cadastrado para esta mesma data e horário.
-            </AlertDialogDescription>
+            <AlertDialogTitle className="flex items-center gap-2 text-amber-600">⚠️ Lembrete Já Existe</AlertDialogTitle>
+            <AlertDialogDescription>Já existe um lembrete cadastrado para esta mesma data e horário.</AlertDialogDescription>
           </AlertDialogHeader>
-
           {lembreteConflitante && (
             <Card className="border-amber-200 bg-amber-50">
               <CardContent className="p-4 space-y-2">
                 <h3 className="font-semibold text-gray-900">{lembreteConflitante.descricao}</h3>
                 <div className="flex flex-wrap gap-3 text-sm text-gray-600">
-                  <span className="flex items-center gap-1">
-                    <CalendarIcon className="w-4 h-4" />
-                    {formatarDataSegura(lembreteConflitante.data_evento)}
-                  </span>
-                  {lembreteConflitante.hora_evento && (
-                    <span className="flex items-center gap-1">
-                      ⏰ {lembreteConflitante.hora_evento}
-                    </span>
-                  )}
-                  {lembreteConflitante.valor && (
-                    <span className="font-semibold text-green-600">
-                      💰 R$ {lembreteConflitante.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                  )}
+                  <span className="flex items-center gap-1"><CalendarIcon className="w-4 h-4" />{formatarDataSegura(lembreteConflitante.data_evento)}</span>
+                  {lembreteConflitante.hora_evento && <span>⏰ {lembreteConflitante.hora_evento}</span>}
+                  {lembreteConflitante.valor && <span className="font-semibold text-green-600">💰 R$ {lembreteConflitante.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>}
                 </div>
-                {lembreteConflitante.observacoes && (
-                  <p className="text-sm text-gray-600 mt-2">{lembreteConflitante.observacoes}</p>
-                )}
               </CardContent>
             </Card>
           )}
-
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={() => {
-                handleEditarLembrete(lembreteConflitante);
-                setLembreteConflitante(null);
-              }}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Editar Este Lembrete
-            </AlertDialogAction>
+            <AlertDialogAction onClick={() => { handleEditarLembrete(lembreteConflitante); setLembreteConflitante(null); }} className="bg-blue-600 hover:bg-blue-700"><Edit className="w-4 h-4 mr-2" />Editar Este Lembrete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -2198,16 +1795,10 @@ ${valor}`
       <GerenciarPixDialog
         open={showGerenciarPix}
         onClose={() => { setShowGerenciarPix(false); setFormChavePix({ descricao: "", chave: "", tipo: "cpf" }); setEditingChavePix(null); }}
-        chavesPix={chavesPix}
-        formChavePix={formChavePix}
-        setFormChavePix={setFormChavePix}
-        editingChavePix={editingChavePix}
-        setEditingChavePix={setEditingChavePix}
-        gruposPixExpandidos={gruposPixExpandidos}
-        setGruposPixExpandidos={setGruposPixExpandidos}
-        onSalvar={handleSalvarChavePix}
-        onExcluir={handleExcluirChavePix}
-        formatarChavePixPorTipo={formatarChavePixPorTipo}
+        chavesPix={chavesPix} formChavePix={formChavePix} setFormChavePix={setFormChavePix}
+        editingChavePix={editingChavePix} setEditingChavePix={setEditingChavePix}
+        gruposPixExpandidos={gruposPixExpandidos} setGruposPixExpandidos={setGruposPixExpandidos}
+        onSalvar={handleSalvarChavePix} onExcluir={handleExcluirChavePix} formatarChavePixPorTipo={formatarChavePixPorTipo}
       />
 
       <ContaDuplicadaDialog
@@ -2217,7 +1808,6 @@ ${valor}`
         onEditar={(conta) => { setContaDuplicada(null); setPendingSaveConta(null); handleEditarConta(conta); }}
         formatarDataSegura={formatarDataSegura}
       />
-
     </div>
   );
 }

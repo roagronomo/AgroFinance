@@ -163,12 +163,21 @@ ${conta.codigo_barras && !conta.recorrente ? `\n🔢 *Código de Barras:*\n\`${c
 _Lembrete automático - AgroFinance_`;
         }
 
-        await enviarWhatsApp(destino, mensagem);
-
-        // Atualizar o status do lembrete
+        // Marcar como enviado ANTES de enviar a mensagem (evita duplicação em execuções paralelas)
         const updateData = {};
         if (deveEnviarNoDia) {
           updateData.lembrete_enviado = true;
+        }
+        if (deveEnviarAntecipado) {
+          updateData.lembrete_antecipado_enviado = true;
+        }
+        await base44.asServiceRole.entities.ContaPagar.update(conta.id, updateData);
+
+        await enviarWhatsApp(destino, mensagem);
+
+        // Criar próxima parcela para contas recorrentes
+        const updateDataFinal = {};
+        if (deveEnviarNoDia) {
           
           // Se for conta recorrente e foi enviado no dia, criar a próxima parcela
           if (conta.recorrente && conta.parcela_atual < conta.parcelas_total) {

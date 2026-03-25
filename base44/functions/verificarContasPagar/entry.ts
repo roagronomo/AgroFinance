@@ -213,11 +213,6 @@ _Lembrete automático - AgroFinance_`;
             console.log(`Próxima parcela criada: ${conta.parcela_atual + 1}/${conta.parcelas_total}`);
           }
         }
-        if (deveEnviarAntecipado) {
-          updateData.lembrete_antecipado_enviado = true;
-        }
-
-        await base44.asServiceRole.entities.ContaPagar.update(conta.id, updateData);
         lembretesEnviados++;
         console.log(`Lembrete enviado: ${conta.descricao} (tipo: ${deveEnviarNoDia ? 'DIA' : 'ANTECIPADO'})`);
 

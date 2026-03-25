@@ -68,6 +68,8 @@ export default function DespesasLembretes() {
   const [gruposDisponiveis, setGruposDisponiveis] = useState([]);
   const [ultimaAtualizacaoGrupos, setUltimaAtualizacaoGrupos] = useState(null);
   const [lembreteConflitante, setLembreteConflitante] = useState(null);
+  const [contaDuplicada, setContaDuplicada] = useState(null);
+  const [pendingSaveConta, setPendingSaveConta] = useState(null);
 
   const [formDataConta, setFormDataConta] = useState({
     descricao: "",

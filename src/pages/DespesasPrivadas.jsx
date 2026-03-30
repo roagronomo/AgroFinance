@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, Lock, Calendar as CalendarIcon, Check, DollarSign, Copy, CreditCard } from "lucide-react";
+import { Plus, Edit, Trash2, Lock, Calendar as CalendarIcon, Check, DollarSign, Copy, CreditCard, Undo2 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -113,6 +113,7 @@ export default function DespesasPrivadas() {
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState(formInicial);
   const [dialogExcluir, setDialogExcluir] = useState(null);
+  const [dialogMarcarPago, setDialogMarcarPago] = useState(null);
   const [showGruposWhatsApp, setShowGruposWhatsApp] = useState(false);
   const [gruposWhatsApp, setGruposWhatsApp] = useState([]);
   const [carregandoGrupos, setCarregandoGrupos] = useState(false);
@@ -284,6 +285,22 @@ export default function DespesasPrivadas() {
       toast.error("Erro ao excluir");
     } finally {
       setDialogExcluir(null);
+    }
+  };
+
+  const handleMarcarPago = async () => {
+    if (!dialogMarcarPago) return;
+    try {
+      await base44.entities.ContaPagar.update(dialogMarcarPago, {
+        pago: true,
+        data_pagamento: new Date().toISOString().split('T')[0]
+      });
+      toast.success("Despesa marcada como paga!");
+      await carregarDados();
+    } catch (e) {
+      toast.error("Erro ao marcar como pago");
+    } finally {
+      setDialogMarcarPago(null);
     }
   };
 
@@ -514,12 +531,21 @@ export default function DespesasPrivadas() {
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex justify-end gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => handleEditar(conta)} className="text-blue-600 h-8 w-8">
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => setDialogExcluir(conta.id)} className="text-red-600 h-8 w-8">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                           <Button variant="ghost" size="icon" onClick={() => handleEditar(conta)} className="text-blue-600 h-8 w-8">
+                             <Edit className="w-4 h-4" />
+                           </Button>
+                           {!conta.pago ? (
+                             <Button variant="ghost" size="icon" onClick={() => setDialogMarcarPago(conta.id)} className="text-green-600 h-8 w-8" title="Marcar como pago">
+                               <Check className="w-4 h-4" />
+                             </Button>
+                           ) : (
+                             <Button variant="ghost" size="icon" onClick={async () => { await base44.entities.ContaPagar.update(conta.id, { pago: false, data_pagamento: null }); await carregarDados(); }} className="text-orange-500 h-8 w-8" title="Desfazer pagamento">
+                               <Undo2 className="w-4 h-4" />
+                             </Button>
+                           )}
+                           <Button variant="ghost" size="icon" onClick={() => setDialogExcluir(conta.id)} className="text-red-600 h-8 w-8">
+                             <Trash2 className="w-4 h-4" />
+                           </Button>
                           </div>
                         </td>
                       </tr>
@@ -653,6 +679,19 @@ export default function DespesasPrivadas() {
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Fechar</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!dialogMarcarPago} onOpenChange={open => !open && setDialogMarcarPago(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Marcar como Pago</AlertDialogTitle>
+            <AlertDialogDescription>Confirma que esta despesa foi paga?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleMarcarPago} className="bg-green-600 hover:bg-green-700">Confirmar Pagamento</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

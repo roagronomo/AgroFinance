@@ -24,7 +24,7 @@ import {
   Wallet,
   Bell,
   FolderCheck,
-  Wifi
+  MessageCircle
 } from "lucide-react";
 import {
   Sidebar,
@@ -95,9 +95,10 @@ const navigationSections = [
         icon: RefreshCw,
       },
       {
-        title: "Correção de Vínculos",
-        url: createPageUrl("CorrecaoVinculos"),
-        icon: RefreshCw,
+        title: "Conexão WhatsApp",
+        url: "/conexao-whatsapp",
+        icon: MessageCircle,
+        className: "text-green-500",
       },
     ]
   },
@@ -171,11 +172,6 @@ const navigationSections = [
         title: "Despesas e Lembretes",
         url: createPageUrl("DespesasLembretes"),
         icon: Bell,
-      },
-      {
-        title: "Conexão WhatsApp",
-        url: "/conexao-whatsapp",
-        icon: Wifi,
       },
       ]
       }
@@ -491,7 +487,7 @@ export default function Layout({ children, currentPageName }) {
                               className="pl-8"
                             >
                               <Link to={item.url} className="flex items-center gap-3">
-                                <item.icon className="h-4 w-4" />
+                                <item.icon className={`h-4 w-4 ${item.className || ''}`} />
                                 <span>{item.title}</span>
                               </Link>
                             </SidebarMenuButton>

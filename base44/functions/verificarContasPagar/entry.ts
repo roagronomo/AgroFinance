@@ -73,9 +73,9 @@ Deno.serve(async (req) => {
       pago: false 
     }, 'data_vencimento');
 
-    // Filtrar contas privadas
-    const contas = todasContas.filter(c => !c.privado);
-    console.log(`[INFO] Total contas ativas não pagas: ${todasContas.length}, não privadas: ${contas.length}`);
+    // Incluir TODAS as contas (privadas e não privadas)
+    const contas = todasContas;
+    console.log(`[INFO] Total contas ativas não pagas: ${todasContas.length} (privadas incluídas)`);
 
     const hoje = new Date(agoraBrasilia);
     hoje.setHours(0, 0, 0, 0);

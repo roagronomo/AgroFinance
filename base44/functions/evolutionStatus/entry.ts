@@ -15,8 +15,8 @@
  */
 Deno.serve(async (req) => {
   try {
-    const payload = await req.json();
-    const { acao, instancia } = payload;
+    const payload = await req.json().catch(() => ({}));
+    const { acao = 'status', instancia } = payload;
 
     const EVOLUTION_API_URL = Deno.env.get("EVOLUTION_API_URL");
     const EVOLUTION_API_KEY = Deno.env.get("EVOLUTION_API_KEY");

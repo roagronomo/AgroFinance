@@ -41,11 +41,16 @@ Deno.serve(async (req) => {
     console.log(`[DIAGNÓSTICO] Horário UTC: ${agora.toISOString()}`);
     console.log(`[DIAGNÓSTICO] Horário Brasília: ${String(horaBrasilia).padStart(2,'0')}:${String(minutoBrasilia).padStart(2,'0')}`);
 
+    // Suporte a modo debug via query params (ex: ?forcar_no_dia=1)
+    const url = new URL(req.url);
+    const modoForcarNoDia = url.searchParams.get('forcar_no_dia') === '1';
+    const modoForcarAntecipado = url.searchParams.get('forcar_antecipado') === '1';
+
     // Determinar o modo de execução pelo horário BRT
     // 06:00-06:59 BRT = Notificação de dia do vencimento (lembrete_enviado)
     // 16:00-16:59 BRT = Aviso antecipado (lembrete_antecipado_enviado)
-    const modoNoDia = horaBrasilia === 6;
-    const modoAntecipado = horaBrasilia === 16;
+    const modoNoDia = modoForcarNoDia || horaBrasilia === 6;
+    const modoAntecipado = modoForcarAntecipado || horaBrasilia === 16;
 
     if (!modoNoDia && !modoAntecipado) {
       console.log(`[GUARD] Fora do horário de envio. Hora BRT: ${horaBrasilia}:${String(minutoBrasilia).padStart(2,'0')}. Envio às 6h (dia) e 16h (antecipado) BRT.`);
@@ -60,11 +65,17 @@ Deno.serve(async (req) => {
 
     console.log('Iniciando verificação de contas a pagar...');
 
-    // Buscar todas as contas ativas e não pagas
-    const contas = await base44.asServiceRole.entities.ContaPagar.filter({ 
+    const GRUPO_PADRAO = "120363424659062662@g.us";
+
+    // Buscar todas as contas ativas, não pagas e não privadas
+    const todasContas = await base44.asServiceRole.entities.ContaPagar.filter({ 
       ativo: true,
       pago: false 
     }, 'data_vencimento');
+
+    // Filtrar contas privadas
+    const contas = todasContas.filter(c => !c.privado);
+    console.log(`[INFO] Total contas ativas não pagas: ${todasContas.length}, não privadas: ${contas.length}`);
 
     const hoje = new Date(agoraBrasilia);
     hoje.setHours(0, 0, 0, 0);
@@ -93,8 +104,10 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Determinar o destino (grupo ou telefone individual)
-        const destino = conta.grupo_whatsapp_id || conta.telefone_contato;
+        // Determinar o destino (grupo ou telefone individual, com fallback para grupo padrão)
+        const destinoRaw = (conta.grupo_whatsapp_id || '').trim() || (conta.telefone_contato || '').trim();
+        const destino = destinoRaw || GRUPO_PADRAO;
+        console.log(`[CONTA] "${conta.descricao}" | dias: ${diasRestantes} | destino: ${destino} | noDia: ${deveEnviarNoDia} | antecipado: ${deveEnviarAntecipado}`);
         
         // Criar chave única para evitar duplicação: destino + ID da conta
         const chaveUnica = `${destino}_${conta.id}`;

@@ -23,7 +23,8 @@ import {
   FolderOpen,
   Wallet,
   Bell,
-  FolderCheck
+  FolderCheck,
+  Wifi
 } from "lucide-react";
 import {
   Sidebar,
@@ -170,6 +171,11 @@ const navigationSections = [
         title: "Despesas e Lembretes",
         url: createPageUrl("DespesasLembretes"),
         icon: Bell,
+      },
+      {
+        title: "Conexão WhatsApp",
+        url: "/conexao-whatsapp",
+        icon: Wifi,
       },
       ]
       }

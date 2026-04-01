@@ -1,6 +1,7 @@
 import './App.css'
 import { Toaster } from "@/components/ui/toaster"
 import DespesasPrivadas from './pages/DespesasPrivadas';
+import ConexaoWhatsApp from './pages/ConexaoWhatsApp';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import VisualEditAgent from '@/lib/VisualEditAgent'
@@ -61,6 +62,11 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/conexao-whatsapp" element={
+        <LayoutWrapper currentPageName="Conexão WhatsApp">
+          <ConexaoWhatsApp />
+        </LayoutWrapper>
+      } />
       <Route path="/despesas-privadas" element={
         <LayoutWrapper currentPageName="Despesas Privadas">
           <DespesasPrivadas />

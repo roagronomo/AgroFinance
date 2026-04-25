@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import AutocompleteInput from "../components/common/AutocompleteInput";
 import GerenciarPixDialog from "../components/despesas/GerenciarPixDialog";
 import ContaDuplicadaDialog from "../components/despesas/ContaDuplicadaDialog";
+import ContaCard from "../components/despesas/ContaCard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1050,6 +1051,48 @@ ${valor}`
 
   const temFiltroAtivo = buscaConta || filtroCategoriaContas || filtroFornecedorContas;
   const limparFiltros = () => { setBuscaConta(""); setFiltroCategoriaContas(""); setFiltroFornecedorContas(""); };
+
+  // Contas em atraso (separadas)
+  const contasEmAtraso = contasAtivas.filter(c => calcularDiasRestantes(c.data_vencimento) < 0);
+  const contasNaoVencidas = contasAtivas.filter(c => calcularDiasRestantes(c.data_vencimento) >= 0);
+
+  // Resumo financeiro do mês atual
+  const hoje = new Date();
+  const mesAtual = hoje.getMonth();
+  const anoAtual = hoje.getFullYear();
+  const contasDoMes = contasNaoVencidas.filter(c => {
+    if (!c.data_vencimento) return false;
+    const d = new Date(c.data_vencimento + 'T00:00:00');
+    return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
+  });
+  const totalMes = contasDoMes.reduce((s, c) => s + (c.valor || 0), 0);
+  const totalAtrasado = contasEmAtraso.reduce((s, c) => s + (c.valor || 0), 0);
+  const totalGeral = contasAtivas.reduce((s, c) => s + (c.valor || 0), 0);
+
+  // Exportação CSV
+  const exportarCSV = () => {
+    const cabecalho = ['Descrição', 'Fornecedor', 'Categoria', 'Valor (R$)', 'Vencimento', 'Status', 'Recorrente', 'Parcela', 'Observações'];
+    const linhas = contasAtivas.map(c => [
+      `"${c.descricao || ''}"`,
+      `"${c.fornecedor || ''}"`,
+      `"${c.categoria || ''}"`,
+      (c.valor || 0).toFixed(2).replace('.', ','),
+      c.data_vencimento ? formatarDataSegura(c.data_vencimento) : '',
+      getStatusTexto(calcularDiasRestantes(c.data_vencimento)),
+      c.recorrente ? 'Sim' : 'Não',
+      c.recorrente ? `${c.parcela_atual}/${c.parcelas_total}` : '',
+      `"${c.observacoes || ''}"`
+    ]);
+    const csv = [cabecalho.join(';'), ...linhas.map(l => l.join(';'))].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `contas_a_pagar_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('CSV exportado com sucesso!');
+  };
   const lembretesAtivos = lembretes.filter(l => l.ativo !== false && !l.concluido);
   const lembretesConcluidos = lembretes.filter(l => l.concluido);
 
@@ -1553,12 +1596,40 @@ ${valor}`
           <h1 className="text-2xl font-bold text-gray-900">Despesas e Lembretes</h1>
           <p className="text-gray-500 mt-1">{contasAtivas.length} conta(s) ativa(s) • {lembretesAtivos.length} lembrete(s) ativo(s)</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button onClick={exportarCSV} variant="outline" className="border-gray-400 text-gray-600 hover:bg-gray-50"><Download className="w-4 h-4 mr-2" />Exportar CSV</Button>
           <Button onClick={() => setShowGerenciarPix(true)} variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50"><CreditCard className="w-4 h-4 mr-2" />Chaves PIX</Button>
           <Button onClick={() => { setShowForm(true); setTipoForm("conta"); }} className="bg-green-600 hover:bg-green-700"><Plus className="w-4 h-4 mr-2" />Nova Conta</Button>
           <Button onClick={() => { setShowForm(true); setTipoForm("lembrete"); }} variant="outline"><Plus className="w-4 h-4 mr-2" />Novo Lembrete</Button>
         </div>
       </div>
+
+      {/* Cards de resumo financeiro */}
+      {!isLoading && contasAtivas.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Card className="border-blue-200 bg-blue-50">
+            <CardContent className="p-4">
+              <p className="text-xs text-blue-600 font-medium uppercase tracking-wide mb-1">Vencendo este mês</p>
+              <p className="text-2xl font-bold text-blue-800">R$ {totalMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              <p className="text-xs text-blue-600 mt-1">{contasDoMes.length} conta(s)</p>
+            </CardContent>
+          </Card>
+          <Card className={contasEmAtraso.length > 0 ? "border-red-300 bg-red-50" : "border-gray-200 bg-gray-50"}>
+            <CardContent className="p-4">
+              <p className="text-xs font-medium uppercase tracking-wide mb-1 text-red-600">Em atraso</p>
+              <p className={`text-2xl font-bold ${contasEmAtraso.length > 0 ? 'text-red-700' : 'text-gray-500'}`}>R$ {totalAtrasado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              <p className={`text-xs mt-1 ${contasEmAtraso.length > 0 ? 'text-red-600' : 'text-gray-400'}`}>{contasEmAtraso.length} conta(s)</p>
+            </CardContent>
+          </Card>
+          <Card className="border-gray-200 bg-gray-50">
+            <CardContent className="p-4">
+              <p className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-1">Total em aberto</p>
+              <p className="text-2xl font-bold text-gray-800">R$ {totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              <p className="text-xs text-gray-500 mt-1">{contasAtivas.length} conta(s)</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {isLoading ? (
         <Card><CardContent className="p-8 text-center text-gray-500">Carregando...</CardContent></Card>
@@ -1613,44 +1684,41 @@ ${valor}`
               </div>
             )}
 
+            {/* Contas em Atraso */}
+            {contasEmAtraso.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold text-red-700 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-red-500 inline-block animate-pulse"></span>
+                  ⚠️ Em Atraso ({contasEmAtraso.length})
+                </h3>
+                {contasEmAtraso.map(conta => (
+                  <ContaCard key={conta.id} conta={conta} className="border-red-300 bg-red-50"
+                    getStatusCor={getStatusCor} getStatusTexto={getStatusTexto}
+                    calcularDiasRestantes={calcularDiasRestantes} formatarDataSegura={formatarDataSegura}
+                    onEditar={handleEditarConta} onAnexarRecibo={setDialogAnexarRecibo}
+                    onMarcarPago={setDialogMarcarPago} onExcluir={setDialogExcluir} />
+                ))}
+                <p className="text-xs font-semibold text-gray-600 pt-1 pb-0">📋 A Vencer ({contasNaoVencidas.length})</p>
+              </div>
+            )}
+
             {contasAtivas.length === 0 ? (
               <Card><CardContent className="p-8 text-center text-gray-500"><DollarSign className="w-12 h-12 mx-auto mb-3 text-gray-300" /><p>Nenhuma conta a pagar cadastrada</p></CardContent></Card>
             ) : contasAtivasFiltradas.length === 0 ? (
               <Card><CardContent className="p-8 text-center text-gray-500"><Search className="w-12 h-12 mx-auto mb-3 text-gray-300" /><p>Nenhuma conta encontrada com os filtros aplicados</p></CardContent></Card>
             ) : (
-              contasAtivasFiltradas.map((conta) => {
-                const diasRestantes = calcularDiasRestantes(conta.data_vencimento);
-                return (
-                  <Card key={conta.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-900">{conta.descricao}</h3>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusCor(diasRestantes)}`}>{getStatusTexto(diasRestantes)}</span>
-                          </div>
-                          <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                            <span className="flex items-center gap-1"><CalendarIcon className="w-4 h-4" />{formatarDataSegura(conta.data_vencimento)}</span>
-                            <span className="font-semibold text-red-600">💰 R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                            {conta.recorrente && <span className="text-purple-600 font-medium">💳 Recorrente {conta.parcela_atual}/{conta.parcelas_total}</span>}
-                            {conta.fornecedor && <span>🏢 {conta.fornecedor}</span>}
-                            {conta.categoria && <span className="text-blue-600">📂 {conta.categoria}</span>}
-                            {conta.codigo_barras && <span className="text-green-600">🔢 Código extraído</span>}
-                            {conta.recibo_anexo && <span className="text-purple-600">📄 Recibo anexado</span>}
-                          </div>
-                          {conta.observacoes && <p className="text-sm text-gray-500 mt-2">{conta.observacoes}</p>}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEditarConta(conta)} className="text-blue-600 hover:text-blue-700" title="Editar"><Edit className="w-4 h-4" /></Button>
-                          <Button variant="ghost" size="icon" onClick={() => setDialogAnexarRecibo(conta.id)} className="text-purple-600 hover:text-purple-700" title="Anexar recibo"><FileText className="w-4 h-4" /></Button>
-                          <Button variant="ghost" size="icon" onClick={() => setDialogMarcarPago(conta.id)} className="text-green-600 hover:text-green-700" title="Marcar como pago"><Check className="w-4 h-4" /></Button>
-                          <Button variant="ghost" size="icon" onClick={() => setDialogExcluir({ id: conta.id, tipo: 'conta' })} className="text-red-600"><Trash2 className="w-4 h-4" /></Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
+              contasNaoVencidas.filter(c => {
+                const matchBusca = !buscaConta || c.descricao?.toLowerCase().includes(buscaConta.toLowerCase());
+                const matchCategoria = !filtroCategoriaContas || c.categoria === filtroCategoriaContas;
+                const matchFornecedor = !filtroFornecedorContas || c.fornecedor === filtroFornecedorContas;
+                return matchBusca && matchCategoria && matchFornecedor;
+              }).map(conta => (
+                <ContaCard key={conta.id} conta={conta}
+                  getStatusCor={getStatusCor} getStatusTexto={getStatusTexto}
+                  calcularDiasRestantes={calcularDiasRestantes} formatarDataSegura={formatarDataSegura}
+                  onEditar={handleEditarConta} onAnexarRecibo={setDialogAnexarRecibo}
+                  onMarcarPago={setDialogMarcarPago} onExcluir={setDialogExcluir} />
+              ))
             )}
           </TabsContent>
 

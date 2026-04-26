@@ -71,6 +71,64 @@ Deno.serve(async (req) => {
 
     const GRUPO_PADRAO = "120363424659062662@g.us";
 
+    // === AUTO-MARCAR CONTAS PAGAS (apenas modo manhã ou modo manual "auto-marcar") ===
+    const modoAutoMarcar = modoNoDia || url.searchParams.get('modo') === 'auto-marcar';
+    if (modoAutoMarcar) {
+      try {
+        const hojeAuto = new Date(agoraBrasilia);
+        hojeAuto.setHours(0, 0, 0, 0);
+        const limite30 = new Date(hojeAuto);
+        limite30.setDate(limite30.getDate() - 30);
+
+        const hojeStr = hojeAuto.toISOString().split('T')[0];
+        const limite30Str = limite30.toISOString().split('T')[0];
+
+        const candidatas = await base44.asServiceRole.entities.ContaPagar.filter({
+          ativo: true,
+          pago: false
+        });
+
+        const paraMarcar = candidatas.filter(c => {
+          if (!c.data_vencimento) return false;
+          return c.data_vencimento < hojeStr && c.data_vencimento >= limite30Str;
+        });
+
+        const marcadas = [];
+        for (const conta of paraMarcar) {
+          const obsAuto = `\n[Auto] Marcada como paga em ${hojeStr} (vencia ${conta.data_vencimento}, sem marcação após 1+ dia)`;
+          const novasObs = (conta.observacoes || '') + obsAuto;
+          await base44.asServiceRole.entities.ContaPagar.update(conta.id, {
+            pago: true,
+            data_pagamento: conta.data_vencimento,
+            observacoes: novasObs,
+            lembrete_enviado: true
+          });
+          marcadas.push(conta);
+        }
+
+        console.log(`[verificarContasPagar] Auto-marcadas ${marcadas.length} contas como pagas`);
+
+        if (marcadas.length >= 1) {
+          const linhas = marcadas.map(c => {
+            const valor = (c.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            const dataVenc = new Date(c.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR');
+            return `• ${c.descricao} - ${valor} - venceu ${dataVenc}`;
+          }).join('\n');
+
+          const mensagem = `🔔 *Auto-marcação de contas pagas*\n\nMarquei ${marcadas.length} conta(s) como paga(s) automaticamente (venciam há 1+ dia sem marcação):\n\n${linhas}\n\nSe alguma foi marcada errado, abra o app e desmarque.`;
+
+          try {
+            await enviarWhatsApp(GRUPO_PADRAO, mensagem);
+          } catch (e) {
+            console.error('[AUTO-MARCAR] Erro ao enviar WhatsApp:', e.message);
+          }
+        }
+      } catch (e) {
+        console.error('[AUTO-MARCAR] Erro na rotina:', e.message);
+      }
+    }
+    // ================================================================================
+
     // Buscar todas as contas ativas, não pagas e não privadas
     const todasContas = await base44.asServiceRole.entities.ContaPagar.filter({ 
       ativo: true,

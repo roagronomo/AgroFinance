@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, Bell, Calendar as CalendarIcon, DollarSign, FileText, Upload, Check, X, Undo2, Paperclip, Upload as UploadIcon, Download, ChevronDown, ChevronRight, Send, CreditCard, Copy, Search, Filter, XCircle } from "lucide-react";
+import { Plus, Edit, Trash2, Bell, Calendar as CalendarIcon, DollarSign, FileText, Upload, Check, X, Undo2, Paperclip, Upload as UploadIcon, Download, ChevronDown, ChevronRight, Send, CreditCard, Copy, Search, Filter, XCircle, AlertTriangle } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { format, differenceInDays, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -1060,35 +1060,48 @@ ${valor}`
   const hoje = new Date();
   const mesAtual = hoje.getMonth();
   const anoAtual = hoje.getFullYear();
-  const contasDoMes = contasNaoVencidas.filter(c => {
+  const contasDoMes = contasAtivas.filter(c => {
     if (!c.data_vencimento) return false;
     const d = new Date(c.data_vencimento + 'T00:00:00');
     return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
   });
+  const contasPagasDoMes = contasPagas.filter(c => {
+    if (!c.data_pagamento) return false;
+    const d = new Date(c.data_pagamento + 'T00:00:00');
+    return d.getMonth() === mesAtual && d.getFullYear() === anoAtual;
+  });
   const totalMes = contasDoMes.reduce((s, c) => s + (c.valor || 0), 0);
+  const totalPagoMes = contasPagasDoMes.reduce((s, c) => s + (c.valor || 0), 0);
+  const qtdPendentes = contasAtivas.length;
   const totalAtrasado = contasEmAtraso.reduce((s, c) => s + (c.valor || 0), 0);
   const totalGeral = contasAtivas.reduce((s, c) => s + (c.valor || 0), 0);
 
-  // Exportação CSV
+  // Aba ativa (para exportação CSV)
+  const [abaAtiva, setAbaAtiva] = useState("contas");
+
+  // Exportação CSV - exporta a aba ativa (Ativas ou Pagas)
   const exportarCSV = () => {
-    const cabecalho = ['Descrição', 'Fornecedor', 'Categoria', 'Valor (R$)', 'Vencimento', 'Status', 'Recorrente', 'Parcela', 'Observações'];
-    const linhas = contasAtivas.map(c => [
-      `"${c.descricao || ''}"`,
-      `"${c.fornecedor || ''}"`,
-      `"${c.categoria || ''}"`,
+    const cabecalho = ['Descrição', 'Valor (R$)', 'Vencimento', 'Pagamento', 'Status', 'Categoria', 'Observações'];
+    const fonte = abaAtiva === "pagas" ? contasPagas : contasAtivas;
+    if (fonte.length === 0) {
+      toast.warning('Nenhuma conta para exportar nesta aba');
+      return;
+    }
+    const linhas = fonte.map(c => [
+      `"${(c.descricao || '').replace(/"/g, '""')}"`,
       (c.valor || 0).toFixed(2).replace('.', ','),
       c.data_vencimento ? formatarDataSegura(c.data_vencimento) : '',
-      getStatusTexto(calcularDiasRestantes(c.data_vencimento)),
-      c.recorrente ? 'Sim' : 'Não',
-      c.recorrente ? `${c.parcela_atual}/${c.parcelas_total}` : '',
-      `"${c.observacoes || ''}"`
+      c.data_pagamento ? formatarDataSegura(c.data_pagamento) : '',
+      c.pago ? 'Pago' : getStatusTexto(calcularDiasRestantes(c.data_vencimento)),
+      `"${(c.categoria || '').replace(/"/g, '""')}"`,
+      `"${(c.observacoes || '').replace(/"/g, '""')}"`
     ]);
     const csv = [cabecalho.join(';'), ...linhas.map(l => l.join(';'))].join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `contas_a_pagar_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.download = `contas_AgroFinance_${format(new Date(), 'yyyy-MM-dd')}.csv`;
     link.click();
     URL.revokeObjectURL(url);
     toast.success('CSV exportado com sucesso!');
@@ -1604,37 +1617,18 @@ ${valor}`
         </div>
       </div>
 
-      {/* Cards de resumo financeiro */}
-      {!isLoading && contasAtivas.length > 0 && (
+      {!isLoading && (contasAtivas.length > 0 || contasPagas.length > 0) && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card className="border-blue-200 bg-blue-50">
-            <CardContent className="p-4">
-              <p className="text-xs text-blue-600 font-medium uppercase tracking-wide mb-1">Vencendo este mês</p>
-              <p className="text-2xl font-bold text-blue-800">R$ {totalMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-              <p className="text-xs text-blue-600 mt-1">{contasDoMes.length} conta(s)</p>
-            </CardContent>
-          </Card>
-          <Card className={contasEmAtraso.length > 0 ? "border-red-300 bg-red-50" : "border-gray-200 bg-gray-50"}>
-            <CardContent className="p-4">
-              <p className="text-xs font-medium uppercase tracking-wide mb-1 text-red-600">Em atraso</p>
-              <p className={`text-2xl font-bold ${contasEmAtraso.length > 0 ? 'text-red-700' : 'text-gray-500'}`}>R$ {totalAtrasado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-              <p className={`text-xs mt-1 ${contasEmAtraso.length > 0 ? 'text-red-600' : 'text-gray-400'}`}>{contasEmAtraso.length} conta(s)</p>
-            </CardContent>
-          </Card>
-          <Card className="border-gray-200 bg-gray-50">
-            <CardContent className="p-4">
-              <p className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-1">Total em aberto</p>
-              <p className="text-2xl font-bold text-gray-800">R$ {totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-              <p className="text-xs text-gray-500 mt-1">{contasAtivas.length} conta(s)</p>
-            </CardContent>
-          </Card>
+          <Card className="border-blue-200 bg-blue-50"><CardContent className="p-4"><div className="flex items-center justify-between mb-1"><p className="text-xs text-blue-600 font-medium uppercase">Total a pagar no mês</p><DollarSign className="w-4 h-4 text-blue-600" /></div><p className="text-2xl font-bold text-blue-800">R$ {totalMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p><p className="text-xs text-blue-600 mt-1">{contasDoMes.length} conta(s)</p></CardContent></Card>
+          <Card className="border-green-200 bg-green-50"><CardContent className="p-4"><div className="flex items-center justify-between mb-1"><p className="text-xs text-green-700 font-medium uppercase">Total já pago no mês</p><Check className="w-4 h-4 text-green-700" /></div><p className="text-2xl font-bold text-green-800">R$ {totalPagoMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p><p className="text-xs text-green-700 mt-1">{contasPagasDoMes.length} conta(s)</p></CardContent></Card>
+          <Card className="border-amber-200 bg-amber-50"><CardContent className="p-4"><div className="flex items-center justify-between mb-1"><p className="text-xs text-amber-700 font-medium uppercase">Contas pendentes</p><Bell className="w-4 h-4 text-amber-700" /></div><p className="text-2xl font-bold text-amber-800">{qtdPendentes}</p><p className="text-xs text-amber-700 mt-1">R$ {totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} em aberto</p></CardContent></Card>
         </div>
       )}
 
       {isLoading ? (
         <Card><CardContent className="p-8 text-center text-gray-500">Carregando...</CardContent></Card>
       ) : (
-        <Tabs defaultValue="contas" className="w-full">
+        <Tabs value={abaAtiva} onValueChange={setAbaAtiva} className="w-full">
           <TabsList>
             <TabsTrigger value="contas">Contas a Pagar ({contasAtivas.length})</TabsTrigger>
             <TabsTrigger value="lembretes">Lembretes ({lembretesAtivos.length})</TabsTrigger>
@@ -1684,13 +1678,14 @@ ${valor}`
               </div>
             )}
 
-            {/* Contas em Atraso */}
+            {/* Banner: Contas em Atraso */}
             {contasEmAtraso.length > 0 && (
               <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-red-700 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-red-500 inline-block animate-pulse"></span>
-                  ⚠️ Em Atraso ({contasEmAtraso.length})
-                </h3>
+                <div className="flex items-center gap-3 bg-red-100 border-l-4 border-red-600 rounded-md px-4 py-3">
+                  <AlertTriangle className="w-5 h-5 text-red-700 shrink-0" />
+                  <h3 className="text-base font-bold text-red-800 flex-1">Contas em Atraso</h3>
+                  <span className="bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">{contasEmAtraso.length}</span>
+                </div>
                 {contasEmAtraso.map(conta => (
                   <ContaCard key={conta.id} conta={conta} className="border-red-300 bg-red-50"
                     getStatusCor={getStatusCor} getStatusTexto={getStatusTexto}
@@ -1698,7 +1693,7 @@ ${valor}`
                     onEditar={handleEditarConta} onAnexarRecibo={setDialogAnexarRecibo}
                     onMarcarPago={setDialogMarcarPago} onExcluir={setDialogExcluir} />
                 ))}
-                <p className="text-xs font-semibold text-gray-600 pt-1 pb-0">📋 A Vencer ({contasNaoVencidas.length})</p>
+                <p className="text-xs font-semibold text-gray-600 pt-2 pb-0">📋 A Vencer ({contasNaoVencidas.length})</p>
               </div>
             )}
 
@@ -1774,32 +1769,18 @@ ${valor}`
                       <div className="text-sm text-gray-600 font-semibold">Total: R$ {contas.reduce((sum, c) => sum + c.valor, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
                     </div>
                     {gruposExpandidos[descricao] && (
-                      <div className="divide-y">
+                      <div className="p-3 space-y-2 bg-white">
                         {contas.map((conta) => (
-                          <div key={conta.id} className="p-4 bg-white">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  {conta.recorrente && <span className="text-xs text-purple-600 font-medium">💳 Parcela {conta.parcela_atual}/{conta.parcelas_total}</span>}
-                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">✓ Pago</span>
-                                </div>
-                                <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                                  <span>📅 Vencimento: {formatarDataSegura(conta.data_vencimento)}</span>
-                                  {conta.data_pagamento && <span>✅ Pago em: {formatarDataSegura(conta.data_pagamento)}</span>}
-                                  <span className="font-semibold text-green-700">💰 R$ {conta.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                                  {conta.fornecedor && <span>🏢 {conta.fornecedor}</span>}
-                                  {conta.categoria && <span className="text-blue-600">📂 {conta.categoria}</span>}
-                                </div>
-                              </div>
-                              <div className="flex gap-2">
-                                <Button variant="ghost" size="icon" onClick={() => handleReutilizarConta(conta)} className="text-green-600 hover:text-green-700" title="Usar como rascunho"><Copy className="w-4 h-4" /></Button>
-                                {conta.boleto_anexo && <Button variant="ghost" size="icon" onClick={() => handleDownloadAnexo(conta.boleto_anexo.url, conta.boleto_anexo.file_name)} className="text-blue-600 hover:text-blue-700" title="Baixar boleto"><Download className="w-4 h-4" /></Button>}
-                                {conta.recibo_anexo && <Button variant="ghost" size="icon" onClick={() => handleDownloadAnexo(conta.recibo_anexo.url, conta.recibo_anexo.file_name)} className="text-purple-600 hover:text-purple-700" title="Baixar recibo"><FileText className="w-4 h-4" /></Button>}
-                                <Button variant="ghost" size="icon" onClick={() => setDialogDesmarcarPago(conta.id)} className="text-orange-600 hover:text-orange-700" title="Retornar para a pagar"><Undo2 className="w-4 h-4" /></Button>
-                                <Button variant="ghost" size="icon" onClick={() => setDialogExcluir({ id: conta.id, tipo: 'conta' })} className="text-red-600 hover:text-red-700" title="Excluir"><Trash2 className="w-4 h-4" /></Button>
-                              </div>
-                            </div>
-                          </div>
+                          <ContaCard
+                            key={conta.id}
+                            conta={conta}
+                            paga={true}
+                            formatarDataSegura={formatarDataSegura}
+                            onReutilizar={handleReutilizarConta}
+                            onDownloadAnexo={handleDownloadAnexo}
+                            onDesmarcarPago={setDialogDesmarcarPago}
+                            onExcluir={setDialogExcluir}
+                          />
                         ))}
                       </div>
                     )}

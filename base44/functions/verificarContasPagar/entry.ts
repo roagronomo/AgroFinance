@@ -180,14 +180,39 @@ Deno.serve(async (req) => {
       if (grupo.length > 1) {
         const valoresDistintos = [...new Set(grupo.map(c => c.valor))];
         if (valoresDistintos.length > 1) {
-          // Valores diferentes para mesma descrição + vencimento = duplicidade suspeita
           const descricao = grupo[0].descricao;
           const vencimento = new Date(grupo[0].data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR');
-          const listaValores = grupo.map(c => `• R$ ${c.valor?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`).join('\n');
-          const msg = `⚠️ *ALERTA - CONTAS POSSIVELMENTE DUPLICADAS*\n\n📋 *${descricao}*\n📅 *Vencimento:* ${vencimento}\n\n💰 *Valores cadastrados (${grupo.length}x):*\n${listaValores}\n\n⚠️ Verifique se há duplicidade antes do vencimento!\n\n_AgroFinance_`;
+
+          // Lista detalhada: valor + fornecedor + categoria de cada conta
+          const listaValores = grupo.map(c => {
+            const valorFmt = c.valor?.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            const forn = c.fornecedor ? ` — ${c.fornecedor}` : '';
+            const cat = c.categoria ? ` [${c.categoria}]` : '';
+            return `• R$ ${valorFmt}${forn}${cat}`;
+          }).join('\n');
+
+          // Verifica se TODAS as contas do grupo têm fornecedor preenchido E são todos distintos
+          const fornecedores = grupo.map(c => (c.fornecedor || '').trim().toLowerCase()).filter(f => f.length > 0);
+          const todosTemFornecedor = fornecedores.length === grupo.length;
+          const fornecedoresTodosDistintos = todosTemFornecedor && new Set(fornecedores).size === grupo.length;
+
+          // Monta título, motivo e ação conforme o caso
+          let titulo, motivo, acao;
+          if (fornecedoresTodosDistintos) {
+            titulo = '⚠️ *ATENÇÃO - CONTAS COM MESMA DESCRIÇÃO*';
+            motivo = `🔍 *Motivo:* Mesma descrição ("${descricao}") e mesmo vencimento (${vencimento}), com valores E fornecedores diferentes.`;
+            acao = 'ℹ️ Provavelmente são contas distintas (fornecedores diferentes). Revise se necessário.';
+          } else {
+            titulo = '⚠️ *ALERTA - CONTAS POSSIVELMENTE DUPLICADAS*';
+            motivo = `🔍 *Motivo:* Mesma descrição ("${descricao}") e mesmo vencimento (${vencimento}), mas com valores diferentes — possível cadastro em duplicidade.`;
+            acao = '⚠️ Verifique se há duplicidade antes do vencimento!';
+          }
+
+          const msg = `${titulo}\n\n📋 *${descricao}*\n📅 *Vencimento:* ${vencimento}\n\n💰 *Valores cadastrados (${grupo.length}x):*\n${listaValores}\n\n${motivo}\n\n${acao}\n\n_AgroFinance_`;
+
           try {
             await enviarWhatsApp(GRUPO_PADRAO, msg);
-            console.log(`[DUPLICIDADE] Alerta enviado para: ${descricao} (${grupo.length} contas, ${valoresDistintos.length} valores distintos)`);
+            console.log(`[DUPLICIDADE] Alerta enviado para: ${descricao} (${grupo.length} contas, ${valoresDistintos.length} valores distintos, fornecedores todos distintos: ${fornecedoresTodosDistintos})`);
           } catch (e) {
             console.error(`[DUPLICIDADE] Erro ao enviar alerta:`, e.message);
           }

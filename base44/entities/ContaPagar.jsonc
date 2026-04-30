@@ -1,0 +1,185 @@
+{
+  "name": "ContaPagar",
+  "type": "object",
+  "properties": {
+    "descricao": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o da conta/despesa"
+    },
+    "valor": {
+      "type": "number",
+      "description": "Valor da conta"
+    },
+    "data_vencimento": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de vencimento da conta"
+    },
+    "dias_antes_avisar": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 365,
+      "default": 3,
+      "description": "Quantos dias antes avisar (al\u00e9m de avisar no dia)"
+    },
+    "telefone_contato": {
+      "type": "string",
+      "description": "N\u00famero de telefone/WhatsApp para enviar o lembrete"
+    },
+    "grupo_whatsapp_id": {
+      "type": "string",
+      "description": "ID do grupo do WhatsApp (ex: 556481472080-1616761032@g.us) - se preenchido, envia para o grupo ao inv\u00e9s do n\u00famero individual"
+    },
+    "chave_pix": {
+      "type": "string",
+      "description": "Chave PIX para pagamento (CPF, CNPJ, telefone, e-mail ou aleat\u00f3ria)"
+    },
+    "codigo_barras": {
+      "type": "string",
+      "description": "C\u00f3digo de barras do boleto (extra\u00eddo automaticamente)"
+    },
+    "boleto_anexo": {
+      "type": "object",
+      "description": "Anexo do boleto/conta em PDF",
+      "properties": {
+        "file_id": {
+          "type": "string"
+        },
+        "file_name": {
+          "type": "string"
+        },
+        "file_size": {
+          "type": "number"
+        },
+        "mime_type": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "recibo_anexo": {
+      "type": "object",
+      "description": "Anexo do recibo de pagamento",
+      "properties": {
+        "file_id": {
+          "type": "string"
+        },
+        "file_name": {
+          "type": "string"
+        },
+        "file_size": {
+          "type": "number"
+        },
+        "mime_type": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "pago": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se a conta j\u00e1 foi paga"
+    },
+    "data_pagamento": {
+      "type": "string",
+      "format": "date",
+      "description": "Data em que a conta foi paga"
+    },
+    "lembrete_enviado": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se o lembrete no dia j\u00e1 foi enviado"
+    },
+    "lembrete_antecipado_enviado": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se o lembrete antecipado j\u00e1 foi enviado"
+    },
+    "alerta_duplicidade_enviado": {
+      "type": "boolean",
+      "default": false,
+      "description": "Marca true ap\u00f3s enviar alerta de poss\u00edvel duplicidade no WhatsApp, para evitar reenviar todo dia"
+    },
+    "categoria": {
+      "type": "string",
+      "description": "Categoria da despesa"
+    },
+    "fornecedor": {
+      "type": "string",
+      "description": "Nome do fornecedor/credor"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es adicionais"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se o lembrete est\u00e1 ativo"
+    },
+    "recorrente": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se \u00e9 um pagamento recorrente"
+    },
+    "parcelas_total": {
+      "type": "integer",
+      "description": "Quantidade total de parcelas (para recorrentes)"
+    },
+    "parcela_atual": {
+      "type": "integer",
+      "default": 1,
+      "description": "N\u00famero da parcela atual (para recorrentes)"
+    },
+    "data_vencimento_final": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de vencimento da \u00faltima parcela (calculada automaticamente)"
+    },
+    "grupo_recorrencia_id": {
+      "type": "string",
+      "description": "ID \u00fanico para agrupar contas recorrentes do mesmo grupo"
+    },
+    "privado": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se a conta \u00e9 privada"
+    }
+  },
+  "required": [
+    "descricao",
+    "valor",
+    "data_vencimento"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

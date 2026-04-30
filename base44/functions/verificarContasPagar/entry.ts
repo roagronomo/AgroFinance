@@ -180,6 +180,13 @@ Deno.serve(async (req) => {
       if (grupo.length > 1) {
         const valoresDistintos = [...new Set(grupo.map(c => c.valor))];
         if (valoresDistintos.length > 1) {
+          // Pula se TODAS as contas do grupo já receberam alerta antes
+          const algumNaoAlertado = grupo.some(c => !c.alerta_duplicidade_enviado);
+          if (!algumNaoAlertado) {
+            console.log(`[DUPLICIDADE] Grupo já alertado anteriormente — ignorado: ${grupo[0].descricao} (${grupo[0].data_vencimento})`);
+            continue;
+          }
+
           const descricao = grupo[0].descricao;
           const vencimento = new Date(grupo[0].data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR');
 
@@ -213,6 +220,14 @@ Deno.serve(async (req) => {
           try {
             await enviarWhatsApp(GRUPO_PADRAO, msg);
             console.log(`[DUPLICIDADE] Alerta enviado para: ${descricao} (${grupo.length} contas, ${valoresDistintos.length} valores distintos, fornecedores todos distintos: ${fornecedoresTodosDistintos})`);
+            // Marca TODAS as contas do grupo como alertadas para não reenviar
+            for (const c of grupo) {
+              try {
+                await base44.asServiceRole.entities.ContaPagar.update(c.id, { alerta_duplicidade_enviado: true });
+              } catch (errUpd) {
+                console.error(`[DUPLICIDADE] Falha ao marcar conta ${c.id}:`, errUpd.message);
+              }
+            }
           } catch (e) {
             console.error(`[DUPLICIDADE] Erro ao enviar alerta:`, e.message);
           }

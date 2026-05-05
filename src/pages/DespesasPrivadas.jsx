@@ -107,13 +107,6 @@ const formInicial = {
 
 export default function DespesasPrivadas() {
   const [autenticado, setAutenticado] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(null); // null = carregando
-
-  useEffect(() => {
-    base44.auth.me().then(user => {
-      setIsAdmin(user?.role === 'admin');
-    }).catch(() => setIsAdmin(false));
-  }, []);
   const [contas, setContas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -337,24 +330,6 @@ export default function DespesasPrivadas() {
       setCarregandoGrupos(false);
     }
   };
-
-  // Aguarda verificação de admin
-  if (isAdmin === null) {
-    return <div className="fixed inset-0 flex items-center justify-center"><div className="w-8 h-8 border-4 border-gray-200 border-t-gray-800 rounded-full animate-spin"></div></div>;
-  }
-
-  // Bloqueia acesso se não for admin
-  if (!isAdmin) {
-    return (
-      <div className="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center">
-        <div className="text-center text-white">
-          <Lock className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <h2 className="text-xl font-bold mb-2">Acesso Negado</h2>
-          <p className="text-gray-400">Esta área é restrita a administradores.</p>
-        </div>
-      </div>
-    );
-  }
 
   if (!autenticado) {
     return <PinModal onSuccess={() => setAutenticado(true)} />;
